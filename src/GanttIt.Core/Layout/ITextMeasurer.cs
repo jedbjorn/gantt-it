@@ -22,6 +22,13 @@ public interface ITextMeasurer
     /// once. The layout engine calls this at most three times per layout (all
     /// texts, then wrapped names, then a wrapped title) and never repeats a
     /// request it has already measured.
+    /// <para>
+    /// Requests are distinct, and they include timescale label candidates that may
+    /// never be drawn. The Revit measurer therefore can't simply move each
+    /// measured note into place: it needs notes keyed by request, copied for text
+    /// drawn more than once (a date in both Start and End, a repeated "Q1") and
+    /// deleted when unused.
+    /// </para>
     /// </summary>
     IReadOnlyList<TextSize> Measure(IReadOnlyList<TextRequest> requests);
 }

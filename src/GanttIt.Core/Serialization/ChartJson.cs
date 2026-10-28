@@ -1,4 +1,5 @@
 using GanttIt.Core.Model;
+using GanttIt.Core.Scheduling;
 
 namespace GanttIt.Core.Serialization;
 
@@ -54,6 +55,10 @@ public static class ChartJson
                 return "A link refers to a section that does not exist.";
             if (to != from + 1) return "A link joins sections that are not neighbours.";
             if (!seen.Add((link.FromSectionId, link.ToSectionId))) return "A link appears twice.";
+            // Every Scheduler path keeps To.Start = From.End + 1 + LagDays, so a
+            // mismatch means outside edits; trusting it would shift the chain.
+            if (link.LagDays != Scheduler.CurrentLag(chart.Sections[from], chart.Sections[to]))
+                return "A link's lag does not match its sections' dates.";
         }
         return null;
     }

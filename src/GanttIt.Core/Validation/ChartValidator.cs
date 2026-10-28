@@ -1,5 +1,6 @@
 using GanttIt.Core.Dates;
 using GanttIt.Core.Model;
+using GanttIt.Core.Scheduling;
 
 namespace GanttIt.Core.Validation;
 
@@ -74,6 +75,8 @@ public static class ChartValidator
             var to = chart.IndexOf(link.ToSectionId);
             if (from < 0 || to != from + 1)
                 issues.Add(new(IssueCode.LinkInvalid, "A link does not join two neighbouring sections."));
+            else if (link.LagDays != Scheduler.CurrentLag(chart.Sections[from], chart.Sections[to]))
+                issues.Add(new(IssueCode.LinkInvalid, "A link's lag does not match its sections' dates.", link.ToSectionId));
         }
 
         issues.AddRange(ValidateSettings(settings));

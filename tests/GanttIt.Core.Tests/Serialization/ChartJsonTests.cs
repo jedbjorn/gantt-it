@@ -1,6 +1,8 @@
+using GanttIt.Core.Layout;
 using GanttIt.Core.Model;
 using GanttIt.Core.Scheduling;
 using GanttIt.Core.Serialization;
+using GanttIt.Core.Tests.Support;
 using static GanttIt.Core.Tests.Support.TestCharts;
 
 namespace GanttIt.Core.Tests.Serialization;
@@ -139,6 +141,7 @@ public class ChartJsonTests
             Mutate(c => c.Links.Add(new Link(c.Sections[2].Id, Id(999), 0))),                 // missing section
             Mutate(c => c.Links.Add(c.Links[0])),                                             // duplicate link
             Mutate(c => c.Sections[0].Start = D(1066, 10, 14)),                               // outside supported dates
+            Mutate(c => c.Links[0] = c.Links[0] with { LagDays = 30 }),                      // lag contradicts dates
         ];
 
         foreach (var json in cases)
@@ -147,6 +150,68 @@ public class ChartJsonTests
             Assert.Equal(LoadStatus.Invalid, result.Status);
             Assert.NotNull(result.Error);
         }
+    }
+
+    [Fact]
+    public void HugeLinkLag_IsReported_SoItNeverReachesTheScheduler()
+    {
+        // Hand-edited JSON: a lag far beyond any date would make SetEnd/EnforceLinks overflow DateOnly.
+        var json = ChartJson.Serialize(Sample()).Replace("\"lagDays\":1", "\"lagDays\":10000000");
+
+        var result = ChartJson.Deserialize(json);
+
+        Assert.Equal(LoadStatus.Invalid, result.Status);
+        Assert.Null(result.Value);
+        Assert.Contains("lag", result.Error);
+    }
+
+    [Fact]
+    public void LinkLagThatDoesNotMatchTheDates_IsReported()
+    {
+        // The real gap is 1 day; a stored lag of 30 would silently break To.Start = From.End + 1 + LagDays.
+        var json = ChartJson.Serialize(Sample()).Replace("\"lagDays\":1", "\"lagDays\":30");
+
+        var result = ChartJson.Deserialize(json);
+
+        Assert.Equal(LoadStatus.Invalid, result.Status);
+        Assert.Contains("lag", result.Error);
+    }
+
+    [Fact]
+    public void Duration_IsDerived_AndNotStored()
+    {
+        Assert.DoesNotContain("\"duration\"", ChartJson.Serialize(Sample()));
+    }
+
+    [Fact]
+    public void NewerSchemaVersion_WithAStructurallyBrokenChart_HasNoPreview()
+    {
+        var result = ChartJson.Deserialize("{\"schemaVersion\":2,\"name\":\"x\",\"sections\":null}");
+
+        Assert.Equal(LoadStatus.NewerVersion, result.Status);
+        Assert.Null(result.Value);
+        Assert.False(result.IsEditable);
+    }
+
+    [Fact]
+    public void NewerSchemaVersion_Preview_CanBeLaidOut()
+    {
+        var json = ChartJson.Serialize(Sample()).Replace("\"schemaVersion\":1", "\"schemaVersion\":2");
+
+        var preview = ChartJson.Deserialize(json).Value!;
+        var layout = LayoutEngine.Layout(preview, Settings(), new FakeMeasurer());
+
+        Assert.Equal(preview.Sections.Count, layout.Primitives.OfType<FilledRectPrimitive>().Count());
+    }
+
+    [Fact]
+    public void Settings_WithADateFormatLayoutCannotUse_AreReported()
+    {
+        var result = SettingsJson.Deserialize("{\"schemaVersion\":1,\"dateFormat\":\"hh\",\"palette\":[\"#112233\"]}");
+
+        Assert.Equal(LoadStatus.Invalid, result.Status);
+        Assert.Null(result.Value);
+        Assert.NotNull(result.Error);
     }
 
     [Fact]

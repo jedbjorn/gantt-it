@@ -1,3 +1,4 @@
+using GanttIt.Core.Dates;
 using GanttIt.Core.Model;
 
 namespace GanttIt.Core.Serialization;
@@ -15,7 +16,8 @@ public static class SettingsJson
 
     private static string? Problem(ProjectSettings settings)
     {
-        if (settings.DateFormat is null) return "The settings have no date format.";
+        // Layout formats every date with this pattern, so a bad one must not load.
+        if (!DateFormats.IsValidPattern(settings.DateFormat, out var dateError)) return dateError;
         if (settings.Palette is null) return "The settings have no palette.";
         if (!double.IsFinite(settings.CellPadding)) return "The settings have a non-finite cell padding.";
         foreach (var style in new[] { settings.TitleTextStyle, settings.HeaderTextStyle, settings.BodyTextStyle, settings.ChartLineStyle, settings.HeaderLineStyle })

@@ -11,7 +11,8 @@ public enum LoadStatus
 
     /// <summary>
     /// Written by a newer add-in (higher SchemaVersion). <see cref="LoadResult{T}.Value"/>
-    /// holds a best-effort read for display, or null; it must not be edited or saved.
+    /// holds a structurally valid best-effort read for display, or null when none
+    /// could be made; it must not be edited or saved.
     /// </summary>
     NewerVersion,
 
@@ -79,8 +80,11 @@ internal static class JsonStore
 
         if (version > currentVersion)
         {
-            // Show what we can, but never edit or downgrade it.
+            // Show what we can, but never edit or downgrade it. The preview passes the
+            // same structural checks as an editable load, so displaying it (e.g. a
+            // home-screen thumbnail) can't fail; otherwise there is no preview.
             var preview = TryRead<T>(json, out _);
+            if (preview is not null && validate(preview) is not null) preview = null;
             return new LoadResult<T>(LoadStatus.NewerVersion, preview,
                 $"Written by a newer version of Gantt-It (schema {version}; this version reads {currentVersion}). It is read-only here.");
         }

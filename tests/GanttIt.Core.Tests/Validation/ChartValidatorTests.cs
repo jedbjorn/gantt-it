@@ -80,6 +80,26 @@ public class ChartValidatorTests
         Assert.Contains(IssueCode.LinkInvalid, Codes(chart));
     }
 
+    [Theory]
+    [InlineData(30)]
+    [InlineData(10_000_000)]
+    public void LinkLagThatDoesNotMatchTheDates_IsAnError(int lag)
+    {
+        var chart = Sequential(3, D(2026, 1, 1), gap: 2);
+        chart.Links.Add(new Link(Id(1), Id(2), lag)); // the real gap is 2 days
+
+        Assert.Contains(IssueCode.LinkInvalid, Codes(chart));
+    }
+
+    [Fact]
+    public void LinkLagMatchingTheDates_IsValid()
+    {
+        var chart = Sequential(3, D(2026, 1, 1), gap: 2);
+        chart.Links.Add(new Link(Id(1), Id(2), 2));
+
+        Assert.Empty(Codes(chart));
+    }
+
     [Fact]
     public void Widths_AndSettings_AreChecked()
     {

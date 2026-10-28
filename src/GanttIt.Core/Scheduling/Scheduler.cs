@@ -175,9 +175,8 @@ public static class Scheduler
 
     private static void PropagateForward(Chart chart, int index)
     {
-        for (var i = index; i < chart.Sections.Count - 1 && ApplyLink(chart, i); i++)
-        {
-        }
+        var i = index;
+        while (i < chart.Sections.Count - 1 && ApplyLink(chart, i)) i++;
     }
 
     /// <summary>Applies the link after <paramref name="index"/>, if any. Returns whether one existed.</summary>
