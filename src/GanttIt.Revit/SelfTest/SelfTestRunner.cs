@@ -848,8 +848,9 @@ internal sealed class SelfTestRunner
             update.Message);
         if (update.Succeeded && ChartGenerator.LastDraw is { } draw)
             CheckChart(new FixtureRun(part, view.Id, draw), "after partial hand delete and Update", []);
-        var removed = _backend.Delete(view.Id);
-        _r.Check("A7", "the partly hand-deleted chart deletes cleanly", removed.Succeeded && _doc.GetElement(view.Id) is null,
+        var partId = view.Id;
+        var removed = _backend.Delete(partId);
+        _r.Check("A7", "the partly hand-deleted chart deletes cleanly", removed.Succeeded && _doc.GetElement(partId) is null,
             new JsonObject { ["status"] = removed.Status.ToString() }, removed.Message);
     }
 
@@ -1262,10 +1263,11 @@ internal sealed class SelfTestRunner
         var original = sourceEntry?.Load.Value;
         if (original is null) return;
         original.Sections[0].Name = "Kickoff (after reopen)";
-        var update = _backend.Update(source.Id, original, _settings);
+        var sourceId = source.Id; // the View object is invalid once deleted
+        var update = _backend.Update(sourceId, original, _settings);
         var afterUpdate = Unchanged(copyW, w) && Unchanged(copyP, p);
-        var delete = _backend.Delete(source.Id);
-        var sourceGone = _doc.GetElement(source.Id) is null;
+        var delete = _backend.Delete(sourceId);
+        var sourceGone = _doc.GetElement(sourceId) is null;
         _r.Check("A9", "after reopen: updating then deleting the original leaves each copy's elements untouched",
             update.Succeeded && afterUpdate && delete.Succeeded && sourceGone && Unchanged(copyW, w) && Unchanged(copyP, p)
             && !_backend.ListCharts().Any(e => e.ViewId == copyW.Id || e.ViewId == copyP.Id),
