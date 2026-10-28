@@ -22,4 +22,7 @@ public sealed class Section
     /// </summary>
     [JsonIgnore]
     public int Duration => End.DayNumber - Start.DayNumber + 1;
+
+    /// <summary>A copy with the same id.</summary>
+    public Section Clone() => new() { Id = Id, Name = Name, Start = Start, End = End, Color = Color };
 }

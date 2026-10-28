@@ -44,6 +44,24 @@ public sealed class Chart
     public static Chart Create(string name, Guid? id = null) =>
         new() { Id = id ?? Guid.NewGuid(), Name = name, Title = name };
 
+    /// <summary>
+    /// A deep copy: new <see cref="Section"/> objects and lists, same ids. The
+    /// editor works on a copy so Cancel leaves the stored chart untouched.
+    /// </summary>
+    public Chart Clone() => new()
+    {
+        Id = Id,
+        Name = Name,
+        Title = Title,
+        Timescale = Timescale,
+        Columns = Columns,
+        TimelineWidth = TimelineWidth,
+        NameMaxWidth = NameMaxWidth,
+        Sections = Sections.Select(s => s.Clone()).ToList(),
+        Links = [.. Links],
+        SchemaVersion = SchemaVersion,
+    };
+
     /// <summary>Index of the section with <paramref name="sectionId"/>, or −1.</summary>
     public int IndexOf(Guid sectionId) => Sections.FindIndex(s => s.Id == sectionId);
 
