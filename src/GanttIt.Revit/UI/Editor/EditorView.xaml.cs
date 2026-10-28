@@ -1,6 +1,8 @@
+using System.Collections.Specialized;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using System.Windows.Threading;
 using GanttIt.Core.Editing;
 
 namespace GanttIt.Revit.UI.Editor;
@@ -16,9 +18,28 @@ public partial class EditorView : UserControl
     private Point _dragStart;
     private SectionRowViewModel? _dragRow;
 
-    public EditorView() => InitializeComponent();
+    public EditorView()
+    {
+        InitializeComponent();
+        DataContextChanged += (_, e) =>
+        {
+            if (e.OldValue is EditorViewModel old) old.Rows.CollectionChanged -= OnRowsChanged;
+            if (e.NewValue is EditorViewModel now) now.Rows.CollectionChanged += OnRowsChanged;
+        };
+    }
 
     private EditorViewModel? Editor => DataContext as EditorViewModel;
+
+    /// <summary>Add section appends a row: scroll it into view once it is laid out.</summary>
+    private void OnRowsChanged(object? sender, NotifyCollectionChangedEventArgs e)
+    {
+        if (e.Action != NotifyCollectionChangedAction.Add) return;
+        Dispatcher.BeginInvoke(DispatcherPriority.Loaded, () =>
+        {
+            if (SectionsList.Template?.FindName("PART_Scroller", SectionsList) is ScrollViewer scroller)
+                scroller.ScrollToEnd();
+        });
+    }
 
     private void OnHandleMouseDown(object sender, MouseButtonEventArgs e)
     {

@@ -29,15 +29,11 @@ public sealed class EditorViewModel : ObservableObject
     public const string RestoredNoticeId = "Editor.RestoredNotice";
     private const int MaxNotices = 4;
 
-    /// <summary>Charts whose hand-edit warning was already shown in this Revit session (§7.4: once per chart).</summary>
-    private static readonly HashSet<Guid> HandEditWarned = [];
-
     private readonly MainViewModel _main;
     private readonly IDialogService _dialogs;
     private readonly ChartEntry? _existing;
     private readonly IReadOnlyCollection<string> _otherViewNames;
     private bool _keepDraft;
-    private bool _showHandEditWarning;
     private bool _canGenerate;
     private string? _nameError;
 
@@ -67,7 +63,6 @@ public sealed class EditorViewModel : ObservableObject
         DeleteCommand = new RelayCommand(Delete, () => IsExisting);
         SettingsCommand = new RelayCommand(() => OpenSettings());
         DismissNoticeCommand = new RelayCommand<NoticeViewModel>(n => Notices.Remove(n));
-        DismissHandEditWarningCommand = new RelayCommand(() => ShowHandEditWarning = false);
 
         if (draft is not null)
         {
@@ -78,8 +73,7 @@ public sealed class EditorViewModel : ObservableObject
 
         if (namesError is not null) AddNotice(namesError);
 
-        // §7.4: Update overwrites hand edits to Gantt-It's own elements; warn once per chart.
-        if (IsExisting && HandEditWarned.Add(Chart.Id)) _showHandEditWarning = true;
+        // Update is always a full, silent regeneration (§7.4, decision #16): no hand-edit warning.
 
         Revalidate();
         Preview.RenderNow();
@@ -186,20 +180,16 @@ public sealed class EditorViewModel : ObservableObject
     public string IssueSummary => Issues.Count switch
     {
         0 => IsExisting ? "Ready to update." : "Ready to generate.",
-        1 => "1 problem to fix before generating:",
-        _ => $"{Issues.Count} problems to fix before generating:",
+        1 => $"1 problem to fix before {Gerund}:",
+        _ => $"{Issues.Count} problems to fix before {Gerund}:",
     };
+
+    private string Gerund => IsExisting ? "updating" : "generating";
 
     public bool CanGenerate
     {
         get => _canGenerate;
         private set => SetField(ref _canGenerate, value);
-    }
-
-    public bool ShowHandEditWarning
-    {
-        get => _showHandEditWarning;
-        private set => SetField(ref _showHandEditWarning, value);
     }
 
     public PreviewViewModel Preview { get; }
@@ -215,8 +205,6 @@ public sealed class EditorViewModel : ObservableObject
     public ICommand SettingsCommand { get; }
 
     public ICommand DismissNoticeCommand { get; }
-
-    public ICommand DismissHandEditWarningCommand { get; }
 
     // ---- Scheduling edits, called by the rows -----------------------------------------------
 

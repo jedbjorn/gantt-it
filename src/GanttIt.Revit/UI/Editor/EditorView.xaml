@@ -64,13 +64,12 @@
     <Grid Margin="16,12,16,12">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />            <!-- 0 header -->
-            <RowDefinition Height="Auto" />            <!-- 1 hand-edit warning -->
-            <RowDefinition Height="Auto" />            <!-- 2 chart properties -->
-            <RowDefinition Height="Auto" />            <!-- 3 notices -->
-            <RowDefinition Height="*" MinHeight="140" /> <!-- 4 sections -->
-            <RowDefinition Height="Auto" />            <!-- 5 splitter -->
-            <RowDefinition Height="230" MinHeight="110" /> <!-- 6 preview -->
-            <RowDefinition Height="Auto" />            <!-- 7 issues + buttons -->
+            <RowDefinition Height="Auto" />            <!-- 1 chart properties -->
+            <RowDefinition Height="Auto" />            <!-- 2 notices -->
+            <RowDefinition Height="*" MinHeight="140" /> <!-- 3 sections -->
+            <RowDefinition Height="Auto" />            <!-- 4 splitter -->
+            <RowDefinition Height="230" MinHeight="110" /> <!-- 5 preview -->
+            <RowDefinition Height="Auto" />            <!-- 6 issues + buttons -->
         </Grid.RowDefinitions>
 
         <!-- 0 Header -->
@@ -87,22 +86,8 @@
                        TextTrimming="CharacterEllipsis" AutomationProperties.AutomationId="Editor.Heading" />
         </DockPanel>
 
-        <!-- 1 Hand-edit warning (§7.4), once per chart -->
-        <Border Grid.Row="1" Style="{StaticResource WarningBanner}" Margin="0,0,0,10"
-                Visibility="{Binding ShowHandEditWarning, Converter={StaticResource BoolToVisible}}"
-                AutomationProperties.AutomationId="Editor.HandEditWarning">
-            <DockPanel>
-                <Button DockPanel.Dock="Right" Content="Got it" Command="{Binding DismissHandEditWarningCommand}"
-                        VerticalAlignment="Center" Margin="10,0,0,0"
-                        AutomationProperties.AutomationId="Editor.HandEditWarning.Dismiss" />
-                <TextBlock TextWrapping="Wrap" VerticalAlignment="Center"
-                           AutomationProperties.AutomationId="Editor.HandEditWarning.Text"
-                           Text="Update redraws everything Gantt-It drew on this legend. Changes made by hand to those elements (moved text, restyled lines, recoloured bars) are overwritten. Annotations you added yourself are kept." />
-            </DockPanel>
-        </Border>
-
-        <!-- 2 Chart properties -->
-        <Border Grid.Row="2" Style="{StaticResource Panel}" Margin="0,0,0,10">
+        <!-- 1 Chart properties -->
+        <Border Grid.Row="1" Style="{StaticResource Panel}" Margin="0,0,0,10">
             <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto" />
@@ -168,8 +153,8 @@
             </Grid>
         </Border>
 
-        <!-- 3 Inline notices -->
-        <ItemsControl Grid.Row="3" ItemsSource="{Binding Notices}" Focusable="False"
+        <!-- 2 Inline notices -->
+        <ItemsControl Grid.Row="2" ItemsSource="{Binding Notices}" Focusable="False"
                       AutomationProperties.AutomationId="Editor.Notices">
             <ItemsControl.ItemTemplate>
                 <DataTemplate DataType="{x:Type editor:NoticeViewModel}">
@@ -189,8 +174,8 @@
             </ItemsControl.ItemTemplate>
         </ItemsControl>
 
-        <!-- 4 Sections grid -->
-        <Border Grid.Row="4" Style="{StaticResource Panel}" Padding="0">
+        <!-- 3 Sections grid -->
+        <Border Grid.Row="3" Style="{StaticResource Panel}" Padding="0">
             <DockPanel>
                 <!-- Column headers. The trailing column matches the rows' scroll bar. -->
                 <Border DockPanel.Dock="Top" BorderBrush="{StaticResource BorderBrush}" BorderThickness="0,0,0,1"
@@ -227,10 +212,25 @@
                             AutomationProperties.AutomationId="Editor.AddSection" AutomationProperties.Name="Add section" />
                 </Border>
 
-                <ScrollViewer x:Name="RowsScroller" VerticalScrollBarVisibility="Visible" HorizontalScrollBarVisibility="Disabled"
-                              Focusable="False">
-                    <ItemsControl ItemsSource="{Binding Rows}" Focusable="False" AllowDrop="True"
-                                  AutomationProperties.AutomationId="Editor.Sections" AutomationProperties.Name="Sections">
+                <!-- Virtualized (Beyond Intention: hundreds of sections). The ItemsControl hosts its own
+                     ScrollViewer so the VirtualizingStackPanel can realize only the visible rows. -->
+                <ItemsControl x:Name="SectionsList" ItemsSource="{Binding Rows}" Focusable="False" AllowDrop="True"
+                              VirtualizingPanel.IsVirtualizing="True" VirtualizingPanel.VirtualizationMode="Standard"
+                              VirtualizingPanel.ScrollUnit="Pixel" ScrollViewer.CanContentScroll="True"
+                              AutomationProperties.AutomationId="Editor.Sections" AutomationProperties.Name="Sections">
+                        <ItemsControl.Template>
+                            <ControlTemplate TargetType="ItemsControl">
+                                <ScrollViewer x:Name="PART_Scroller" Focusable="False" CanContentScroll="True"
+                                              VerticalScrollBarVisibility="Visible" HorizontalScrollBarVisibility="Disabled">
+                                    <ItemsPresenter />
+                                </ScrollViewer>
+                            </ControlTemplate>
+                        </ItemsControl.Template>
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <VirtualizingStackPanel />
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
                         <ItemsControl.ItemTemplate>
                             <DataTemplate DataType="{x:Type editor:SectionRowViewModel}">
                                 <Border Style="{StaticResource RowBorder}" AllowDrop="True" ToolTip="{Binding Error}"
@@ -320,18 +320,17 @@
                                 </Border>
                             </DataTemplate>
                         </ItemsControl.ItemTemplate>
-                    </ItemsControl>
-                </ScrollViewer>
+                </ItemsControl>
             </DockPanel>
         </Border>
 
-        <!-- 5 Splitter: drag to give the preview more room -->
-        <GridSplitter Grid.Row="5" Height="10" HorizontalAlignment="Stretch" VerticalAlignment="Center"
+        <!-- 4 Splitter: drag to give the preview more room -->
+        <GridSplitter Grid.Row="4" Height="10" HorizontalAlignment="Stretch" VerticalAlignment="Center"
                       Background="Transparent" ResizeBehavior="PreviousAndNext" Focusable="False"
                       ToolTip="Drag to resize the preview" />
 
-        <!-- 6 Live preview (§2.2, §6) -->
-        <Border Grid.Row="6" Style="{StaticResource Panel}" Padding="0">
+        <!-- 5 Live preview (§2.2, §6) -->
+        <Border Grid.Row="5" Style="{StaticResource Panel}" Padding="0">
             <DockPanel>
                 <DockPanel DockPanel.Dock="Top" Margin="10,6,10,0">
                     <TextBlock Text="Preview" Style="{StaticResource SectionText}" Margin="0" />
@@ -352,8 +351,8 @@
             </DockPanel>
         </Border>
 
-        <!-- 7 Validation + buttons -->
-        <DockPanel Grid.Row="7" Margin="0,10,0,0">
+        <!-- 6 Validation + buttons -->
+        <DockPanel Grid.Row="6" Margin="0,10,0,0">
             <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Bottom">
                 <Button Content="Delete chart" Command="{Binding DeleteCommand}" Style="{StaticResource DangerButton}"
                         Visibility="{Binding IsExisting, Converter={StaticResource BoolToVisible}}" Margin="0,0,24,0"
