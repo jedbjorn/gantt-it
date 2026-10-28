@@ -52,6 +52,7 @@ internal static class SelfTestHarness
         });
 
         application.DialogBoxShowing += OnDialog;
+        application.Idling += ZoomOnce.OnIdling;
 
         if (!File.Exists(AutorunPath)) return;
         try

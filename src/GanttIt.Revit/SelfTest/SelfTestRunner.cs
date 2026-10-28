@@ -16,11 +16,14 @@ namespace GanttIt.Revit.SelfTest;
 /// The Gantt-It Self-Test (§8.1). Phases:
 /// <list type="bullet">
 /// <item><c>1</c>: settings, the fixture charts, read-back geometry (A5), chart
-/// correctness (A6), preview calibration (A15), Update on a sheet with a hand note
-/// and the duplicated-legend hazard (A7), fault injection (A11), PNG exports, a
-/// snapshot for phase 2, save, and a final "GI Undo" chart for the GUI Undo check.</item>
+/// correctness (A6), preview calibration (A15), lengths in project units (D11),
+/// Update on a sheet with a hand note (A7), detached copies and hand-deleted
+/// charts (A9, decision #17), fault injection and the warning path (A11), PNG
+/// exports, a snapshot for phase 2, save, and a final "GI Undo" chart for the GUI
+/// Undo check.</item>
 /// <item><c>2</c>: after save, close and reopen, the chart and settings read back
-/// identical and a duplicated legend gets a new Id and is regenerated (A9).</item>
+/// identical, the copies are still detached, and updating then deleting the
+/// original leaves each copy's elements untouched (A9).</item>
 /// <item><c>undo-check</c>: after one GUI Undo, the "GI Undo" chart is gone (A11).</item>
 /// </list>
 /// Every check records PASS/FAIL and its numbers in the report.
@@ -30,8 +33,10 @@ internal sealed class SelfTestRunner
     private const string UndoChartName = "GI Undo";
     private const string FaultChartName = "GI Fault";
     private const string SheetName = "GI Self-Test Sheet";
-    private const string DupAName = "GI Days copy (with detailing)";
-    private const string DupBName = "GI Multi-year copy";
+    private const string CopyWName = "GI Days copy (with detailing)";
+    private const string CopyPName = "GI Days copy (plain)";
+    private const string AllDeletedName = "GI Hand-deleted";
+    private const string PartDeletedName = "GI Partly deleted";
     private static readonly Rgb FaultColor = Rgb.Parse("#13579B");
     private static readonly Rgb UndoColor = Rgb.Parse("#FEDCBA");
 
@@ -46,6 +51,11 @@ internal sealed class SelfTestRunner
     private ProjectSettings _settings = new();
     private ResolvedStyles? _styles;
     private ElementId? _sheetId;
+    private ElementId? _viewportId;
+    private JsonObject? _copies;
+
+    /// <summary>Per-element geometry read back from Revit (§8.1), so A5 can be re-checked off the VM.</summary>
+    private readonly JsonObject _geometry = [];
 
     private sealed record FixtureRun(Chart Chart, ElementId ViewId, DrawResult Draw);
 
@@ -83,6 +93,7 @@ internal sealed class SelfTestRunner
             ["workshared"] = _doc.IsWorkshared,
         };
 
+        _r.Section("geometry", _geometry);
         switch (phase)
         {
             case "1":
@@ -115,10 +126,12 @@ internal sealed class SelfTestRunner
             _r.Step("A6", $"generate {chart.Name}", () => GenerateFixture(chart));
 
         _r.Step("A15", "calibrated preview vs Revit", CheckCalibration);
+        _r.Step("D11", "lengths in project units", CheckLengths);
         _r.Step("A7", "update on a sheet", CheckUpdateOnSheet);
-        _r.Step("A7", "duplicated chart legend", CheckDuplicateHazard);
-        _r.Step("A9", "prepare duplicate for reopen", PrepareDuplicateForReopen);
+        _r.Step("A9", "duplicated legends are detached", CheckCopiesDetached);
+        _r.Step("A9", "hand-deleted charts", CheckHandDeleted);
         _r.Step("A11", "fault injection", CheckFaults);
+        _r.Step("A11", "warning preprocessing", CheckWarningPath);
         _r.Step("A6", "list charts", CheckListCharts);
         _r.Step("evidence", "export images", ExportImages);
         _r.Step("A9", "snapshot", WriteSnapshot);
@@ -141,10 +154,14 @@ internal sealed class SelfTestRunner
             var r = _backend.Delete(entry.ViewId);
             removed.Add($"{entry.ViewName}: {r.Status}");
         }
+        // Detached "GI " legends (copies, hand-deleted charts) are plain legends that the
+        // backend refuses to delete; remove them directly so a rerun's names don't collide.
+        var leftovers = RevitUtil.Legends(_doc).Where(v => v.Name.StartsWith("GI ", StringComparison.Ordinal)).Select(v => v.Id).ToList();
+        if (leftovers.Count > 0) SelfTestTx("remove leftover legends", () => _doc.Delete(leftovers));
         var sheets = new FilteredElementCollector(_doc).OfClass(typeof(ViewSheet)).Cast<ViewSheet>()
             .Where(s => s.Name == SheetName).Select(s => s.Id).ToList();
         if (sheets.Count > 0) SelfTestTx("remove sheets", () => _doc.Delete(sheets));
-        _r.Section("cleanup", new JsonObject { ["charts"] = removed, ["sheets"] = sheets.Count });
+        _r.Section("cleanup", new JsonObject { ["charts"] = removed, ["detachedLegends"] = leftovers.Count, ["sheets"] = sheets.Count });
     }
 
     /// <summary>
@@ -274,6 +291,18 @@ internal sealed class SelfTestRunner
             }
         }
 
+        _geometry[label] = new JsonObject
+        {
+            ["viewId"] = view.Id.Value,
+            ["viewUniqueId"] = view.UniqueId,
+            ["units"] = "feet, legend coordinates (Y up)",
+            ["gridXs"] = new JsonArray(gridXs.Select(x => (JsonNode)x).ToArray()),
+            ["gridYs"] = new JsonArray(gridYs.Select(y => (JsonNode)y).ToArray()),
+            ["textBoxes"] = new JsonArray(boxes.Select(b => (JsonNode)new JsonArray(b.Left, b.Bottom, b.Right, b.Top)).ToArray()),
+            ["textBoxesFromCoord"] = new JsonArray(coordBoxes.Select(b => (JsonNode)new JsonArray(b.Left, b.Bottom, b.Right, b.Top)).ToArray()),
+            ["lines"] = new JsonArray(segments.Select(l => (JsonNode)new JsonArray(l.Item1.X, l.Item1.Y, l.Item2.X, l.Item2.Y)).ToArray()),
+        };
+
         var report = GeometryChecker.Check(boxes, segments, gridXs, gridYs);
         var coordReport = GeometryChecker.Check(coordBoxes, segments, gridXs, gridYs);
         var violations = report.Violations.Concat(coordReport.Violations).ToList();
@@ -370,7 +399,9 @@ internal sealed class SelfTestRunner
             view.ViewType == ViewType.Legend && view.Scale == 1,
             new JsonObject { ["viewType"] = view.ViewType.ToString(), ["scale"] = view.Scale });
 
-        _r.Check("A6", $"{label}: element counts match the fixture",
+        CheckFixtureCounts(run.Chart, notes, regions, label);
+
+        _r.Check("A6", $"{label}: element counts match the layout",
             notes.Count == expectedTexts && curves.Count == expectedLines && regions.Count == expectedBars
             && regions.Count == run.Chart.Sections.Count && other == 0 && strays == 0 && run.Draw.SkippedShortLines == 0,
             new JsonObject
@@ -448,6 +479,39 @@ internal sealed class SelfTestRunner
                 ["wrongFillType"] = wrongFill,
                 ["regionsWithVisibleBoundary"] = visibleBoundary,
                 ["fillTypes"] = new JsonArray(typeNames.Select(n => (JsonNode)n).ToArray()),
+            });
+    }
+
+    /// <summary>
+    /// Counts derived from the fixture definition alone, independent of the layout:
+    /// one bar per section, one body note per section and visible column, one header
+    /// per column, one title, and every section name drawn in the body.
+    /// </summary>
+    private void CheckFixtureCounts(Chart chart, List<TextNote> notes, List<FilledRegion> regions, string label)
+    {
+        var styles = _styles!;
+        var columns = 1 + new[] { ChartColumns.Start, ChartColumns.End, ChartColumns.Duration }.Count(c => chart.Columns.HasFlag(c));
+        var headerTexts = new HashSet<string>(StringComparer.Ordinal) { "Section", "Start", "End", "Dur" };
+        var body = notes.Where(n => n.GetTypeId() == styles.BodyText).ToList();
+        var bodyTexts = body.Select(n => n.Text.TrimEnd('\r')).ToHashSet(StringComparer.Ordinal);
+        var titles = notes.Count(n => n.GetTypeId() == styles.TitleText);
+        var columnHeaders = notes.Count(n => n.GetTypeId() == styles.HeaderText && headerTexts.Contains(n.Text.TrimEnd('\r')));
+        var namesDrawn = chart.Sections.Count(s => bodyTexts.Contains(RevitTextMeasurer.RevitText(s.Name)));
+        var expectedTitles = string.IsNullOrWhiteSpace(chart.Title) ? 0 : 1;
+        _r.Check("A6", $"{label}: element counts match the fixture definition (independent of the layout)",
+            regions.Count == chart.Sections.Count && body.Count == chart.Sections.Count * columns
+            && titles == expectedTitles && columnHeaders == columns && namesDrawn == chart.Sections.Count,
+            new JsonObject
+            {
+                ["sections"] = chart.Sections.Count,
+                ["visibleColumns"] = columns,
+                ["bars"] = regions.Count,
+                ["bodyNotes"] = body.Count,
+                ["expectedBodyNotes"] = chart.Sections.Count * columns,
+                ["titleNotes"] = titles,
+                ["expectedTitleNotes"] = expectedTitles,
+                ["columnHeaderNotes"] = columnHeaders,
+                ["sectionNamesDrawn"] = namesDrawn,
             });
     }
 
@@ -530,6 +594,7 @@ internal sealed class SelfTestRunner
             sheet.Name = SheetName;
             _sheetId = sheet.Id;
             viewportId = Viewport.Create(_doc, sheet.Id, view.Id, new XYZ(0.6, 0.6, 0)).Id;
+            _viewportId = viewportId;
             noteId = TextNote.Create(_doc, view.Id, new XYZ(0, Core.Model.Units.FromMillimeters(15), 0),
                 "Hand-added note (must survive Update)", _settings.BodyTextStyle is { } s ? StyleReader.ResolveText(_doc, s)!.Id
                     : _doc.GetDefaultElementTypeId(ElementTypeGroup.TextNoteType)).Id;
@@ -557,6 +622,9 @@ internal sealed class SelfTestRunner
             new JsonObject
             {
                 ["status"] = result.Status.ToString(),
+                ["viewId"] = run.ViewId.Value,
+                ["viewportId"] = viewportId.Value,
+                ["sheetId"] = _sheetId?.Value,
                 ["sameViewUniqueId"] = after?.UniqueId == viewUid,
                 ["viewportExists"] = viewport is not null,
                 ["viewportShowsChart"] = viewport?.ViewId == run.ViewId,
@@ -578,111 +646,211 @@ internal sealed class SelfTestRunner
         }
     }
 
+    /// <summary>D11: a paper length formats in project units and parses back within 0.05 mm.</summary>
+    private void CheckLengths()
+    {
+        var rows = new JsonObject();
+        var pass = true;
+        foreach (var mm in new[] { 1.5, 180.0 })
+        {
+            var feet = Core.Model.Units.FromMillimeters(mm);
+            var text = _backend.FormatLength(feet);
+            var parsed = _backend.TryParseLength(text, out var back);
+            var errorMm = parsed ? Math.Abs(back - feet) * 304.8 : double.NaN;
+            pass &= parsed && errorMm <= 0.05;
+            rows[$"{mm}mm"] = new JsonObject { ["text"] = text, ["parsed"] = parsed, ["roundTripErrorMm"] = Report.N(errorMm, 5) };
+        }
+        _r.Check("D11", "paper lengths show in project units and round-trip within 0.05 mm (1.5 mm, 180 mm)", pass, rows);
+    }
+
     /// <summary>
-    /// The §7.2 hazard: a legend duplicated With Detailing carries the source's entity,
-    /// so its GeneratedIds name the source chart's live elements. Update and Delete of
-    /// the copy must leave the source untouched.
+    /// Decision #17 (§7.2 v1.1): legends duplicated in Revit, plain or with detailing,
+    /// are detached plain legends. They are not listed; Update and Delete refuse them;
+    /// updating the original and Regenerate all leave their elements untouched.
     /// </summary>
-    private void CheckDuplicateHazard()
+    private void CheckCopiesDetached()
     {
         var run = Fixture(Fixtures.Days);
         var source = (View)_doc.GetElement(run.ViewId);
         var sourceStored = ChartStore.Read(source)!;
-        var sourceIds = sourceStored.GeneratedIds.ToList();
 
-        ElementId copyId = ElementId.InvalidElementId;
-        SelfTestTx("duplicate a chart legend with detailing", () =>
+        ElementId copyW = ElementId.InvalidElementId, copyP = ElementId.InvalidElementId;
+        SelfTestTx("duplicate a chart legend (with detailing, and plain)", () =>
         {
-            copyId = source.Duplicate(ViewDuplicateOption.WithDetailing);
-            _doc.GetElement(copyId).Name = DupAName;
+            copyW = source.Duplicate(ViewDuplicateOption.WithDetailing);
+            _doc.GetElement(copyW).Name = CopyWName;
+            copyP = source.Duplicate(ViewDuplicateOption.Duplicate);
+            _doc.GetElement(copyP).Name = CopyPName;
         });
-        var copy = (View)_doc.GetElement(copyId);
-        var inherited = ChartStore.Read(copy);
-        var inheritedDetail = new FilteredElementCollector(_doc, copyId).WhereElementIsNotElementType()
-            .Count(e => e.OwnerViewId == copyId && e is TextNote or DetailCurve or FilledRegion);
+        var w0 = CopyState(copyW);
+        var p0 = CopyState(copyP);
 
-        var entries = _backend.ListCharts();
-        var copyEntry = entries.First(e => e.ViewId == copyId);
-        var sourceEntry = entries.First(e => e.ViewId == run.ViewId);
-        _r.Check("A7", "duplicated chart legend: the copy carries the source entity and gets a new Chart.Id on load",
-            inherited is not null && inherited.ChartJson == sourceStored.ChartJson
-            && inherited.GeneratedIds.SequenceEqual(sourceIds)
-            && copyEntry.Load.Value is not null && copyEntry.Load.Value.Id != run.Chart.Id
-            && sourceEntry.Load.Value?.Id == run.Chart.Id,
+        var listed = _backend.ListCharts();
+        var copyListed = listed.Any(e => e.ViewId == copyW || e.ViewId == copyP);
+        var sourceListed = listed.Any(e => e.ViewId == run.ViewId);
+        _r.Check("A9", "duplicated legends (with detailing, plain) are detached: not listed, entity copied verbatim, no owned GeneratedIds",
+            !copyListed && sourceListed && w0.Entity == sourceStored.ChartJson && p0.Entity == sourceStored.ChartJson
+            && !w0.Live && !p0.Live && w0.Owned.Count > 0 && p0.Owned.Count == 0,
             new JsonObject
             {
-                ["entityCopiedVerbatim"] = inherited?.ChartJson == sourceStored.ChartJson,
-                ["copyChartIdIsNew"] = copyEntry.Load.Value?.Id != run.Chart.Id,
-                ["sourceChartIdKept"] = sourceEntry.Load.Value?.Id == run.Chart.Id,
-                ["copiedDetailElements"] = inheritedDetail,
+                ["copiesListed"] = copyListed,
+                ["sourceListed"] = sourceListed,
+                ["entityCopiedVerbatim"] = w0.Entity == sourceStored.ChartJson && p0.Entity == sourceStored.ChartJson,
+                ["withDetailingOwnedElements"] = w0.Owned.Count,
+                ["plainOwnedElements"] = p0.Owned.Count,
+                ["withDetailingLive"] = w0.Live,
+                ["plainLive"] = p0.Live,
             });
 
-        var update = _backend.Update(copyId, copyEntry.Load.Value!, _settings);
-        var sourceAfter = ChartStore.Read(source)!;
-        var sourceIntact = sourceIds.Count(uid => _doc.GetElement(uid) is { } e && e.OwnerViewId == run.ViewId);
-        var copyStored = ChartStore.Read(copy)!;
-        var copyChart = ChartJson.Deserialize(copyStored.ChartJson).Value;
-        var copyOwned = copyStored.GeneratedIds.Count(uid => _doc.GetElement(uid) is { } e && e.OwnerViewId == copyId);
-        _r.Check("A7", "duplicated chart legend: Update of the copy never touches the source chart (OwnerViewId rule)",
-            update.Succeeded && sourceIntact == sourceIds.Count && sourceAfter.ChartJson == sourceStored.ChartJson
-            && sourceAfter.GeneratedIds.SequenceEqual(sourceIds)
-            && copyOwned == copyStored.GeneratedIds.Count && !copyStored.GeneratedIds.Intersect(sourceIds).Any()
-            && copyChart is not null && copyChart.Id != run.Chart.Id,
+        var results = new List<(string What, ActionResult Result)>();
+        foreach (var (id, name) in new[] { (copyW, CopyWName), (copyP, CopyPName) })
+        {
+            var chart = ChartJson.Deserialize(ChartStore.Read((View)_doc.GetElement(id))!.ChartJson).Value!;
+            chart.Name = name;
+            results.Add(($"Update {name}", _backend.Update(id, chart, _settings)));
+            results.Add(($"Delete {name}", _backend.Delete(id)));
+        }
+        var sourceIds = ChartStore.Read(source)!.GeneratedIds.ToList();
+        _r.Check("A9", "Update and Delete refuse both detached copies (Blocked); copies and source unchanged",
+            results.All(r => r.Result.Status == ActionStatus.Blocked)
+            && CopyState(copyW).SameAs(w0) && CopyState(copyP).SameAs(p0)
+            && sourceIds.SequenceEqual(sourceStored.GeneratedIds),
+            new JsonObject(results.Select(r => KeyValuePair.Create(r.What, (JsonNode?)r.Result.Status.ToString()))),
+            results.FirstOrDefault(r => r.Result.Status == ActionStatus.Blocked).Result?.Message);
+
+        // The original is still a chart: update it.
+        var original = run.Chart;
+        original.Sections[1].Name = "Survey (revised)";
+        var update = _backend.Update(run.ViewId, original, _settings);
+        _r.Check("A9", "updating the original leaves both copies' elements and entities untouched",
+            update.Succeeded && CopyState(copyW).SameAs(w0) && CopyState(copyP).SameAs(p0)
+            && !_backend.ListCharts().Any(e => e.ViewId == copyW || e.ViewId == copyP),
             new JsonObject
             {
                 ["status"] = update.Status.ToString(),
-                ["sourceGeneratedIds"] = sourceIds.Count,
-                ["sourceElementsIntact"] = sourceIntact,
-                ["copyGeneratedIds"] = copyStored.GeneratedIds.Count,
-                ["copyGeneratedOwnedByCopy"] = copyOwned,
-                ["copyIdPersisted"] = copyChart?.Id != run.Chart.Id,
-                ["copiedDetailElementsKeptAsHandAnnotation"] = inheritedDetail,
+                ["withDetailingOwnedElements"] = CopyState(copyW).Owned.Count,
             },
             update.Message);
+        if (update.Succeeded && ChartGenerator.LastDraw is { } draw)
+        {
+            var updated = run with { Draw = draw };
+            _runs[_runs.IndexOf(run)] = updated;
+            CheckChart(updated, "after Update (copies present)", []);
+        }
 
-        var delete = _backend.Delete(copyId);
-        var sourceIntactAfterDelete = sourceIds.Count(uid => _doc.GetElement(uid) is { } e && e.OwnerViewId == run.ViewId);
-        _r.Check("A7", "duplicated chart legend: Delete of the copy leaves the source chart intact",
-            delete.Succeeded && _doc.GetElement(copyId) is null && sourceIntactAfterDelete == sourceIds.Count,
-            new JsonObject
-            {
-                ["status"] = delete.Status.ToString(),
-                ["copyGone"] = _doc.GetElement(copyId) is null,
-                ["sourceElementsIntact"] = sourceIntactAfterDelete,
-            },
-            delete.Message);
+        var regen = _backend.RegenerateAll(_settings);
+        var live = _backend.ListCharts().Count;
+        _r.Check("A9", "Regenerate all redraws live charts only; the detached copies are untouched",
+            regen.Succeeded && CopyState(copyW).SameAs(w0) && CopyState(copyP).SameAs(p0)
+            && (regen.Message ?? "").Contains($"Regenerated {live} chart", StringComparison.Ordinal),
+            new JsonObject { ["status"] = regen.Status.ToString(), ["liveCharts"] = live },
+            regen.Message);
+
+        _copies = new JsonObject
+        {
+            ["sourceViewUniqueId"] = source.UniqueId,
+            ["withDetailing"] = w0.ToJson(_doc, copyW),
+            ["plain"] = p0.ToJson(_doc, copyP),
+        };
     }
 
-    // ------------------------------------------------------------------ A9 (phase 1 part)
-
-    private JsonObject? _dupB;
-
-    private void PrepareDuplicateForReopen()
+    /// <summary>The state of a (detached) legend: its entity and the elements it owns.</summary>
+    private sealed record LegendState(bool Exists, bool Live, string? Entity, string GeneratedIds, HashSet<string> Owned)
     {
-        var run = Fixture(Fixtures.MultiYear);
-        var source = (View)_doc.GetElement(run.ViewId);
-        ElementId copyId = ElementId.InvalidElementId;
-        SelfTestTx("duplicate a chart legend", () =>
+        public bool SameAs(LegendState o) =>
+            Exists == o.Exists && Live == o.Live && Entity == o.Entity && GeneratedIds == o.GeneratedIds && Owned.SetEquals(o.Owned);
+
+        public JsonObject ToJson(Document doc, ElementId id) => new()
         {
-            copyId = source.Duplicate(ViewDuplicateOption.Duplicate);
-            _doc.GetElement(copyId).Name = DupBName;
-        });
-        var copy = (View)_doc.GetElement(copyId);
-        var entry = _backend.ListCharts().First(e => e.ViewId == copyId);
-        _dupB = new JsonObject
-        {
-            ["viewUniqueId"] = copy.UniqueId,
-            ["sourceViewUniqueId"] = source.UniqueId,
-            ["sourceChartId"] = run.Chart.Id.ToString(),
-            ["storedChartJson"] = ChartStore.Read(copy)?.ChartJson,
+            ["viewUniqueId"] = doc.GetElement(id)?.UniqueId,
+            ["entity"] = Entity,
+            ["generatedIdsJoined"] = GeneratedIds,
+            ["ownedUniqueIds"] = new JsonArray(Owned.Order(StringComparer.Ordinal).Select(u => (JsonNode)u).ToArray()),
         };
-        _r.Check("A9", "duplicated chart legend (plain Duplicate): new Chart.Id on load, before reopen",
-            ChartStore.Read(copy) is not null && entry.Load.Value is not null && entry.Load.Value.Id != run.Chart.Id,
+    }
+
+    private LegendState CopyState(ElementId viewId) =>
+        _doc.GetElement(viewId) is View v ? StateOf(v) : new LegendState(false, false, null, "", []);
+
+    private LegendState StateOf(View v)
+    {
+        var stored = ChartStore.Read(v);
+        var owned = new FilteredElementCollector(_doc, v.Id).WhereElementIsNotElementType()
+            .Where(e => e.OwnerViewId == v.Id && e is TextNote or DetailCurve or FilledRegion)
+            .Select(e => e.UniqueId).ToHashSet(StringComparer.Ordinal);
+        return new LegendState(true, stored is not null && ChartStore.IsLive(_doc, stored), stored?.ChartJson,
+            stored is null ? "" : string.Join(",", stored.GeneratedIds), owned);
+    }
+
+    /// <summary>
+    /// A chart whose generated elements were all deleted by hand is detached; one with
+    /// only some deleted stays live and Update redraws it cleanly (Beyond Intention).
+    /// </summary>
+    private void CheckHandDeleted()
+    {
+        // All deleted.
+        var all = Fixtures.BuildDays();
+        all.Name = AllDeletedName;
+        var gen = _backend.Generate(all, _settings);
+        if (gen.ViewId is null)
+        {
+            _r.Check("A9", "hand-deleted: chart generated", false, detail: gen.Message);
+            return;
+        }
+        var view = (View)_doc.GetElement(gen.ViewId);
+        var ids = ChartStore.OwnedGeneratedIds(_doc, view, ChartStore.Read(view)!.GeneratedIds);
+        SelfTestTx("delete every generated element by hand", () => _doc.Delete(ids));
+        var listed = _backend.ListCharts().Any(e => e.ViewId == view.Id);
+        var update = _backend.Update(view.Id, all, _settings);
+        var delete = _backend.Delete(view.Id);
+        _r.Check("A9", "every generated element deleted by hand: the chart is detached (not listed; Update and Delete Blocked)",
+            !listed && update.Status == ActionStatus.Blocked && delete.Status == ActionStatus.Blocked && _doc.GetElement(view.Id) is View,
             new JsonObject
             {
-                ["copyEntityPresent"] = ChartStore.Read(copy) is not null,
-                ["copyChartIdIsNew"] = entry.Load.Value?.Id != run.Chart.Id,
-            });
+                ["deletedByHand"] = ids.Count,
+                ["listed"] = listed,
+                ["update"] = update.Status.ToString(),
+                ["delete"] = delete.Status.ToString(),
+                ["viewStillExists"] = _doc.GetElement(view.Id) is View,
+            },
+            update.Message);
+        SelfTestTx("remove the detached legend", () => _doc.Delete(view.Id));
+
+        // Some deleted.
+        var part = Fixtures.BuildMonths();
+        part.Name = PartDeletedName;
+        gen = _backend.Generate(part, _settings);
+        if (gen.ViewId is null || ChartGenerator.LastDraw is null)
+        {
+            _r.Check("A7", "partly hand-deleted: chart generated", false, detail: gen.Message);
+            return;
+        }
+        view = (View)_doc.GetElement(gen.ViewId);
+        var stored = ChartStore.Read(view)!;
+        var elements = stored.GeneratedIds.Select(u => _doc.GetElement(u)).ToList();
+        var victims = elements.OfType<TextNote>().Where((_, i) => i % 2 == 0).Select(e => e.Id)
+            .Concat(elements.OfType<DetailCurve>().Take(5).Select(e => e.Id))
+            .Concat(elements.OfType<FilledRegion>().Take(1).Select(e => e.Id))
+            .ToList();
+        SelfTestTx("delete some generated elements by hand", () => _doc.Delete(victims));
+        listed = _backend.ListCharts().Any(e => e.ViewId == view.Id);
+        update = _backend.Update(view.Id, part, _settings);
+        var oldLeft = stored.GeneratedIds.Count(u => _doc.GetElement(u) is not null);
+        _r.Check("A7", "some generated elements deleted by hand: still listed, and Update redraws it completely",
+            listed && update.Succeeded && oldLeft == 0,
+            new JsonObject
+            {
+                ["deletedByHand"] = victims.Count,
+                ["listed"] = listed,
+                ["update"] = update.Status.ToString(),
+                ["oldElementsLeft"] = oldLeft,
+            },
+            update.Message);
+        if (update.Succeeded && ChartGenerator.LastDraw is { } draw)
+            CheckChart(new FixtureRun(part, view.Id, draw), "after partial hand delete and Update", []);
+        var removed = _backend.Delete(view.Id);
+        _r.Check("A7", "the partly hand-deleted chart deletes cleanly", removed.Succeeded && _doc.GetElement(view.Id) is null,
+            new JsonObject { ["status"] = removed.Status.ToString() }, removed.Message);
     }
 
     private void WriteSnapshot()
@@ -707,7 +875,7 @@ internal sealed class SelfTestRunner
             ["document"] = _doc.PathName,
             ["settingsJson"] = ChartStore.ReadSettingsJson(_doc),
             ["charts"] = charts,
-            ["duplicate"] = _dupB?.DeepClone(),
+            ["copies"] = _copies?.DeepClone(),
         };
         Report.Write(SnapshotPath, snapshot);
         _r.Check("A9", "snapshot written for the reopen phase", File.Exists(SnapshotPath),
@@ -789,6 +957,52 @@ internal sealed class SelfTestRunner
                 ["generatedIntact"] = intact,
             },
             result.Message);
+    }
+
+    /// <summary>
+    /// The failure preprocessor's warning path: two coincident detail lines in a plain
+    /// legend, in a transaction using <see cref="GanttItFailures"/>. If Revit raises a
+    /// warning, it must be recorded and deleted with no dialog. The lines are removed
+    /// afterwards. If no warning is raised, that is recorded as observed, not as a check.
+    /// </summary>
+    private void CheckWarningPath()
+    {
+        var legend = RevitUtil.Legends(_doc).FirstOrDefault(v => ChartStore.Read(v) is null);
+        if (legend is null)
+        {
+            _r.Section("warningPath", "no plain legend to draw in");
+            return;
+        }
+        var dialogs = SelfTestHarness.DialogLog.Count;
+        var failures = new GanttItFailures();
+        var made = new List<ElementId>();
+        using (var t = new Transaction(_doc, "Gantt-It Self-Test: provoke a warning"))
+        {
+            var options = t.GetFailureHandlingOptions();
+            options.SetFailuresPreprocessor(failures);
+            options.SetClearAfterRollback(true);
+            t.SetFailureHandlingOptions(options);
+            t.Start();
+            var a = new XYZ(0, -3, 0);
+            var b = new XYZ(0.3, -3, 0);
+            for (var i = 0; i < 2; i++) made.Add(_doc.Create.NewDetailCurve(legend, Autodesk.Revit.DB.Line.CreateBound(a, b)).Id);
+            t.Commit();
+        }
+        var dialogDelta = SelfTestHarness.DialogLog.Count - dialogs;
+        var survivors = made.Where(id => _doc.GetElement(id) is not null).ToList();
+        if (survivors.Count > 0) SelfTestTx("remove the warning probe lines", () => _doc.Delete(survivors));
+
+        if (failures.Warnings.Count > 0)
+            _r.Check("A11", "a Revit warning is recorded and deleted by the failure preprocessor, with no dialog",
+                dialogDelta == 0,
+                new JsonObject
+                {
+                    ["warnings"] = failures.Warnings.Count,
+                    ["firstWarning"] = failures.Warnings[0],
+                    ["dialogs"] = dialogDelta,
+                });
+        else
+            _r.Section("warningPath", $"observed only: two coincident detail lines raised no warning (dialogs {dialogDelta})");
     }
 
     /// <summary>Generates "GI Undo" as the last transaction, for the GUI Undo check (undo-check phase).</summary>
@@ -966,7 +1180,7 @@ internal sealed class SelfTestRunner
             _r.Step("A9", $"reopen {name}", () => CheckReopenedChart(c));
         }
 
-        if (snapshot["duplicate"] is JsonObject dup) _r.Step("A9", "duplicate after reopen", () => CheckReopenedDuplicate(dup));
+        if (snapshot["copies"] is JsonObject copies) _r.Step("A9", "copies after reopen", () => CheckCopiesAfterReopen(copies));
     }
 
     private void CheckReopenedChart(JsonObject c)
@@ -1000,59 +1214,70 @@ internal sealed class SelfTestRunner
         CheckGeometry(view, ids, xs, ys, null, $"{name} after reopen");
     }
 
-    private void CheckReopenedDuplicate(JsonObject dup)
+    /// <summary>
+    /// After reopen the copies are still detached. Updating and then deleting the
+    /// original (through the backend) leaves each copy's elements and entity untouched.
+    /// </summary>
+    private void CheckCopiesAfterReopen(JsonObject copies)
     {
-        var copy = _doc.GetElement(dup["viewUniqueId"]!.GetValue<string>()) as View;
-        var source = _doc.GetElement(dup["sourceViewUniqueId"]!.GetValue<string>()) as View;
-        var sourceChartId = Guid.Parse(dup["sourceChartId"]!.GetValue<string>());
-        if (copy is null || source is null)
+        var source = _doc.GetElement(copies["sourceViewUniqueId"]!.GetValue<string>()) as View;
+        var copyW = _doc.GetElement(copies["withDetailing"]!["viewUniqueId"]!.GetValue<string>()) as View;
+        var copyP = _doc.GetElement(copies["plain"]!["viewUniqueId"]!.GetValue<string>()) as View;
+        if (source is null || copyW is null || copyP is null)
         {
-            _r.Check("A9", "duplicate after reopen: both legends exist", false);
+            _r.Check("A9", "copies after reopen: the source and both copies exist", false);
             return;
         }
 
-        var sourceStored = ChartStore.Read(source)!;
-        var copyStoredBefore = ChartStore.Read(copy)!;
-        var entries = _backend.ListCharts();
-        var copyEntry = entries.First(e => e.ViewId == copy.Id);
-        var sourceEntry = entries.First(e => e.ViewId == source.Id);
-        var storedIdBefore = ChartJson.Deserialize(copyStoredBefore.ChartJson).Value?.Id;
-        _r.Check("A9", "duplicated legend after reopen: the copy gets a new Chart.Id, the source keeps its own",
-            storedIdBefore == sourceChartId && copyEntry.Load.Value is not null && copyEntry.Load.Value.Id != sourceChartId
-            && sourceEntry.Load.Value?.Id == sourceChartId,
+        bool Unchanged(View v, JsonObject snap)
+        {
+            var st = StateOf(v);
+            var owned = snap["ownedUniqueIds"]!.AsArray().Select(n => n!.GetValue<string>()).ToHashSet(StringComparer.Ordinal);
+            return st.Exists && !st.Live && st.Entity == snap["entity"]?.GetValue<string>()
+                   && st.GeneratedIds == snap["generatedIdsJoined"]!.GetValue<string>() && st.Owned.SetEquals(owned);
+        }
+        var w = copies["withDetailing"]!.AsObject();
+        var p = copies["plain"]!.AsObject();
+
+        var listed = _backend.ListCharts();
+        var sourceEntry = listed.FirstOrDefault(e => e.ViewId == source.Id);
+        var copiesListed = listed.Any(e => e.ViewId == copyW.Id || e.ViewId == copyP.Id);
+        var blocked = new[] { copyW, copyP }.SelectMany(v =>
+        {
+            var chart = ChartJson.Deserialize(ChartStore.Read(v)!.ChartJson).Value!;
+            chart.Name = v.Name;
+            return new[] { _backend.Update(v.Id, chart, _settings), _backend.Delete(v.Id) };
+        }).ToList();
+        _r.Check("A9", "after reopen: copies still detached (not listed, Update and Delete Blocked), elements unchanged; source listed",
+            !copiesListed && sourceEntry?.Load.IsEditable == true && blocked.All(r => r.Status == ActionStatus.Blocked)
+            && Unchanged(copyW, w) && Unchanged(copyP, p),
             new JsonObject
             {
-                ["copyStoredIdEqualsSource"] = storedIdBefore == sourceChartId,
-                ["copyListedIdIsNew"] = copyEntry.Load.Value?.Id != sourceChartId,
-                ["sourceIdKept"] = sourceEntry.Load.Value?.Id == sourceChartId,
+                ["copiesListed"] = copiesListed,
+                ["sourceListed"] = sourceEntry is not null,
+                ["blocked"] = blocked.Count(r => r.Status == ActionStatus.Blocked),
+                ["withDetailingOwnedElements"] = StateOf(copyW).Owned.Count,
             });
 
-        // First edit: the copy is regenerated into its own elements; the source is untouched.
-        var sourceIds = sourceStored.GeneratedIds.ToList();
-        var ownedBefore = ChartStore.OwnedGeneratedIds(_doc, copy, copyStoredBefore.GeneratedIds).Count;
-        var result = _backend.Update(copy.Id, copyEntry.Load.Value!, _settings);
-        var copyStored = ChartStore.Read(copy)!;
-        var persisted = ChartJson.Deserialize(copyStored.ChartJson).Value;
-        var copyOwned = copyStored.GeneratedIds.Count(uid => _doc.GetElement(uid) is { } e && e.OwnerViewId == copy.Id);
-        var sourceIntact = sourceIds.Count(uid => _doc.GetElement(uid) is { } e && e.OwnerViewId == source.Id);
-        var relisted = _backend.ListCharts().First(e => e.ViewId == copy.Id).Load.Value?.Id;
-        _r.Check("A9", "duplicated legend: regenerated on its first edit with its new Id persisted; the source is untouched",
-            result.Succeeded && persisted is not null && persisted.Id != sourceChartId && relisted == persisted.Id
-            && copyStored.GeneratedIds.Count > 0 && copyOwned == copyStored.GeneratedIds.Count
-            && !copyStored.GeneratedIds.Intersect(sourceIds).Any()
-            && sourceIntact == sourceIds.Count && ChartStore.Read(source)!.ChartJson == sourceStored.ChartJson,
+        var original = sourceEntry?.Load.Value;
+        if (original is null) return;
+        original.Sections[0].Name = "Kickoff (after reopen)";
+        var update = _backend.Update(source.Id, original, _settings);
+        var afterUpdate = Unchanged(copyW, w) && Unchanged(copyP, p);
+        var delete = _backend.Delete(source.Id);
+        var sourceGone = _doc.GetElement(source.Id) is null;
+        _r.Check("A9", "after reopen: updating then deleting the original leaves each copy's elements untouched",
+            update.Succeeded && afterUpdate && delete.Succeeded && sourceGone && Unchanged(copyW, w) && Unchanged(copyP, p)
+            && !_backend.ListCharts().Any(e => e.ViewId == copyW.Id || e.ViewId == copyP.Id),
             new JsonObject
             {
-                ["status"] = result.Status.ToString(),
-                ["copyOwnedElementsBefore"] = ownedBefore,
-                ["copyGeneratedIdsAfter"] = copyStored.GeneratedIds.Count,
-                ["copyGeneratedOwnedByCopy"] = copyOwned,
-                ["newIdPersisted"] = persisted?.Id != sourceChartId,
-                ["idStableOnRelist"] = relisted == persisted?.Id,
-                ["sourceElementsIntact"] = sourceIntact,
-                ["sourceGeneratedIds"] = sourceIds.Count,
+                ["update"] = update.Status.ToString(),
+                ["copiesUnchangedAfterUpdate"] = afterUpdate,
+                ["delete"] = delete.Status.ToString(),
+                ["sourceGone"] = sourceGone,
+                ["withDetailingOwnedElements"] = StateOf(copyW).Owned.Count,
             },
-            result.Message);
+            update.Message ?? delete.Message);
     }
 
     // ================================================================== helpers
@@ -1114,7 +1339,11 @@ internal sealed class SelfTestRunner
         new(name.Select(ch => char.IsLetterOrDigit(ch) ? ch : '-').ToArray());
 }
 
-/// <summary>Zooms the newly activated chart view to fit on a later idle tick (view changes are asynchronous).</summary>
+/// <summary>
+/// Zooms the newly activated chart view to fit once it is active (view changes are
+/// asynchronous). The Idling handler is subscribed once at startup: Revit refuses a
+/// subscription made from inside an Idling handler, which is where autorun runs.
+/// </summary>
 internal static class ZoomOnce
 {
     private static ElementId? _target;
@@ -1124,21 +1353,21 @@ internal static class ZoomOnce
     {
         _target = viewId;
         _ticks = 0;
-        uiapp.Idling += OnIdling;
     }
 
-    private static void OnIdling(object? sender, Autodesk.Revit.UI.Events.IdlingEventArgs e)
+    public static void OnIdling(object? sender, Autodesk.Revit.UI.Events.IdlingEventArgs e)
     {
-        if (sender is not UIApplication uiapp) return;
+        if (_target is null || sender is not UIApplication uiapp) return;
         var uidoc = uiapp.ActiveUIDocument;
-        if (++_ticks > 50 || uidoc is null || _target is null)
+        if (++_ticks > 200 || uidoc is null)
         {
-            uiapp.Idling -= OnIdling;
+            _target = null;
             return;
         }
         if (uidoc.ActiveView?.Id != _target) return;
-        uiapp.Idling -= OnIdling;
-        uidoc.GetOpenUIViews().FirstOrDefault(v => v.ViewId == _target)?.ZoomToFit();
+        var target = _target;
+        _target = null;
+        uidoc.GetOpenUIViews().FirstOrDefault(v => v.ViewId == target)?.ZoomToFit();
     }
 }
 #endif
