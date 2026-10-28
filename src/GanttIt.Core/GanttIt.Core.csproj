@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    GanttIt.Core — pure managed logic shared by the Revit generator and the
+    WPF preview: data model, scheduling rules, timescale, layout engine,
+    geometry checks and JSON. No Revit and no WPF references (spec §8).
+  -->
+
+  <PropertyGroup>
+    <TargetFrameworks>net8.0;net10.0</TargetFrameworks>
+    <RootNamespace>GanttIt.Core</RootNamespace>
+    <AssemblyName>GanttIt.Core</AssemblyName>
+    <IsPackable>false</IsPackable>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+  </PropertyGroup>
+
+</Project>

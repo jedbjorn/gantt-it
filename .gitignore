@@ -35,3 +35,15 @@
 /.sc-state/map.db-shm
 /.sc-state/db_backups/
 # <<< subfloor managed ignores <<<
+
+## .NET build outputs
+[Bb]in/
+[Oo]bj/
+*.user
+*.suo
+.vs/
+.vscode/
+.idea/
+*.binlog
+TestResults/
+/artifacts/

@@ -1,0 +1,39 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    GanttIt.Revit — the Revit add-in. TargetFramework comes from $(RevitVersion)
+    (set by the Configuration in Directory.Build.props): 2026 → net8.0-windows,
+    2027 → net10.0-windows. Builds on Linux/macOS via EnableWindowsTargeting.
+
+    The Revit API comes from the Nice3point reference packages (versions in
+    Directory.Packages.props). ExcludeAssets=runtime keeps RevitAPI*.dll out of
+    the output: Revit supplies them at runtime.
+  -->
+
+  <PropertyGroup>
+    <TargetFramework>$(RevitTargetFramework)</TargetFramework>
+    <UseWPF>true</UseWPF>
+    <EnableWindowsTargeting>true</EnableWindowsTargeting>
+    <PlatformTarget>x64</PlatformTarget>
+    <OutputType>Library</OutputType>
+    <RootNamespace>GanttIt.Revit</RootNamespace>
+    <AssemblyName>GanttIt.Revit</AssemblyName>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Nice3point.Revit.Api.RevitAPI" ExcludeAssets="runtime" PrivateAssets="all" />
+    <PackageReference Include="Nice3point.Revit.Api.RevitAPIUI" ExcludeAssets="runtime" PrivateAssets="all" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\GanttIt.Core\GanttIt.Core.csproj" />
+  </ItemGroup>
+
+  <!-- Ribbon icons load from disk next to the DLL; the manifest ships alongside. -->
+  <ItemGroup>
+    <Content Include="Resources\icons\*.png" CopyToOutputDirectory="PreserveNewest" />
+    <None Update="GanttIt.addin" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+</Project>
