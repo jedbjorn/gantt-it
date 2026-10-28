@@ -26,23 +26,48 @@ public sealed class OpenGanttIt : IExternalCommand
             return Result.Cancelled;
         }
 
+        GanttItWindow window;
         try
         {
             var backend = new RevitBackend(uiapp);
             var session = new GanttItSession(backend, metrics => new WpfTextMeasurer(metrics), new DocumentDrafts(document));
-            var window = new GanttItWindow(session);
+            window = new GanttItWindow(session);
             _ = new WindowInteropHelper(window) { Owner = uiapp.MainWindowHandle };
-            window.ShowDialog();
-
-            if (window.ViewToOpen is { } viewId && document.GetElement(viewId) is View view)
-                uidoc.ActiveView = view;
-            return Result.Succeeded;
         }
         catch (Exception ex)
         {
-            // Revit reports a failed command with this message.
+            // Nothing has run yet, so Failed can't undo any work. Revit reports this message.
             message = $"Gantt-It could not open: {ex.Message}";
             return Result.Failed;
+        }
+
+        // From here on the user may have committed Generate/Update/Delete transactions.
+        // Revit undoes a command's changes when it returns Failed or Cancelled, so every
+        // path below returns Succeeded.
+        try
+        {
+            window.ShowDialog();
+        }
+        catch (Exception ex)
+        {
+            TaskDialog.Show("Gantt-It", $"Gantt-It closed because of an unexpected error:\n\n{ex.Message}");
+            return Result.Succeeded;
+        }
+
+        if (window.ViewToOpen is { } viewId) OpenView(uidoc, document, viewId);
+        return Result.Succeeded;
+    }
+
+    /// <summary>"Open view" (§2.1): activates the chosen legend; a failure is reported, never fatal.</summary>
+    private static void OpenView(UIDocument uidoc, Document document, ElementId viewId)
+    {
+        try
+        {
+            if (document.GetElement(viewId) is View view) uidoc.ActiveView = view;
+        }
+        catch (Exception ex)
+        {
+            TaskDialog.Show("Gantt-It", $"The legend could not be opened: {ex.Message}\n\nOpen it from the Project Browser instead.");
         }
     }
 }
