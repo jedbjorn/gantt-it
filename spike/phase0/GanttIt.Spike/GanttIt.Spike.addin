@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Phase 0 spike manifest (throwaway). Deployed next to a GanttIt.Spike\ folder in
+     %AppData%\Autodesk\Revit\Addins\<year>\. ClientId is spike-only; the real
+     GanttIt.addin gets its own fixed GUID. -->
+<RevitAddIns>
+  <AddIn Type="Application">
+    <Name>Gantt-It Spike</Name>
+    <Assembly>GanttIt.Spike\GanttIt.Spike.dll</Assembly>
+    <FullClassName>GanttIt.Spike.SpikeApp</FullClassName>
+    <ClientId>6a7e2c51-0f00-4d1e-9a00-47414e540000</ClientId>
+    <VendorId>DSOS</VendorId>
+    <VendorDescription>Designs/OS</VendorDescription>
+  </AddIn>
+</RevitAddIns>

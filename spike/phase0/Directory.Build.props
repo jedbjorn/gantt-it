@@ -1,0 +1,26 @@
+<Project>
+  <!--
+    Phase 0 spike (throwaway). Same configuration pattern as rst-c:
+    "Debug R26" -> Revit 2026 / net8.0-windows, "Debug R27" -> Revit 2027 / net10.0-windows.
+  -->
+  <PropertyGroup>
+    <Configurations>Debug R26;Debug R27;Release R26;Release R27</Configurations>
+    <Configuration Condition="'$(Configuration)' == ''">Debug R26</Configuration>
+  </PropertyGroup>
+  <PropertyGroup>
+    <RevitVersion Condition="$(Configuration.Contains('R26'))">2026</RevitVersion>
+    <RevitVersion Condition="$(Configuration.Contains('R27'))">2027</RevitVersion>
+  </PropertyGroup>
+  <PropertyGroup>
+    <RevitTargetFramework Condition="'$(RevitVersion)' == '2026'">net8.0-windows</RevitTargetFramework>
+    <RevitTargetFramework Condition="'$(RevitVersion)' == '2027'">net10.0-windows</RevitTargetFramework>
+  </PropertyGroup>
+  <PropertyGroup>
+    <Product>Gantt-It Spike</Product>
+    <Company>Designs/OS</Company>
+    <LangVersion>latest</LangVersion>
+    <Nullable>disable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <NoWarn>$(NoWarn);CA1416;CS0618;NU1701</NoWarn>
+  </PropertyGroup>
+</Project>
