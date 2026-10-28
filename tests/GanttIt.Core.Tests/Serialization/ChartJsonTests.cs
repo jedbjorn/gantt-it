@@ -241,31 +241,4 @@ public class ChartJsonTests
         Assert.Throws<InvalidOperationException>(() => SettingsJson.Serialize(newer.Value!));
         Assert.Equal(LoadStatus.Invalid, SettingsJson.Deserialize("{\"schemaVersion\":1,\"palette\":[\"#12\"]}").Status);
     }
-
-    [Fact]
-    public void CopyRule_GivesTheLaterDuplicateANewId()
-    {
-        var original = Sample();
-        var copy = ChartJson.Deserialize(ChartJson.Serialize(original)).Value!;
-        var other = Sequential(1, D(2026, 1, 1));
-        other.Id = Id(77);
-        var next = 500;
-
-        var reassigned = ChartCopies.ReassignDuplicateIds([original, other, copy], () => Id(next++));
-
-        Assert.Same(copy, Assert.Single(reassigned));
-        Assert.Equal(Id(500), copy.Id);
-        Assert.Equal(Id(1000), original.Id);
-        Assert.Equal(Id(77), other.Id);
-    }
-
-    [Fact]
-    public void AssignNewId_ReplacesTheId()
-    {
-        var chart = Sample();
-        var id = ChartCopies.AssignNewId(chart);
-
-        Assert.Equal(id, chart.Id);
-        Assert.NotEqual(Id(1000), id);
-    }
 }

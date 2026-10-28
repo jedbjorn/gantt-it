@@ -1,0 +1,55 @@
+{
+  "meta": {
+    "phase": "undo-check",
+    "at": "2026-10-29T00:38:14.7137811\u002B01:00",
+    "revit": "2026 26.4.10.51",
+    "revitYear": "2026",
+    "runtime": ".NET 8.0.26",
+    "addinVersion": "0.1.0-alpha\u002Bf84483001547b1c70b4f99fe17f49d05e01a573f",
+    "document": "C:\\GanttIt\\work\\metric-26.rvt",
+    "documentTitle": "metric-26",
+    "lengthUnit": "autodesk.unit.unit:millimeters-1.0.1",
+    "formatLength1_5mm": "1.5",
+    "formatLength180mm": "180",
+    "shortCurveToleranceMm": 0.7804,
+    "workshared": false
+  },
+  "overall": "PASS",
+  "summary": {
+    "passed": 1,
+    "failed": 0,
+    "byCriterion": {
+      "A11": {
+        "result": "PASS",
+        "checks": 1,
+        "failed": 0
+      }
+    }
+  },
+  "checks": [
+    {
+      "criterion": "A11",
+      "name": "one GUI Undo fully reverses a Generate",
+      "result": "PASS",
+      "numbers": {
+        "viewGone": true,
+        "elementsBeforeGenerate": 9233,
+        "elementsAfterGenerate": 9300,
+        "elementsNow": 9233,
+        "fillTypeGone": true,
+        "stillListed": false
+      }
+    }
+  ],
+  "sections": {
+    "geometry": {}
+  },
+  "timingsMs": {},
+  "trigger": "ribbon",
+  "request": {
+    "phase": "undo-check",
+    "save": true,
+    "quiet": true
+  },
+  "dialogs": []
+}

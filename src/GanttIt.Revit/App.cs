@@ -29,6 +29,10 @@ public sealed class App : IExternalApplication
             Image = LoadIcon("gantt_16.png"),
         };
         panel.AddItem(button);
+#if DEBUG
+        // Debug builds only (§8.1): the Self-Test button, autorun harness and dialog handler.
+        SelfTest.SelfTestHarness.Register(application, panel);
+#endif
         return Result.Succeeded;
     }
 
