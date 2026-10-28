@@ -1,3 +1,3 @@
-a: 2026/selftest-2026-metric-26-1.json overall=PASS 55 passed
-b: 2027/selftest-2027-metric-27-1.json overall=PASS 55 passed
-checks compared: 55; differences (ids, paths, times ignored): 0
+a: /home/jedi/Repos/gantt-it/.claude/worktrees/agent-ab46cf5c8e9bb5d3f/.sc-state/local/c1/pull/2026/selftest-2026-metric-26-1.json overall=PASS 78 passed
+b: /home/jedi/Repos/gantt-it/.claude/worktrees/agent-ab46cf5c8e9bb5d3f/.sc-state/local/c1/pull/2027/selftest-2027-metric-27-1.json overall=PASS 78 passed
+checks compared: 78; sections compared: 6; differences (ids, paths, times ignored): 0

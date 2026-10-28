@@ -1,16 +1,16 @@
 {
   "meta": {
     "phase": "undo-check",
-    "at": "2026-10-29T00:00:47.8846849\u002B01:00",
+    "at": "2026-10-29T00:41:08.1620077\u002B01:00",
     "revit": "2026 26.4.10.51",
     "revitYear": "2026",
     "runtime": ".NET 8.0.26",
-    "addinVersion": "0.1.0-alpha",
+    "addinVersion": "0.1.0-alpha\u002Bf84483001547b1c70b4f99fe17f49d05e01a573f",
     "document": "C:\\GanttIt\\work\\imperial-26.rvt",
     "documentTitle": "imperial-26",
     "lengthUnit": "autodesk.unit.unit:feetFractionalInches-1.0.0",
-    "formatLength1_5mm": "0\u0027 - 0 1/16\u0022",
-    "formatLength180mm": "0\u0027 - 7 3/32\u0022",
+    "formatLength1_5mm": "0\u0027 - 0 15/256\u0022",
+    "formatLength180mm": "0\u0027 - 7 11/128\u0022",
     "shortCurveToleranceMm": 0.7804,
     "workshared": false
   },
@@ -33,15 +33,17 @@
       "result": "PASS",
       "numbers": {
         "viewGone": true,
-        "elementsBeforeGenerate": 9169,
-        "elementsAfterGenerate": 9236,
-        "elementsNow": 9169,
+        "elementsBeforeGenerate": 9298,
+        "elementsAfterGenerate": 9365,
+        "elementsNow": 9298,
         "fillTypeGone": true,
         "stillListed": false
       }
     }
   ],
-  "sections": {},
+  "sections": {
+    "geometry": {}
+  },
   "timingsMs": {},
   "trigger": "ribbon",
   "request": {

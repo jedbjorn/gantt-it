@@ -1,11 +1,11 @@
 {
   "meta": {
     "phase": "undo-check",
-    "at": "2026-10-28T23:54:44.3849791\u002B01:00",
+    "at": "2026-10-29T00:38:14.7137811\u002B01:00",
     "revit": "2026 26.4.10.51",
     "revitYear": "2026",
     "runtime": ".NET 8.0.26",
-    "addinVersion": "0.1.0-alpha",
+    "addinVersion": "0.1.0-alpha\u002Bf84483001547b1c70b4f99fe17f49d05e01a573f",
     "document": "C:\\GanttIt\\work\\metric-26.rvt",
     "documentTitle": "metric-26",
     "lengthUnit": "autodesk.unit.unit:millimeters-1.0.1",
@@ -33,15 +33,17 @@
       "result": "PASS",
       "numbers": {
         "viewGone": true,
-        "elementsBeforeGenerate": 9104,
-        "elementsAfterGenerate": 9171,
-        "elementsNow": 9104,
+        "elementsBeforeGenerate": 9233,
+        "elementsAfterGenerate": 9300,
+        "elementsNow": 9233,
         "fillTypeGone": true,
         "stillListed": false
       }
     }
   ],
-  "sections": {},
+  "sections": {
+    "geometry": {}
+  },
   "timingsMs": {},
   "trigger": "ribbon",
   "request": {

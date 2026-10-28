@@ -1,0 +1,68 @@
+# 2026/selftest-2026-imperial-26-1.json: 9 chart states
+PASS  GI Days after Generate: 40 boxes, 39 lines; text-crosses-line 0, endpoint-off-grid 0, collinear-overlap 0
+PASS  GI Months after Generate: 65 boxes, 62 lines; text-crosses-line 0, endpoint-off-grid 0, collinear-overlap 0
+PASS  GI Multi-year after Generate: 69 boxes, 60 lines; text-crosses-line 0, endpoint-off-grid 0, collinear-overlap 0
+PASS  GI Wrapped after Generate: 47 boxes, 42 lines; text-crosses-line 0, endpoint-off-grid 0, collinear-overlap 0
+PASS  GI Duration only after Generate: 29 boxes, 41 lines; text-crosses-line 0, endpoint-off-grid 0, collinear-overlap 0
+PASS  GI Large after Generate: 1229 boxes, 357 lines; text-crosses-line 0, endpoint-off-grid 0, collinear-overlap 0
+PASS  GI Months after Update: 65 boxes, 62 lines; text-crosses-line 0, endpoint-off-grid 0, collinear-overlap 0
+PASS  GI Days after Update (copies present): 40 boxes, 39 lines; text-crosses-line 0, endpoint-off-grid 0, collinear-overlap 0
+PASS  GI Partly deleted after partial hand delete and Update: 65 boxes, 62 lines; text-crosses-line 0, endpoint-off-grid 0, collinear-overlap 0
+# 2026/selftest-2026-imperial-26-2.json: 6 chart states
+PASS  GI Days after reopen: 40 boxes, 39 lines; text-crosses-line 0, endpoint-off-grid 0, collinear-overlap 0
+PASS  GI Months after reopen: 65 boxes, 62 lines; text-crosses-line 0, endpoint-off-grid 0, collinear-overlap 0
+PASS  GI Multi-year after reopen: 69 boxes, 60 lines; text-crosses-line 0, endpoint-off-grid 0, collinear-overlap 0
+PASS  GI Wrapped after reopen: 47 boxes, 42 lines; text-crosses-line 0, endpoint-off-grid 0, collinear-overlap 0
+PASS  GI Duration only after reopen: 29 boxes, 41 lines; text-crosses-line 0, endpoint-off-grid 0, collinear-overlap 0
+PASS  GI Large after reopen: 1229 boxes, 357 lines; text-crosses-line 0, endpoint-off-grid 0, collinear-overlap 0
+# 2026/selftest-2026-metric-26-1.json: 9 chart states
+PASS  GI Days after Generate: 40 boxes, 39 lines; text-crosses-line 0, endpoint-off-grid 0, collinear-overlap 0
+PASS  GI Months after Generate: 65 boxes, 62 lines; text-crosses-line 0, endpoint-off-grid 0, collinear-overlap 0
+PASS  GI Multi-year after Generate: 69 boxes, 60 lines; text-crosses-line 0, endpoint-off-grid 0, collinear-overlap 0
+PASS  GI Wrapped after Generate: 47 boxes, 42 lines; text-crosses-line 0, endpoint-off-grid 0, collinear-overlap 0
+PASS  GI Duration only after Generate: 29 boxes, 41 lines; text-crosses-line 0, endpoint-off-grid 0, collinear-overlap 0
+PASS  GI Large after Generate: 1229 boxes, 357 lines; text-crosses-line 0, endpoint-off-grid 0, collinear-overlap 0
+PASS  GI Months after Update: 65 boxes, 62 lines; text-crosses-line 0, endpoint-off-grid 0, collinear-overlap 0
+PASS  GI Days after Update (copies present): 40 boxes, 39 lines; text-crosses-line 0, endpoint-off-grid 0, collinear-overlap 0
+PASS  GI Partly deleted after partial hand delete and Update: 65 boxes, 62 lines; text-crosses-line 0, endpoint-off-grid 0, collinear-overlap 0
+# 2026/selftest-2026-metric-26-2.json: 6 chart states
+PASS  GI Days after reopen: 40 boxes, 39 lines; text-crosses-line 0, endpoint-off-grid 0, collinear-overlap 0
+PASS  GI Months after reopen: 65 boxes, 62 lines; text-crosses-line 0, endpoint-off-grid 0, collinear-overlap 0
+PASS  GI Multi-year after reopen: 69 boxes, 60 lines; text-crosses-line 0, endpoint-off-grid 0, collinear-overlap 0
+PASS  GI Wrapped after reopen: 47 boxes, 42 lines; text-crosses-line 0, endpoint-off-grid 0, collinear-overlap 0
+PASS  GI Duration only after reopen: 29 boxes, 41 lines; text-crosses-line 0, endpoint-off-grid 0, collinear-overlap 0
+PASS  GI Large after reopen: 1229 boxes, 357 lines; text-crosses-line 0, endpoint-off-grid 0, collinear-overlap 0
+# 2027/selftest-2027-imperial-27-1.json: 9 chart states
+PASS  GI Days after Generate: 40 boxes, 39 lines; text-crosses-line 0, endpoint-off-grid 0, collinear-overlap 0
+PASS  GI Months after Generate: 65 boxes, 62 lines; text-crosses-line 0, endpoint-off-grid 0, collinear-overlap 0
+PASS  GI Multi-year after Generate: 69 boxes, 60 lines; text-crosses-line 0, endpoint-off-grid 0, collinear-overlap 0
+PASS  GI Wrapped after Generate: 47 boxes, 42 lines; text-crosses-line 0, endpoint-off-grid 0, collinear-overlap 0
+PASS  GI Duration only after Generate: 29 boxes, 41 lines; text-crosses-line 0, endpoint-off-grid 0, collinear-overlap 0
+PASS  GI Large after Generate: 1229 boxes, 357 lines; text-crosses-line 0, endpoint-off-grid 0, collinear-overlap 0
+PASS  GI Months after Update: 65 boxes, 62 lines; text-crosses-line 0, endpoint-off-grid 0, collinear-overlap 0
+PASS  GI Days after Update (copies present): 40 boxes, 39 lines; text-crosses-line 0, endpoint-off-grid 0, collinear-overlap 0
+PASS  GI Partly deleted after partial hand delete and Update: 65 boxes, 62 lines; text-crosses-line 0, endpoint-off-grid 0, collinear-overlap 0
+# 2027/selftest-2027-imperial-27-2.json: 6 chart states
+PASS  GI Days after reopen: 40 boxes, 39 lines; text-crosses-line 0, endpoint-off-grid 0, collinear-overlap 0
+PASS  GI Months after reopen: 65 boxes, 62 lines; text-crosses-line 0, endpoint-off-grid 0, collinear-overlap 0
+PASS  GI Multi-year after reopen: 69 boxes, 60 lines; text-crosses-line 0, endpoint-off-grid 0, collinear-overlap 0
+PASS  GI Wrapped after reopen: 47 boxes, 42 lines; text-crosses-line 0, endpoint-off-grid 0, collinear-overlap 0
+PASS  GI Duration only after reopen: 29 boxes, 41 lines; text-crosses-line 0, endpoint-off-grid 0, collinear-overlap 0
+PASS  GI Large after reopen: 1229 boxes, 357 lines; text-crosses-line 0, endpoint-off-grid 0, collinear-overlap 0
+# 2027/selftest-2027-metric-27-1.json: 9 chart states
+PASS  GI Days after Generate: 40 boxes, 39 lines; text-crosses-line 0, endpoint-off-grid 0, collinear-overlap 0
+PASS  GI Months after Generate: 65 boxes, 62 lines; text-crosses-line 0, endpoint-off-grid 0, collinear-overlap 0
+PASS  GI Multi-year after Generate: 69 boxes, 60 lines; text-crosses-line 0, endpoint-off-grid 0, collinear-overlap 0
+PASS  GI Wrapped after Generate: 47 boxes, 42 lines; text-crosses-line 0, endpoint-off-grid 0, collinear-overlap 0
+PASS  GI Duration only after Generate: 29 boxes, 41 lines; text-crosses-line 0, endpoint-off-grid 0, collinear-overlap 0
+PASS  GI Large after Generate: 1229 boxes, 357 lines; text-crosses-line 0, endpoint-off-grid 0, collinear-overlap 0
+PASS  GI Months after Update: 65 boxes, 62 lines; text-crosses-line 0, endpoint-off-grid 0, collinear-overlap 0
+PASS  GI Days after Update (copies present): 40 boxes, 39 lines; text-crosses-line 0, endpoint-off-grid 0, collinear-overlap 0
+PASS  GI Partly deleted after partial hand delete and Update: 65 boxes, 62 lines; text-crosses-line 0, endpoint-off-grid 0, collinear-overlap 0
+# 2027/selftest-2027-metric-27-2.json: 6 chart states
+PASS  GI Days after reopen: 40 boxes, 39 lines; text-crosses-line 0, endpoint-off-grid 0, collinear-overlap 0
+PASS  GI Months after reopen: 65 boxes, 62 lines; text-crosses-line 0, endpoint-off-grid 0, collinear-overlap 0
+PASS  GI Multi-year after reopen: 69 boxes, 60 lines; text-crosses-line 0, endpoint-off-grid 0, collinear-overlap 0
+PASS  GI Wrapped after reopen: 47 boxes, 42 lines; text-crosses-line 0, endpoint-off-grid 0, collinear-overlap 0
+PASS  GI Duration only after reopen: 29 boxes, 41 lines; text-crosses-line 0, endpoint-off-grid 0, collinear-overlap 0
+PASS  GI Large after reopen: 1229 boxes, 357 lines; text-crosses-line 0, endpoint-off-grid 0, collinear-overlap 0
