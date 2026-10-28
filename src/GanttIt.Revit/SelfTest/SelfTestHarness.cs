@@ -135,11 +135,19 @@ internal static class SelfTestHarness
             report = new JsonObject { ["overall"] = "FAIL", ["fatal"] = ex.ToString() };
         }
 
-        report["trigger"] = trigger;
-        report["request"] = args.DeepClone();
-        report["dialogs"] = DialogLog.DeepClone();
-        Report.Write(path, report);
-        Report.Write(Path.Combine(OutDir, "selftest.json"), report);
+        try
+        {
+            report["trigger"] = trigger;
+            report["request"] = args.DeepClone();
+            report["dialogs"] = DialogLog.DeepClone();
+            Report.Write(path, report);
+            Report.Write(Path.Combine(OutDir, "selftest.json"), report);
+        }
+        catch (Exception ex)
+        {
+            File.WriteAllText(path, $"{{\"overall\":\"FAIL\",\"fatal\":\"report could not be written\"}}");
+            File.WriteAllText(path + ".error.txt", ex.ToString());
+        }
         File.WriteAllText(path + ".done", DateTime.Now.ToString("o"));
         return path;
     }

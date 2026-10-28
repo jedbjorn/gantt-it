@@ -3,6 +3,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Text.Json;
 using System.Text.Json.Nodes;
+using System.Text.Json.Serialization.Metadata;
 
 namespace GanttIt.Revit.SelfTest;
 
@@ -101,7 +102,17 @@ internal sealed class Report
     public static void Write(string path, JsonNode node)
     {
         Directory.CreateDirectory(Path.GetDirectoryName(path)!);
-        File.WriteAllText(path, node.ToJsonString(new JsonSerializerOptions { WriteIndented = true }));
+        File.WriteAllText(path, node.ToJsonString(WriteOptions));
     }
+
+    /// <summary>
+    /// An explicit resolver: inside Revit, options without one fail when they are
+    /// marked read-only ("must specify a TypeInfoResolver").
+    /// </summary>
+    private static readonly JsonSerializerOptions WriteOptions = new()
+    {
+        WriteIndented = true,
+        TypeInfoResolver = new DefaultJsonTypeInfoResolver(),
+    };
 }
 #endif

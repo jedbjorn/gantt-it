@@ -13,13 +13,15 @@ import sys
 
 IGNORED_KEYS = {
     "at", "path", "document", "documentTitle", "revit", "revitYear", "runtime", "addinVersion",
-    "elapsedMs", "timingsMs", "dialogs", "trigger", "request", "how", "status",
+    "elapsedMs", "timingsMs", "dialogs", "trigger", "request", "how",
 }
 
 
 def ignored(key: str) -> bool:
     k = key.lower()
-    return key in IGNORED_KEYS or k.endswith("id") or k.endswith("ids") or "uniqueid" in k or k.startswith("elements")
+    # Element ids and whole-model element counts differ between years by design (2027 upgrades
+    # the model in memory); counts of generated ids are kept.
+    return key in IGNORED_KEYS or k == "id" or "uniqueid" in k or k.startswith("elements")
 
 
 def flatten(node, prefix=""):
