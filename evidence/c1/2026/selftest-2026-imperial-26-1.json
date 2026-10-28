@@ -1,0 +1,1816 @@
+{
+  "meta": {
+    "phase": "1",
+    "at": "2026-10-28T23:59:17.4762243\u002B01:00",
+    "revit": "2026 26.4.10.51",
+    "revitYear": "2026",
+    "runtime": ".NET 8.0.26",
+    "addinVersion": "0.1.0-alpha",
+    "document": "C:\\GanttIt\\work\\imperial-26.rvt",
+    "documentTitle": "imperial-26",
+    "lengthUnit": "autodesk.unit.unit:feetFractionalInches-1.0.0",
+    "formatLength1_5mm": "0\u0027 - 0 1/16\u0022",
+    "formatLength180mm": "0\u0027 - 7 3/32\u0022",
+    "shortCurveToleranceMm": 0.7804,
+    "workshared": false
+  },
+  "overall": "PASS",
+  "summary": {
+    "passed": 55,
+    "failed": 0,
+    "byCriterion": {
+      "A11": {
+        "result": "PASS",
+        "checks": 4,
+        "failed": 0
+      },
+      "A15": {
+        "result": "PASS",
+        "checks": 1,
+        "failed": 0
+      },
+      "A5": {
+        "result": "PASS",
+        "checks": 7,
+        "failed": 0
+      },
+      "A6": {
+        "result": "PASS",
+        "checks": 35,
+        "failed": 0
+      },
+      "A7": {
+        "result": "PASS",
+        "checks": 4,
+        "failed": 0
+      },
+      "A9": {
+        "result": "PASS",
+        "checks": 4,
+        "failed": 0
+      }
+    }
+  },
+  "checks": [
+    {
+      "criterion": "A9",
+      "name": "settings save and read back identical in session",
+      "result": "PASS",
+      "numbers": {
+        "storedBefore": false,
+        "saveStatus": "Ok",
+        "storedAfter": true,
+        "missingStyles": 0,
+        "identical": true
+      }
+    },
+    {
+      "criterion": "A6",
+      "name": "GI Days: Generate succeeds",
+      "result": "PASS",
+      "numbers": {
+        "status": "Ok",
+        "sections": 5
+      }
+    },
+    {
+      "criterion": "A5",
+      "name": "GI Days after Generate: clean lines on Revit read-back (no text box touches a line, endpoints on grid \u2264 1e-6 ft, no collinear overlap)",
+      "result": "PASS",
+      "numbers": {
+        "textBoxes": 40,
+        "lines": 39,
+        "gridXs": 28,
+        "gridYs": 9,
+        "missingElements": 0,
+        "violationsBoundingBox": 0,
+        "violationsCoordWidth": 0,
+        "textCrossesLine": 0,
+        "endpointOffGrid": 0,
+        "collinearOverlap": 0,
+        "maxBoxAgreementMm": 0,
+        "maxAnchorErrorMm": 0,
+        "maxSizeDiffVsLayoutMm": 0.07,
+        "minTextToLineClearanceMm": 1.5
+      }
+    },
+    {
+      "criterion": "A6",
+      "name": "GI Days after Generate: legend view at 1:1",
+      "result": "PASS",
+      "numbers": {
+        "viewType": "Legend",
+        "scale": 1
+      }
+    },
+    {
+      "criterion": "A6",
+      "name": "GI Days after Generate: element counts match the fixture",
+      "result": "PASS",
+      "numbers": {
+        "sections": 5,
+        "textNotes": 40,
+        "expectedTextNotes": 40,
+        "detailCurves": 39,
+        "expectedDetailCurves": 39,
+        "filledRegions": 5,
+        "expectedFilledRegions": 5,
+        "otherGenerated": 0,
+        "straysInView": 0,
+        "skippedShortLines": 0,
+        "widenedBars": 0,
+        "measuredNotes": 55,
+        "unusedCandidatesDeleted": 16
+      }
+    },
+    {
+      "criterion": "A6",
+      "name": "GI Days after Generate: every text and line uses its configured style",
+      "result": "PASS",
+      "numbers": {
+        "wrongTextType": 0,
+        "wrongTextContent": 0,
+        "wrongAlignment": 0,
+        "wrongLineStyle": 0,
+        "titleNotes": 1,
+        "headerNotes": 19,
+        "bodyNotes": 20,
+        "headerLines": 6,
+        "chartLines": 33,
+        "rightAlignedNotes": 6
+      }
+    },
+    {
+      "criterion": "A6",
+      "name": "GI Days after Generate: bars are \u0027Gantt-It Fill #RRGGBB\u0027 solid regions with invisible boundaries",
+      "result": "PASS",
+      "numbers": {
+        "regions": 5,
+        "wrongFillType": 0,
+        "regionsWithVisibleBoundary": 0,
+        "fillTypes": [
+          "Gantt-It Fill #4F8EF7",
+          "Gantt-It Fill #59A14F",
+          "Gantt-It Fill #B07AA1",
+          "Gantt-It Fill #E15759",
+          "Gantt-It Fill #F28E2B"
+        ]
+      }
+    },
+    {
+      "criterion": "A6",
+      "name": "GI Months: Generate succeeds",
+      "result": "PASS",
+      "numbers": {
+        "status": "Ok",
+        "sections": 8
+      }
+    },
+    {
+      "criterion": "A5",
+      "name": "GI Months after Generate: clean lines on Revit read-back (no text box touches a line, endpoints on grid \u2264 1e-6 ft, no collinear overlap)",
+      "result": "PASS",
+      "numbers": {
+        "textBoxes": 65,
+        "lines": 62,
+        "gridXs": 50,
+        "gridYs": 12,
+        "missingElements": 0,
+        "violationsBoundingBox": 0,
+        "violationsCoordWidth": 0,
+        "textCrossesLine": 0,
+        "endpointOffGrid": 0,
+        "collinearOverlap": 0,
+        "maxBoxAgreementMm": 0,
+        "maxAnchorErrorMm": 0,
+        "maxSizeDiffVsLayoutMm": 0.07,
+        "minTextToLineClearanceMm": 1.5
+      }
+    },
+    {
+      "criterion": "A6",
+      "name": "GI Months after Generate: legend view at 1:1",
+      "result": "PASS",
+      "numbers": {
+        "viewType": "Legend",
+        "scale": 1
+      }
+    },
+    {
+      "criterion": "A6",
+      "name": "GI Months after Generate: element counts match the fixture",
+      "result": "PASS",
+      "numbers": {
+        "sections": 8,
+        "textNotes": 65,
+        "expectedTextNotes": 65,
+        "detailCurves": 62,
+        "expectedDetailCurves": 62,
+        "filledRegions": 8,
+        "expectedFilledRegions": 8,
+        "otherGenerated": 0,
+        "straysInView": 0,
+        "skippedShortLines": 0,
+        "widenedBars": 0,
+        "measuredNotes": 111,
+        "unusedCandidatesDeleted": 51
+      }
+    },
+    {
+      "criterion": "A6",
+      "name": "GI Months after Generate: every text and line uses its configured style",
+      "result": "PASS",
+      "numbers": {
+        "wrongTextType": 0,
+        "wrongTextContent": 0,
+        "wrongAlignment": 0,
+        "wrongLineStyle": 0,
+        "titleNotes": 1,
+        "headerNotes": 32,
+        "bodyNotes": 32,
+        "headerLines": 6,
+        "chartLines": 56,
+        "rightAlignedNotes": 9
+      }
+    },
+    {
+      "criterion": "A6",
+      "name": "GI Months after Generate: bars are \u0027Gantt-It Fill #RRGGBB\u0027 solid regions with invisible boundaries",
+      "result": "PASS",
+      "numbers": {
+        "regions": 8,
+        "wrongFillType": 0,
+        "regionsWithVisibleBoundary": 0,
+        "fillTypes": [
+          "Gantt-It Fill #2A9D8F",
+          "Gantt-It Fill #4F8EF7",
+          "Gantt-It Fill #59A14F",
+          "Gantt-It Fill #76B7B2",
+          "Gantt-It Fill #B07AA1",
+          "Gantt-It Fill #E15759",
+          "Gantt-It Fill #EDC948",
+          "Gantt-It Fill #F28E2B"
+        ]
+      }
+    },
+    {
+      "criterion": "A6",
+      "name": "GI Multi-year: Generate succeeds",
+      "result": "PASS",
+      "numbers": {
+        "status": "Ok",
+        "sections": 10
+      }
+    },
+    {
+      "criterion": "A5",
+      "name": "GI Multi-year after Generate: clean lines on Revit read-back (no text box touches a line, endpoints on grid \u2264 1e-6 ft, no collinear overlap)",
+      "result": "PASS",
+      "numbers": {
+        "textBoxes": 69,
+        "lines": 60,
+        "gridXs": 46,
+        "gridYs": 14,
+        "missingElements": 0,
+        "violationsBoundingBox": 0,
+        "violationsCoordWidth": 0,
+        "textCrossesLine": 0,
+        "endpointOffGrid": 0,
+        "collinearOverlap": 0,
+        "maxBoxAgreementMm": 0,
+        "maxAnchorErrorMm": 0,
+        "maxSizeDiffVsLayoutMm": 0.07,
+        "minTextToLineClearanceMm": 1.5
+      }
+    },
+    {
+      "criterion": "A6",
+      "name": "GI Multi-year after Generate: legend view at 1:1",
+      "result": "PASS",
+      "numbers": {
+        "viewType": "Legend",
+        "scale": 1
+      }
+    },
+    {
+      "criterion": "A6",
+      "name": "GI Multi-year after Generate: element counts match the fixture",
+      "result": "PASS",
+      "numbers": {
+        "sections": 10,
+        "textNotes": 69,
+        "expectedTextNotes": 69,
+        "detailCurves": 60,
+        "expectedDetailCurves": 60,
+        "filledRegions": 10,
+        "expectedFilledRegions": 10,
+        "otherGenerated": 0,
+        "straysInView": 0,
+        "skippedShortLines": 0,
+        "widenedBars": 0,
+        "measuredNotes": 84,
+        "unusedCandidatesDeleted": 31
+      }
+    },
+    {
+      "criterion": "A6",
+      "name": "GI Multi-year after Generate: every text and line uses its configured style",
+      "result": "PASS",
+      "numbers": {
+        "wrongTextType": 0,
+        "wrongTextContent": 0,
+        "wrongAlignment": 0,
+        "wrongLineStyle": 0,
+        "titleNotes": 1,
+        "headerNotes": 28,
+        "bodyNotes": 40,
+        "headerLines": 6,
+        "chartLines": 54,
+        "rightAlignedNotes": 11
+      }
+    },
+    {
+      "criterion": "A6",
+      "name": "GI Multi-year after Generate: bars are \u0027Gantt-It Fill #RRGGBB\u0027 solid regions with invisible boundaries",
+      "result": "PASS",
+      "numbers": {
+        "regions": 10,
+        "wrongFillType": 0,
+        "regionsWithVisibleBoundary": 0,
+        "fillTypes": [
+          "Gantt-It Fill #4F8EF7",
+          "Gantt-It Fill #59A14F",
+          "Gantt-It Fill #76B7B2",
+          "Gantt-It Fill #9C755F",
+          "Gantt-It Fill #B07AA1",
+          "Gantt-It Fill #BAB0AC",
+          "Gantt-It Fill #E15759",
+          "Gantt-It Fill #EDC948",
+          "Gantt-It Fill #F28E2B",
+          "Gantt-It Fill #FF9DA7"
+        ]
+      }
+    },
+    {
+      "criterion": "A6",
+      "name": "GI Wrapped: Generate succeeds",
+      "result": "PASS",
+      "numbers": {
+        "status": "Ok",
+        "sections": 6
+      }
+    },
+    {
+      "criterion": "A5",
+      "name": "GI Wrapped after Generate: clean lines on Revit read-back (no text box touches a line, endpoints on grid \u2264 1e-6 ft, no collinear overlap)",
+      "result": "PASS",
+      "numbers": {
+        "textBoxes": 47,
+        "lines": 42,
+        "gridXs": 32,
+        "gridYs": 10,
+        "missingElements": 0,
+        "violationsBoundingBox": 0,
+        "violationsCoordWidth": 0,
+        "textCrossesLine": 0,
+        "endpointOffGrid": 0,
+        "collinearOverlap": 0,
+        "maxBoxAgreementMm": 0,
+        "maxAnchorErrorMm": 0,
+        "maxSizeDiffVsLayoutMm": 0.07,
+        "minTextToLineClearanceMm": 1.5
+      }
+    },
+    {
+      "criterion": "A6",
+      "name": "GI Wrapped after Generate: legend view at 1:1",
+      "result": "PASS",
+      "numbers": {
+        "viewType": "Legend",
+        "scale": 1
+      }
+    },
+    {
+      "criterion": "A6",
+      "name": "GI Wrapped after Generate: element counts match the fixture",
+      "result": "PASS",
+      "numbers": {
+        "sections": 6,
+        "textNotes": 47,
+        "expectedTextNotes": 47,
+        "detailCurves": 42,
+        "expectedDetailCurves": 42,
+        "filledRegions": 6,
+        "expectedFilledRegions": 6,
+        "otherGenerated": 0,
+        "straysInView": 0,
+        "skippedShortLines": 0,
+        "widenedBars": 0,
+        "measuredNotes": 80,
+        "unusedCandidatesDeleted": 35
+      }
+    },
+    {
+      "criterion": "A6",
+      "name": "GI Wrapped after Generate: every text and line uses its configured style",
+      "result": "PASS",
+      "numbers": {
+        "wrongTextType": 0,
+        "wrongTextContent": 0,
+        "wrongAlignment": 0,
+        "wrongLineStyle": 0,
+        "titleNotes": 1,
+        "headerNotes": 22,
+        "bodyNotes": 24,
+        "headerLines": 6,
+        "chartLines": 36,
+        "rightAlignedNotes": 7
+      }
+    },
+    {
+      "criterion": "A6",
+      "name": "GI Wrapped after Generate: bars are \u0027Gantt-It Fill #RRGGBB\u0027 solid regions with invisible boundaries",
+      "result": "PASS",
+      "numbers": {
+        "regions": 6,
+        "wrongFillType": 0,
+        "regionsWithVisibleBoundary": 0,
+        "fillTypes": [
+          "Gantt-It Fill #4F8EF7",
+          "Gantt-It Fill #59A14F",
+          "Gantt-It Fill #76B7B2",
+          "Gantt-It Fill #B07AA1",
+          "Gantt-It Fill #E15759",
+          "Gantt-It Fill #F28E2B"
+        ]
+      }
+    },
+    {
+      "criterion": "A6",
+      "name": "GI Duration only: Generate succeeds",
+      "result": "PASS",
+      "numbers": {
+        "status": "Ok",
+        "sections": 4
+      }
+    },
+    {
+      "criterion": "A5",
+      "name": "GI Duration only after Generate: clean lines on Revit read-back (no text box touches a line, endpoints on grid \u2264 1e-6 ft, no collinear overlap)",
+      "result": "PASS",
+      "numbers": {
+        "textBoxes": 29,
+        "lines": 41,
+        "gridXs": 33,
+        "gridYs": 8,
+        "missingElements": 0,
+        "violationsBoundingBox": 0,
+        "violationsCoordWidth": 0,
+        "textCrossesLine": 0,
+        "endpointOffGrid": 0,
+        "collinearOverlap": 0,
+        "maxBoxAgreementMm": 0,
+        "maxAnchorErrorMm": 0,
+        "maxSizeDiffVsLayoutMm": 0.07,
+        "minTextToLineClearanceMm": 1.5
+      }
+    },
+    {
+      "criterion": "A6",
+      "name": "GI Duration only after Generate: legend view at 1:1",
+      "result": "PASS",
+      "numbers": {
+        "viewType": "Legend",
+        "scale": 1
+      }
+    },
+    {
+      "criterion": "A6",
+      "name": "GI Duration only after Generate: element counts match the fixture",
+      "result": "PASS",
+      "numbers": {
+        "sections": 4,
+        "textNotes": 29,
+        "expectedTextNotes": 29,
+        "detailCurves": 41,
+        "expectedDetailCurves": 41,
+        "filledRegions": 4,
+        "expectedFilledRegions": 4,
+        "otherGenerated": 0,
+        "straysInView": 0,
+        "skippedShortLines": 0,
+        "widenedBars": 0,
+        "measuredNotes": 65,
+        "unusedCandidatesDeleted": 36
+      }
+    },
+    {
+      "criterion": "A6",
+      "name": "GI Duration only after Generate: every text and line uses its configured style",
+      "result": "PASS",
+      "numbers": {
+        "wrongTextType": 0,
+        "wrongTextContent": 0,
+        "wrongAlignment": 0,
+        "wrongLineStyle": 0,
+        "titleNotes": 1,
+        "headerNotes": 20,
+        "bodyNotes": 8,
+        "headerLines": 6,
+        "chartLines": 35,
+        "rightAlignedNotes": 5
+      }
+    },
+    {
+      "criterion": "A6",
+      "name": "GI Duration only after Generate: bars are \u0027Gantt-It Fill #RRGGBB\u0027 solid regions with invisible boundaries",
+      "result": "PASS",
+      "numbers": {
+        "regions": 4,
+        "wrongFillType": 0,
+        "regionsWithVisibleBoundary": 0,
+        "fillTypes": [
+          "Gantt-It Fill #4F8EF7",
+          "Gantt-It Fill #59A14F",
+          "Gantt-It Fill #E15759",
+          "Gantt-It Fill #F28E2B"
+        ]
+      }
+    },
+    {
+      "criterion": "A6",
+      "name": "GI Large: Generate succeeds",
+      "result": "PASS",
+      "numbers": {
+        "status": "Ok",
+        "sections": 300
+      },
+      "detail": "7 very short bar(s) were widened to Revit\u0027s minimum line length."
+    },
+    {
+      "criterion": "A5",
+      "name": "GI Large after Generate: clean lines on Revit read-back (no text box touches a line, endpoints on grid \u2264 1e-6 ft, no collinear overlap)",
+      "result": "PASS",
+      "numbers": {
+        "textBoxes": 1229,
+        "lines": 357,
+        "gridXs": 53,
+        "gridYs": 304,
+        "missingElements": 0,
+        "violationsBoundingBox": 0,
+        "violationsCoordWidth": 0,
+        "textCrossesLine": 0,
+        "endpointOffGrid": 0,
+        "collinearOverlap": 0,
+        "maxBoxAgreementMm": 0,
+        "maxAnchorErrorMm": 0,
+        "maxSizeDiffVsLayoutMm": 0.07,
+        "minTextToLineClearanceMm": 1.5
+      }
+    },
+    {
+      "criterion": "A6",
+      "name": "GI Large after Generate: legend view at 1:1",
+      "result": "PASS",
+      "numbers": {
+        "viewType": "Legend",
+        "scale": 1
+      }
+    },
+    {
+      "criterion": "A6",
+      "name": "GI Large after Generate: element counts match the fixture",
+      "result": "PASS",
+      "numbers": {
+        "sections": 300,
+        "textNotes": 1229,
+        "expectedTextNotes": 1229,
+        "detailCurves": 357,
+        "expectedDetailCurves": 357,
+        "filledRegions": 300,
+        "expectedFilledRegions": 300,
+        "otherGenerated": 0,
+        "straysInView": 0,
+        "skippedShortLines": 0,
+        "widenedBars": 7,
+        "measuredNotes": 1185,
+        "unusedCandidatesDeleted": 15
+      }
+    },
+    {
+      "criterion": "A6",
+      "name": "GI Large after Generate: every text and line uses its configured style",
+      "result": "PASS",
+      "numbers": {
+        "wrongTextType": 0,
+        "wrongTextContent": 0,
+        "wrongAlignment": 0,
+        "wrongLineStyle": 0,
+        "titleNotes": 1,
+        "headerNotes": 28,
+        "bodyNotes": 1200,
+        "headerLines": 6,
+        "chartLines": 351,
+        "rightAlignedNotes": 301
+      }
+    },
+    {
+      "criterion": "A6",
+      "name": "GI Large after Generate: bars are \u0027Gantt-It Fill #RRGGBB\u0027 solid regions with invisible boundaries",
+      "result": "PASS",
+      "numbers": {
+        "regions": 300,
+        "wrongFillType": 0,
+        "regionsWithVisibleBoundary": 0,
+        "fillTypes": [
+          "Gantt-It Fill #499894",
+          "Gantt-It Fill #4F8EF7",
+          "Gantt-It Fill #59A14F",
+          "Gantt-It Fill #76B7B2",
+          "Gantt-It Fill #8CD17D",
+          "Gantt-It Fill #9C755F",
+          "Gantt-It Fill #B07AA1",
+          "Gantt-It Fill #BAB0AC",
+          "Gantt-It Fill #E15759",
+          "Gantt-It Fill #EDC948",
+          "Gantt-It Fill #F28E2B",
+          "Gantt-It Fill #FF9DA7"
+        ]
+      }
+    },
+    {
+      "criterion": "A15",
+      "name": "GI Months: calibrated WPF width within 0.5 mm of Revit for every header/body string",
+      "result": "PASS",
+      "numbers": {
+        "strings": 110,
+        "maxWidthDiffMm": 0.383,
+        "meanWidthDiffMm": 0.0969,
+        "within0_5mm": 110,
+        "maxHeightDiffMm": 0
+      }
+    },
+    {
+      "criterion": "A7",
+      "name": "GI Months: Update keeps the view, its viewport and the hand note; GeneratedIds fully replaced",
+      "result": "PASS",
+      "numbers": {
+        "status": "Ok",
+        "sameViewUniqueId": true,
+        "viewportExists": true,
+        "viewportShowsChart": true,
+        "handNoteExists": true,
+        "oldGeneratedIds": 135,
+        "oldStillExisting": 0,
+        "newGeneratedIds": 135,
+        "overlap": 0,
+        "newOwnedByView": 135,
+        "listedSheets": [
+          "A101 - GI Self-Test Sheet"
+        ]
+      }
+    },
+    {
+      "criterion": "A5",
+      "name": "GI Months after Update: clean lines on Revit read-back (no text box touches a line, endpoints on grid \u2264 1e-6 ft, no collinear overlap)",
+      "result": "PASS",
+      "numbers": {
+        "textBoxes": 65,
+        "lines": 62,
+        "gridXs": 50,
+        "gridYs": 12,
+        "missingElements": 0,
+        "violationsBoundingBox": 0,
+        "violationsCoordWidth": 0,
+        "textCrossesLine": 0,
+        "endpointOffGrid": 0,
+        "collinearOverlap": 0,
+        "maxBoxAgreementMm": 0,
+        "maxAnchorErrorMm": 0,
+        "maxSizeDiffVsLayoutMm": 0.07,
+        "minTextToLineClearanceMm": 1.5
+      }
+    },
+    {
+      "criterion": "A6",
+      "name": "GI Months after Update: legend view at 1:1",
+      "result": "PASS",
+      "numbers": {
+        "viewType": "Legend",
+        "scale": 1
+      }
+    },
+    {
+      "criterion": "A6",
+      "name": "GI Months after Update: element counts match the fixture",
+      "result": "PASS",
+      "numbers": {
+        "sections": 8,
+        "textNotes": 65,
+        "expectedTextNotes": 65,
+        "detailCurves": 62,
+        "expectedDetailCurves": 62,
+        "filledRegions": 8,
+        "expectedFilledRegions": 8,
+        "otherGenerated": 0,
+        "straysInView": 0,
+        "skippedShortLines": 0,
+        "widenedBars": 0,
+        "measuredNotes": 111,
+        "unusedCandidatesDeleted": 51
+      }
+    },
+    {
+      "criterion": "A6",
+      "name": "GI Months after Update: every text and line uses its configured style",
+      "result": "PASS",
+      "numbers": {
+        "wrongTextType": 0,
+        "wrongTextContent": 0,
+        "wrongAlignment": 0,
+        "wrongLineStyle": 0,
+        "titleNotes": 1,
+        "headerNotes": 32,
+        "bodyNotes": 32,
+        "headerLines": 6,
+        "chartLines": 56,
+        "rightAlignedNotes": 9
+      }
+    },
+    {
+      "criterion": "A6",
+      "name": "GI Months after Update: bars are \u0027Gantt-It Fill #RRGGBB\u0027 solid regions with invisible boundaries",
+      "result": "PASS",
+      "numbers": {
+        "regions": 8,
+        "wrongFillType": 0,
+        "regionsWithVisibleBoundary": 0,
+        "fillTypes": [
+          "Gantt-It Fill #2A9D8F",
+          "Gantt-It Fill #4F8EF7",
+          "Gantt-It Fill #59A14F",
+          "Gantt-It Fill #76B7B2",
+          "Gantt-It Fill #B07AA1",
+          "Gantt-It Fill #E15759",
+          "Gantt-It Fill #EDC948",
+          "Gantt-It Fill #F28E2B"
+        ]
+      }
+    },
+    {
+      "criterion": "A7",
+      "name": "duplicated chart legend: the copy carries the source entity and gets a new Chart.Id on load",
+      "result": "PASS",
+      "numbers": {
+        "entityCopiedVerbatim": true,
+        "copyChartIdIsNew": true,
+        "sourceChartIdKept": true,
+        "copiedDetailElements": 84
+      }
+    },
+    {
+      "criterion": "A7",
+      "name": "duplicated chart legend: Update of the copy never touches the source chart (OwnerViewId rule)",
+      "result": "PASS",
+      "numbers": {
+        "status": "Ok",
+        "sourceGeneratedIds": 84,
+        "sourceElementsIntact": 84,
+        "copyGeneratedIds": 84,
+        "copyGeneratedOwnedByCopy": 84,
+        "copyIdPersisted": true,
+        "copiedDetailElementsKeptAsHandAnnotation": 84
+      }
+    },
+    {
+      "criterion": "A7",
+      "name": "duplicated chart legend: Delete of the copy leaves the source chart intact",
+      "result": "PASS",
+      "numbers": {
+        "status": "Ok",
+        "copyGone": true,
+        "sourceElementsIntact": 84
+      }
+    },
+    {
+      "criterion": "A9",
+      "name": "duplicated chart legend (plain Duplicate): new Chart.Id on load, before reopen",
+      "result": "PASS",
+      "numbers": {
+        "copyEntityPresent": true,
+        "copyChartIdIsNew": true
+      }
+    },
+    {
+      "criterion": "A11",
+      "name": "fault mid-Generate: rolled back, no Gantt-It element or fill type remains",
+      "result": "PASS",
+      "numbers": {
+        "status": "Failed",
+        "elementsBefore": 9169,
+        "elementsAfter": 9169,
+        "legendsBefore": 8,
+        "legendsAfter": 8,
+        "faultViewLeft": false,
+        "ganttItFillTypesBefore": 13,
+        "ganttItFillTypesAfter": 13
+      },
+      "detail": "Gantt-It: Generate GI Fault failed and was rolled back: Gantt-It debug fault injected at \u0027mid-generate\u0027."
+    },
+    {
+      "criterion": "A11",
+      "name": "fault mid-Update: rolled back, the chart and its elements are unchanged",
+      "result": "PASS",
+      "numbers": {
+        "status": "Failed",
+        "elementsBefore": 9169,
+        "elementsAfter": 9169,
+        "generatedIds": 135,
+        "generatedIntact": 135
+      },
+      "detail": "Gantt-It: Update GI Months failed and was rolled back: Gantt-It debug fault injected at \u0027mid-generate\u0027."
+    },
+    {
+      "criterion": "A6",
+      "name": "every generated chart is listed with an editable load",
+      "result": "PASS",
+      "numbers": {
+        "listed": 7,
+        "fixtures": 6,
+        "charts": [
+          {
+            "name": "GI Days",
+            "status": "Ok",
+            "sections": 5,
+            "sheets": 0
+          },
+          {
+            "name": "GI Months",
+            "status": "Ok",
+            "sections": 8,
+            "sheets": 1
+          },
+          {
+            "name": "GI Multi-year",
+            "status": "Ok",
+            "sections": 10,
+            "sheets": 0
+          },
+          {
+            "name": "GI Wrapped",
+            "status": "Ok",
+            "sections": 6,
+            "sheets": 0
+          },
+          {
+            "name": "GI Duration only",
+            "status": "Ok",
+            "sections": 4,
+            "sheets": 0
+          },
+          {
+            "name": "GI Large",
+            "status": "Ok",
+            "sections": 300,
+            "sheets": 0
+          },
+          {
+            "name": "GI Multi-year copy",
+            "status": "Ok",
+            "sections": 10,
+            "sheets": 0
+          }
+        ]
+      }
+    },
+    {
+      "criterion": "A9",
+      "name": "snapshot written for the reopen phase",
+      "result": "PASS",
+      "numbers": {
+        "charts": 6,
+        "path": "C:\\Users\\Public.DESKTOP-6CDPU6H\\AppData\\Local\\Temp\\GanttIt\\selftest-snapshot-2026-imperial-26.json"
+      }
+    },
+    {
+      "criterion": "A11",
+      "name": "no Revit dialog or warning popup during any Gantt-It action",
+      "result": "PASS",
+      "numbers": {
+        "dialogsDuringRun": 0
+      }
+    },
+    {
+      "criterion": "A9",
+      "name": "work copy saved for the reopen phase",
+      "result": "PASS",
+      "numbers": {
+        "how": "Save",
+        "path": "C:\\GanttIt\\work\\imperial-26.rvt"
+      }
+    },
+    {
+      "criterion": "A11",
+      "name": "undo preparation: \u0027GI Undo\u0027 generated as the last transaction",
+      "result": "PASS",
+      "numbers": {
+        "viewUniqueId": "958c8f70-b17f-48b9-ab6a-38437a02513c-0005cbf4",
+        "name": "GI Undo",
+        "elementsBefore": 9169,
+        "elementsAfter": 9236,
+        "fillType": "Gantt-It Fill #FEDCBA",
+        "transaction": "Gantt-It: Generate GI Undo"
+      }
+    }
+  ],
+  "sections": {
+    "cleanup": {
+      "charts": [],
+      "sheets": 0
+    },
+    "settings": {
+      "json": "{\u0022titleTextStyle\u0022:{\u0022uniqueId\u0022:\u0022933c4a06-93b8-11d3-80f8-00c04f8efc32-000000ea\u0022,\u0022name\u0022:\u00221/4\\u0022 Arial\u0022},\u0022headerTextStyle\u0022:{\u0022uniqueId\u0022:\u00220ec1ca9b-d800-4a88-9ba1-5d210146dcac-0002c8a9\u0022,\u0022name\u0022:\u0022Schedule Default\u0022},\u0022bodyTextStyle\u0022:{\u0022uniqueId\u0022:\u00227169facf-e488-11d3-9188-0000863f27ad-00002870\u0022,\u0022name\u0022:\u00223/32\\u0022 Arial\u0022},\u0022chartLineStyle\u0022:{\u0022uniqueId\u0022:\u0022d3516a40-06bf-11d4-91b5-0000863f27ad-00004633\u0022,\u0022name\u0022:\u0022\\u003CThin Lines\\u003E\u0022},\u0022headerLineStyle\u0022:{\u0022uniqueId\u0022:\u0022d3516a40-06bf-11d4-91b5-0000863f27ad-00004632\u0022,\u0022name\u0022:\u0022\\u003CMedium Lines\\u003E\u0022},\u0022dateFormat\u0022:\u0022yyyy-MM-dd\u0022,\u0022cellPadding\u0022:0.004921259842519685,\u0022palette\u0022:[\u0022#4F8EF7\u0022,\u0022#F28E2B\u0022,\u0022#59A14F\u0022,\u0022#E15759\u0022,\u0022#B07AA1\u0022,\u0022#76B7B2\u0022,\u0022#EDC948\u0022,\u0022#FF9DA7\u0022,\u0022#9C755F\u0022,\u0022#BAB0AC\u0022,\u0022#8CD17D\u0022,\u0022#499894\u0022],\u0022schemaVersion\u0022:1}",
+      "textTypes": [
+        {
+          "name": "3/32\u0022 Arial",
+          "font": "Arial",
+          "sizeMm": 2.3812,
+          "bold": false,
+          "italic": false,
+          "widthFactor": 1,
+          "leaderOffsetMm": 2.032
+        },
+        {
+          "name": "Schedule Default",
+          "font": "Arial",
+          "sizeMm": 3.175,
+          "bold": false,
+          "italic": false,
+          "widthFactor": 1,
+          "leaderOffsetMm": 2.032
+        },
+        {
+          "name": "1/4\u0022 Arial",
+          "font": "Arial",
+          "sizeMm": 6.35,
+          "bold": false,
+          "italic": false,
+          "widthFactor": 1,
+          "leaderOffsetMm": 2.032
+        }
+      ],
+      "lineStyles": [
+        "\u003CBeyond\u003E",
+        "\u003CCenterline\u003E",
+        "\u003CDemolished\u003E",
+        "\u003CHidden Lines\u003E",
+        "\u003CHidden\u003E",
+        "\u003CLines\u003E",
+        "\u003CMedium Lines\u003E",
+        "\u003COverhead\u003E",
+        "\u003CPath of Travel Lines\u003E",
+        "\u003CThin Lines\u003E",
+        "\u003CWide Lines\u003E"
+      ]
+    },
+    "calibration": {
+      "metrics": {
+        "Title": {
+          "font": "Arial",
+          "sizeMm": 6.35,
+          "bold": false,
+          "italic": false,
+          "widthFactor": 1,
+          "k": 1.000965,
+          "linePitchMm": 9.86
+        },
+        "Header": {
+          "font": "Arial",
+          "sizeMm": 3.175,
+          "bold": false,
+          "italic": false,
+          "widthFactor": 1,
+          "k": 1.009187,
+          "linePitchMm": 4.96
+        },
+        "Body": {
+          "font": "Arial",
+          "sizeMm": 2.3812,
+          "bold": false,
+          "italic": false,
+          "widthFactor": 1,
+          "k": 1.018911,
+          "linePitchMm": 3.84
+        }
+      },
+      "rows": [
+        {
+          "text": "Section",
+          "style": "Header",
+          "revitWidthMm": 14.88,
+          "wpfWidthMm": 14.9199,
+          "diffMm": 0.0399
+        },
+        {
+          "text": "Start",
+          "style": "Header",
+          "revitWidthMm": 9.46,
+          "wpfWidthMm": 9.4461,
+          "diffMm": -0.0139
+        },
+        {
+          "text": "End",
+          "style": "Header",
+          "revitWidthMm": 7.94,
+          "wpfWidthMm": 7.9588,
+          "diffMm": 0.0188
+        },
+        {
+          "text": "Dur",
+          "style": "Header",
+          "revitWidthMm": 7.15,
+          "wpfWidthMm": 7.2076,
+          "diffMm": 0.0576
+        },
+        {
+          "text": "Design",
+          "style": "Body",
+          "revitWidthMm": 10.52,
+          "wpfWidthMm": 10.5426,
+          "diffMm": 0.0226
+        },
+        {
+          "text": "2026-10-01",
+          "style": "Body",
+          "revitWidthMm": 17.13,
+          "wpfWidthMm": 17.3237,
+          "diffMm": 0.1937
+        },
+        {
+          "text": "2026-11-15",
+          "style": "Body",
+          "revitWidthMm": 17.13,
+          "wpfWidthMm": 17.0729,
+          "diffMm": -0.0571
+        },
+        {
+          "text": "46",
+          "style": "Body",
+          "revitWidthMm": 3.77,
+          "wpfWidthMm": 3.767,
+          "diffMm": -0.003
+        },
+        {
+          "text": "Permitting \u0026 Approvals",
+          "style": "Body",
+          "revitWidthMm": 34.26,
+          "wpfWidthMm": 34.26,
+          "diffMm": 0
+        },
+        {
+          "text": "2026-11-16",
+          "style": "Body",
+          "revitWidthMm": 17.13,
+          "wpfWidthMm": 17.0729,
+          "diffMm": -0.0571
+        },
+        {
+          "text": "2027-01-10",
+          "style": "Body",
+          "revitWidthMm": 17.13,
+          "wpfWidthMm": 17.3237,
+          "diffMm": 0.1937
+        },
+        {
+          "text": "56",
+          "style": "Body",
+          "revitWidthMm": 3.77,
+          "wpfWidthMm": 3.767,
+          "diffMm": -0.003
+        },
+        {
+          "text": "Tender",
+          "style": "Body",
+          "revitWidthMm": 10.65,
+          "wpfWidthMm": 10.3557,
+          "diffMm": -0.2943
+        },
+        {
+          "text": "2027-01-16",
+          "style": "Body",
+          "revitWidthMm": 17.13,
+          "wpfWidthMm": 17.3237,
+          "diffMm": 0.1937
+        },
+        {
+          "text": "2027-02-05",
+          "style": "Body",
+          "revitWidthMm": 17.13,
+          "wpfWidthMm": 17.3237,
+          "diffMm": 0.1937
+        },
+        {
+          "text": "21",
+          "style": "Body",
+          "revitWidthMm": 3.77,
+          "wpfWidthMm": 3.767,
+          "diffMm": -0.003
+        },
+        {
+          "text": "Contract award",
+          "style": "Body",
+          "revitWidthMm": 22.82,
+          "wpfWidthMm": 22.9652,
+          "diffMm": 0.1452
+        },
+        {
+          "text": "2027-02-08",
+          "style": "Body",
+          "revitWidthMm": 17.13,
+          "wpfWidthMm": 17.3237,
+          "diffMm": 0.1937
+        },
+        {
+          "text": "2027-02-14",
+          "style": "Body",
+          "revitWidthMm": 17.13,
+          "wpfWidthMm": 17.3237,
+          "diffMm": 0.1937
+        },
+        {
+          "text": "7",
+          "style": "Body",
+          "revitWidthMm": 1.92,
+          "wpfWidthMm": 1.8835,
+          "diffMm": -0.0365
+        },
+        {
+          "text": "Mobilisation",
+          "style": "Body",
+          "revitWidthMm": 17.73,
+          "wpfWidthMm": 17.8826,
+          "diffMm": 0.1526
+        },
+        {
+          "text": "2027-02-12",
+          "style": "Body",
+          "revitWidthMm": 17.13,
+          "wpfWidthMm": 17.3237,
+          "diffMm": 0.1937
+        },
+        {
+          "text": "2027-02-21",
+          "style": "Body",
+          "revitWidthMm": 17.13,
+          "wpfWidthMm": 17.3237,
+          "diffMm": 0.1937
+        },
+        {
+          "text": "10",
+          "style": "Body",
+          "revitWidthMm": 3.77,
+          "wpfWidthMm": 3.767,
+          "diffMm": -0.003
+        },
+        {
+          "text": "Groundworks",
+          "style": "Body",
+          "revitWidthMm": 20.04,
+          "wpfWidthMm": 20.1417,
+          "diffMm": 0.1017
+        },
+        {
+          "text": "2027-02-20",
+          "style": "Body",
+          "revitWidthMm": 17.13,
+          "wpfWidthMm": 17.3237,
+          "diffMm": 0.1937
+        },
+        {
+          "text": "2027-06-19",
+          "style": "Body",
+          "revitWidthMm": 17.13,
+          "wpfWidthMm": 17.3237,
+          "diffMm": 0.1937
+        },
+        {
+          "text": "120",
+          "style": "Body",
+          "revitWidthMm": 5.62,
+          "wpfWidthMm": 5.6505,
+          "diffMm": 0.0305
+        },
+        {
+          "text": "Utilities",
+          "style": "Body",
+          "revitWidthMm": 10.85,
+          "wpfWidthMm": 10.9138,
+          "diffMm": 0.0638
+        },
+        {
+          "text": "2027-03-12",
+          "style": "Body",
+          "revitWidthMm": 17.13,
+          "wpfWidthMm": 17.3237,
+          "diffMm": 0.1937
+        },
+        {
+          "text": "2027-03-25",
+          "style": "Body",
+          "revitWidthMm": 17.13,
+          "wpfWidthMm": 17.3237,
+          "diffMm": 0.1937
+        },
+        {
+          "text": "14",
+          "style": "Body",
+          "revitWidthMm": 3.77,
+          "wpfWidthMm": 3.767,
+          "diffMm": -0.003
+        },
+        {
+          "text": "Handover prep",
+          "style": "Body",
+          "revitWidthMm": 22.29,
+          "wpfWidthMm": 22.4045,
+          "diffMm": 0.1145
+        },
+        {
+          "text": "2027-04-15",
+          "style": "Body",
+          "revitWidthMm": 17.13,
+          "wpfWidthMm": 17.3237,
+          "diffMm": 0.1937
+        },
+        {
+          "text": "2027-04-23",
+          "style": "Body",
+          "revitWidthMm": 17.13,
+          "wpfWidthMm": 17.3237,
+          "diffMm": 0.1937
+        },
+        {
+          "text": "9",
+          "style": "Body",
+          "revitWidthMm": 1.92,
+          "wpfWidthMm": 1.8835,
+          "diffMm": -0.0365
+        },
+        {
+          "text": "September 2026",
+          "style": "Header",
+          "revitWidthMm": 32.81,
+          "wpfWidthMm": 33.0742,
+          "diffMm": 0.2642
+        },
+        {
+          "text": "Sep 2026",
+          "style": "Header",
+          "revitWidthMm": 18.99,
+          "wpfWidthMm": 19.152,
+          "diffMm": 0.162
+        },
+        {
+          "text": "Sep \u002726",
+          "style": "Header",
+          "revitWidthMm": 14.95,
+          "wpfWidthMm": 15.0311,
+          "diffMm": 0.0811
+        },
+        {
+          "text": "Sep",
+          "style": "Header",
+          "revitWidthMm": 7.94,
+          "wpfWidthMm": 7.9588,
+          "diffMm": 0.0188
+        },
+        {
+          "text": "S",
+          "style": "Header",
+          "revitWidthMm": 3.04,
+          "wpfWidthMm": 2.9834,
+          "diffMm": -0.0566
+        },
+        {
+          "text": "October 2026",
+          "style": "Header",
+          "revitWidthMm": 26.86,
+          "wpfWidthMm": 27.1046,
+          "diffMm": 0.2446
+        },
+        {
+          "text": "Oct 2026",
+          "style": "Header",
+          "revitWidthMm": 18.06,
+          "wpfWidthMm": 18.1516,
+          "diffMm": 0.0916
+        },
+        {
+          "text": "Oct \u002726",
+          "style": "Header",
+          "revitWidthMm": 14.02,
+          "wpfWidthMm": 14.0307,
+          "diffMm": 0.0107
+        },
+        {
+          "text": "Oct",
+          "style": "Header",
+          "revitWidthMm": 7.01,
+          "wpfWidthMm": 6.9584,
+          "diffMm": -0.0516
+        },
+        {
+          "text": "O",
+          "style": "Header",
+          "revitWidthMm": 3.51,
+          "wpfWidthMm": 3.4792,
+          "diffMm": -0.0308
+        },
+        {
+          "text": "November 2026",
+          "style": "Header",
+          "revitWidthMm": 31.49,
+          "wpfWidthMm": 31.8272,
+          "diffMm": 0.3372
+        },
+        {
+          "text": "Nov 2026",
+          "style": "Header",
+          "revitWidthMm": 18.92,
+          "wpfWidthMm": 19.1476,
+          "diffMm": 0.2276
+        },
+        {
+          "text": "Nov \u002726",
+          "style": "Header",
+          "revitWidthMm": 14.88,
+          "wpfWidthMm": 15.0267,
+          "diffMm": 0.1467
+        },
+        {
+          "text": "Nov",
+          "style": "Header",
+          "revitWidthMm": 7.87,
+          "wpfWidthMm": 7.9544,
+          "diffMm": 0.0844
+        },
+        {
+          "text": "N",
+          "style": "Header",
+          "revitWidthMm": 3.24,
+          "wpfWidthMm": 3.23,
+          "diffMm": -0.01
+        },
+        {
+          "text": "December 2026",
+          "style": "Header",
+          "revitWidthMm": 31.55,
+          "wpfWidthMm": 31.8272,
+          "diffMm": 0.2772
+        },
+        {
+          "text": "Dec 2026",
+          "style": "Header",
+          "revitWidthMm": 18.99,
+          "wpfWidthMm": 19.1476,
+          "diffMm": 0.1576
+        },
+        {
+          "text": "Dec \u002726",
+          "style": "Header",
+          "revitWidthMm": 14.95,
+          "wpfWidthMm": 15.0267,
+          "diffMm": 0.0767
+        },
+        {
+          "text": "Dec",
+          "style": "Header",
+          "revitWidthMm": 7.94,
+          "wpfWidthMm": 7.9544,
+          "diffMm": 0.0144
+        },
+        {
+          "text": "D",
+          "style": "Header",
+          "revitWidthMm": 3.24,
+          "wpfWidthMm": 3.23,
+          "diffMm": -0.01
+        },
+        {
+          "text": "January 2027",
+          "style": "Header",
+          "revitWidthMm": 26.79,
+          "wpfWidthMm": 27.1073,
+          "diffMm": 0.3173
+        },
+        {
+          "text": "Jan 2027",
+          "style": "Header",
+          "revitWidthMm": 18.26,
+          "wpfWidthMm": 18.4053,
+          "diffMm": 0.1453
+        },
+        {
+          "text": "Jan \u002727",
+          "style": "Header",
+          "revitWidthMm": 14.22,
+          "wpfWidthMm": 14.2844,
+          "diffMm": 0.0644
+        },
+        {
+          "text": "Jan",
+          "style": "Header",
+          "revitWidthMm": 7.21,
+          "wpfWidthMm": 7.2121,
+          "diffMm": 0.0021
+        },
+        {
+          "text": "J",
+          "style": "Header",
+          "revitWidthMm": 2.32,
+          "wpfWidthMm": 2.2367,
+          "diffMm": -0.0833
+        },
+        {
+          "text": "February 2027",
+          "style": "Header",
+          "revitWidthMm": 28.71,
+          "wpfWidthMm": 29.093,
+          "diffMm": 0.383
+        },
+        {
+          "text": "Feb 2027",
+          "style": "Header",
+          "revitWidthMm": 18.72,
+          "wpfWidthMm": 18.901,
+          "diffMm": 0.181
+        },
+        {
+          "text": "Feb \u002727",
+          "style": "Header",
+          "revitWidthMm": 14.69,
+          "wpfWidthMm": 14.7801,
+          "diffMm": 0.0901
+        },
+        {
+          "text": "Feb",
+          "style": "Header",
+          "revitWidthMm": 7.67,
+          "wpfWidthMm": 7.7078,
+          "diffMm": 0.0378
+        },
+        {
+          "text": "F",
+          "style": "Header",
+          "revitWidthMm": 2.78,
+          "wpfWidthMm": 2.7324,
+          "diffMm": -0.0476
+        },
+        {
+          "text": "March 2027",
+          "style": "Header",
+          "revitWidthMm": 23.35,
+          "wpfWidthMm": 23.6219,
+          "diffMm": 0.2719
+        },
+        {
+          "text": "Mar 2027",
+          "style": "Header",
+          "revitWidthMm": 18.65,
+          "wpfWidthMm": 18.8975,
+          "diffMm": 0.2475
+        },
+        {
+          "text": "Mar \u002727",
+          "style": "Header",
+          "revitWidthMm": 14.62,
+          "wpfWidthMm": 14.7766,
+          "diffMm": 0.1566
+        },
+        {
+          "text": "Mar",
+          "style": "Header",
+          "revitWidthMm": 7.61,
+          "wpfWidthMm": 7.7042,
+          "diffMm": 0.0942
+        },
+        {
+          "text": "M",
+          "style": "Header",
+          "revitWidthMm": 3.71,
+          "wpfWidthMm": 3.7266,
+          "diffMm": 0.0166
+        },
+        {
+          "text": "April 2027",
+          "style": "Header",
+          "revitWidthMm": 19.98,
+          "wpfWidthMm": 20.1427,
+          "diffMm": 0.1627
+        },
+        {
+          "text": "Apr 2027",
+          "style": "Header",
+          "revitWidthMm": 17.99,
+          "wpfWidthMm": 18.1543,
+          "diffMm": 0.1643
+        },
+        {
+          "text": "Apr \u002727",
+          "style": "Header",
+          "revitWidthMm": 13.96,
+          "wpfWidthMm": 14.0334,
+          "diffMm": 0.0734
+        },
+        {
+          "text": "Apr",
+          "style": "Header",
+          "revitWidthMm": 6.95,
+          "wpfWidthMm": 6.9611,
+          "diffMm": 0.0111
+        },
+        {
+          "text": "A",
+          "style": "Header",
+          "revitWidthMm": 3.04,
+          "wpfWidthMm": 2.9834,
+          "diffMm": -0.0566
+        },
+        {
+          "text": "May 2027",
+          "style": "Header",
+          "revitWidthMm": 19.38,
+          "wpfWidthMm": 19.6442,
+          "diffMm": 0.2642
+        },
+        {
+          "text": "May \u002727",
+          "style": "Header",
+          "revitWidthMm": 15.35,
+          "wpfWidthMm": 15.5233,
+          "diffMm": 0.1733
+        },
+        {
+          "text": "May",
+          "style": "Header",
+          "revitWidthMm": 8.34,
+          "wpfWidthMm": 8.451,
+          "diffMm": 0.111
+        },
+        {
+          "text": "June 2027",
+          "style": "Header",
+          "revitWidthMm": 20.7,
+          "wpfWidthMm": 20.893,
+          "diffMm": 0.193
+        },
+        {
+          "text": "Jun 2027",
+          "style": "Header",
+          "revitWidthMm": 18.26,
+          "wpfWidthMm": 18.4053,
+          "diffMm": 0.1453
+        },
+        {
+          "text": "Jun \u002727",
+          "style": "Header",
+          "revitWidthMm": 14.22,
+          "wpfWidthMm": 14.2844,
+          "diffMm": 0.0644
+        },
+        {
+          "text": "Jun",
+          "style": "Header",
+          "revitWidthMm": 7.21,
+          "wpfWidthMm": 7.2121,
+          "diffMm": 0.0021
+        },
+        {
+          "text": "28",
+          "style": "Header",
+          "revitWidthMm": 4.96,
+          "wpfWidthMm": 4.9754,
+          "diffMm": 0.0154
+        },
+        {
+          "text": "5",
+          "style": "Header",
+          "revitWidthMm": 2.51,
+          "wpfWidthMm": 2.4877,
+          "diffMm": -0.0223
+        },
+        {
+          "text": "12",
+          "style": "Header",
+          "revitWidthMm": 4.96,
+          "wpfWidthMm": 4.9754,
+          "diffMm": 0.0154
+        },
+        {
+          "text": "19",
+          "style": "Header",
+          "revitWidthMm": 4.96,
+          "wpfWidthMm": 4.9754,
+          "diffMm": 0.0154
+        },
+        {
+          "text": "26",
+          "style": "Header",
+          "revitWidthMm": 4.96,
+          "wpfWidthMm": 4.9754,
+          "diffMm": 0.0154
+        },
+        {
+          "text": "2",
+          "style": "Header",
+          "revitWidthMm": 2.51,
+          "wpfWidthMm": 2.4877,
+          "diffMm": -0.0223
+        },
+        {
+          "text": "9",
+          "style": "Header",
+          "revitWidthMm": 2.51,
+          "wpfWidthMm": 2.4877,
+          "diffMm": -0.0223
+        },
+        {
+          "text": "16",
+          "style": "Header",
+          "revitWidthMm": 4.96,
+          "wpfWidthMm": 4.9754,
+          "diffMm": 0.0154
+        },
+        {
+          "text": "23",
+          "style": "Header",
+          "revitWidthMm": 4.96,
+          "wpfWidthMm": 4.9754,
+          "diffMm": 0.0154
+        },
+        {
+          "text": "30",
+          "style": "Header",
+          "revitWidthMm": 4.96,
+          "wpfWidthMm": 4.9754,
+          "diffMm": 0.0154
+        },
+        {
+          "text": "7",
+          "style": "Header",
+          "revitWidthMm": 2.51,
+          "wpfWidthMm": 2.4877,
+          "diffMm": -0.0223
+        },
+        {
+          "text": "14",
+          "style": "Header",
+          "revitWidthMm": 4.96,
+          "wpfWidthMm": 4.9754,
+          "diffMm": 0.0154
+        },
+        {
+          "text": "21",
+          "style": "Header",
+          "revitWidthMm": 4.96,
+          "wpfWidthMm": 4.9754,
+          "diffMm": 0.0154
+        },
+        {
+          "text": "4",
+          "style": "Header",
+          "revitWidthMm": 2.51,
+          "wpfWidthMm": 2.4877,
+          "diffMm": -0.0223
+        },
+        {
+          "text": "11",
+          "style": "Header",
+          "revitWidthMm": 4.96,
+          "wpfWidthMm": 4.6434,
+          "diffMm": -0.3166
+        },
+        {
+          "text": "18",
+          "style": "Header",
+          "revitWidthMm": 4.96,
+          "wpfWidthMm": 4.9754,
+          "diffMm": 0.0154
+        },
+        {
+          "text": "25",
+          "style": "Header",
+          "revitWidthMm": 4.96,
+          "wpfWidthMm": 4.9754,
+          "diffMm": 0.0154
+        },
+        {
+          "text": "1",
+          "style": "Header",
+          "revitWidthMm": 2.51,
+          "wpfWidthMm": 2.4877,
+          "diffMm": -0.0223
+        },
+        {
+          "text": "8",
+          "style": "Header",
+          "revitWidthMm": 2.51,
+          "wpfWidthMm": 2.4877,
+          "diffMm": -0.0223
+        },
+        {
+          "text": "15",
+          "style": "Header",
+          "revitWidthMm": 4.96,
+          "wpfWidthMm": 4.9754,
+          "diffMm": 0.0154
+        },
+        {
+          "text": "22",
+          "style": "Header",
+          "revitWidthMm": 4.96,
+          "wpfWidthMm": 4.9754,
+          "diffMm": 0.0154
+        },
+        {
+          "text": "29",
+          "style": "Header",
+          "revitWidthMm": 4.96,
+          "wpfWidthMm": 4.9754,
+          "diffMm": 0.0154
+        },
+        {
+          "text": "3",
+          "style": "Header",
+          "revitWidthMm": 2.51,
+          "wpfWidthMm": 2.4877,
+          "diffMm": -0.0223
+        },
+        {
+          "text": "10",
+          "style": "Header",
+          "revitWidthMm": 4.96,
+          "wpfWidthMm": 4.9754,
+          "diffMm": 0.0154
+        },
+        {
+          "text": "17",
+          "style": "Header",
+          "revitWidthMm": 4.96,
+          "wpfWidthMm": 4.9754,
+          "diffMm": 0.0154
+        },
+        {
+          "text": "24",
+          "style": "Header",
+          "revitWidthMm": 4.96,
+          "wpfWidthMm": 4.9754,
+          "diffMm": 0.0154
+        },
+        {
+          "text": "31",
+          "style": "Header",
+          "revitWidthMm": 4.96,
+          "wpfWidthMm": 4.9754,
+          "diffMm": 0.0154
+        }
+      ]
+    },
+    "images": [
+      "chart-2026-imperial-26-GI-Days - Legend - GI Days.png",
+      "chart-2026-imperial-26-GI-Months - Legend - GI Months.png",
+      "chart-2026-imperial-26-GI-Multi-year - Legend - GI Multi-year.png",
+      "chart-2026-imperial-26-GI-Wrapped - Legend - GI Wrapped.png",
+      "chart-2026-imperial-26-GI-Duration-only - Legend - GI Duration only.png",
+      "chart-2026-imperial-26-GI-Large - Legend - GI Large.png",
+      "chart-2026-imperial-26-sheet - Sheet - A101 - GI Self-Test Sheet.png"
+    ],
+    "activate": "Can not subscribe to an event during execution of that event!"
+  },
+  "timingsMs": {
+    "cleanup": 6,
+    "settings": 111,
+    "generate GI Days": 449,
+    "generate GI Months": 407,
+    "generate GI Multi-year": 428,
+    "generate GI Wrapped": 301,
+    "generate GI Duration only": 219,
+    "generate GI Large": 8158,
+    "calibrated preview vs Revit": 160,
+    "update on a sheet": 814,
+    "duplicated chart legend": 353,
+    "prepare duplicate for reopen": 26,
+    "fault injection": 357,
+    "list charts": 11,
+    "export images": 6460,
+    "snapshot": 7,
+    "save": 1160,
+    "undo preparation": 124
+  },
+  "trigger": "autorun",
+  "request": {
+    "phase": "1",
+    "save": true
+  },
+  "dialogs": []
+}

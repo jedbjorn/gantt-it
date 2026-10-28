@@ -1,0 +1,3 @@
+a: 2026/selftest-2026-imperial-26-1.json overall=PASS 55 passed
+b: 2027/selftest-2027-imperial-27-1.json overall=PASS 55 passed
+checks compared: 55; differences (ids, paths, times ignored): 0

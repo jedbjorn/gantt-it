@@ -1,0 +1,3 @@
+a: 2026/selftest-2026-metric-26-2.json overall=PASS 15 passed
+b: 2027/selftest-2027-metric-27-2.json overall=PASS 15 passed
+checks compared: 15; differences (ids, paths, times ignored): 0

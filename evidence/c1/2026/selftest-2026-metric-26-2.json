@@ -1,0 +1,293 @@
+{
+  "meta": {
+    "phase": "2",
+    "at": "2026-10-28T23:55:41.9386880\u002B01:00",
+    "revit": "2026 26.4.10.51",
+    "revitYear": "2026",
+    "runtime": ".NET 8.0.26",
+    "addinVersion": "0.1.0-alpha",
+    "document": "C:\\GanttIt\\work\\metric-26.rvt",
+    "documentTitle": "metric-26",
+    "lengthUnit": "autodesk.unit.unit:millimeters-1.0.1",
+    "formatLength1_5mm": "1.5",
+    "formatLength180mm": "180",
+    "shortCurveToleranceMm": 0.7804,
+    "workshared": false
+  },
+  "overall": "PASS",
+  "summary": {
+    "passed": 15,
+    "failed": 0,
+    "byCriterion": {
+      "A5": {
+        "result": "PASS",
+        "checks": 6,
+        "failed": 0
+      },
+      "A9": {
+        "result": "PASS",
+        "checks": 9,
+        "failed": 0
+      }
+    }
+  },
+  "checks": [
+    {
+      "criterion": "A9",
+      "name": "settings read back identical after save, close and reopen",
+      "result": "PASS",
+      "numbers": {
+        "stored": true,
+        "missingStyles": 0,
+        "storedJsonIdentical": true,
+        "loadedSettingsIdentical": true
+      }
+    },
+    {
+      "criterion": "A9",
+      "name": "GI Days: chart reads back identical after save, close and reopen",
+      "result": "PASS",
+      "numbers": {
+        "viewFound": true,
+        "chartJsonIdentical": true,
+        "generatedIdsIdentical": true,
+        "generatedElementsPresent": 84,
+        "generatedIds": 84,
+        "loadStatus": "Ok"
+      }
+    },
+    {
+      "criterion": "A5",
+      "name": "GI Days after reopen: clean lines on Revit read-back (no text box touches a line, endpoints on grid \u2264 1e-6 ft, no collinear overlap)",
+      "result": "PASS",
+      "numbers": {
+        "textBoxes": 40,
+        "lines": 39,
+        "gridXs": 28,
+        "gridYs": 9,
+        "missingElements": 0,
+        "violationsBoundingBox": 0,
+        "violationsCoordWidth": 0,
+        "textCrossesLine": 0,
+        "endpointOffGrid": 0,
+        "collinearOverlap": 0,
+        "maxBoxAgreementMm": 0,
+        "maxAnchorErrorMm": 0,
+        "maxSizeDiffVsLayoutMm": 0,
+        "minTextToLineClearanceMm": 1.5
+      }
+    },
+    {
+      "criterion": "A9",
+      "name": "GI Months: chart reads back identical after save, close and reopen",
+      "result": "PASS",
+      "numbers": {
+        "viewFound": true,
+        "chartJsonIdentical": true,
+        "generatedIdsIdentical": true,
+        "generatedElementsPresent": 135,
+        "generatedIds": 135,
+        "loadStatus": "Ok"
+      }
+    },
+    {
+      "criterion": "A5",
+      "name": "GI Months after reopen: clean lines on Revit read-back (no text box touches a line, endpoints on grid \u2264 1e-6 ft, no collinear overlap)",
+      "result": "PASS",
+      "numbers": {
+        "textBoxes": 65,
+        "lines": 62,
+        "gridXs": 50,
+        "gridYs": 12,
+        "missingElements": 0,
+        "violationsBoundingBox": 0,
+        "violationsCoordWidth": 0,
+        "textCrossesLine": 0,
+        "endpointOffGrid": 0,
+        "collinearOverlap": 0,
+        "maxBoxAgreementMm": 0,
+        "maxAnchorErrorMm": 0,
+        "maxSizeDiffVsLayoutMm": 0,
+        "minTextToLineClearanceMm": 1.5
+      }
+    },
+    {
+      "criterion": "A9",
+      "name": "GI Multi-year: chart reads back identical after save, close and reopen",
+      "result": "PASS",
+      "numbers": {
+        "viewFound": true,
+        "chartJsonIdentical": true,
+        "generatedIdsIdentical": true,
+        "generatedElementsPresent": 139,
+        "generatedIds": 139,
+        "loadStatus": "Ok"
+      }
+    },
+    {
+      "criterion": "A5",
+      "name": "GI Multi-year after reopen: clean lines on Revit read-back (no text box touches a line, endpoints on grid \u2264 1e-6 ft, no collinear overlap)",
+      "result": "PASS",
+      "numbers": {
+        "textBoxes": 69,
+        "lines": 60,
+        "gridXs": 46,
+        "gridYs": 14,
+        "missingElements": 0,
+        "violationsBoundingBox": 0,
+        "violationsCoordWidth": 0,
+        "textCrossesLine": 0,
+        "endpointOffGrid": 0,
+        "collinearOverlap": 0,
+        "maxBoxAgreementMm": 0,
+        "maxAnchorErrorMm": 0,
+        "maxSizeDiffVsLayoutMm": 0,
+        "minTextToLineClearanceMm": 1.5
+      }
+    },
+    {
+      "criterion": "A9",
+      "name": "GI Wrapped: chart reads back identical after save, close and reopen",
+      "result": "PASS",
+      "numbers": {
+        "viewFound": true,
+        "chartJsonIdentical": true,
+        "generatedIdsIdentical": true,
+        "generatedElementsPresent": 95,
+        "generatedIds": 95,
+        "loadStatus": "Ok"
+      }
+    },
+    {
+      "criterion": "A5",
+      "name": "GI Wrapped after reopen: clean lines on Revit read-back (no text box touches a line, endpoints on grid \u2264 1e-6 ft, no collinear overlap)",
+      "result": "PASS",
+      "numbers": {
+        "textBoxes": 47,
+        "lines": 42,
+        "gridXs": 32,
+        "gridYs": 10,
+        "missingElements": 0,
+        "violationsBoundingBox": 0,
+        "violationsCoordWidth": 0,
+        "textCrossesLine": 0,
+        "endpointOffGrid": 0,
+        "collinearOverlap": 0,
+        "maxBoxAgreementMm": 0,
+        "maxAnchorErrorMm": 0,
+        "maxSizeDiffVsLayoutMm": 0,
+        "minTextToLineClearanceMm": 1.5
+      }
+    },
+    {
+      "criterion": "A9",
+      "name": "GI Duration only: chart reads back identical after save, close and reopen",
+      "result": "PASS",
+      "numbers": {
+        "viewFound": true,
+        "chartJsonIdentical": true,
+        "generatedIdsIdentical": true,
+        "generatedElementsPresent": 74,
+        "generatedIds": 74,
+        "loadStatus": "Ok"
+      }
+    },
+    {
+      "criterion": "A5",
+      "name": "GI Duration only after reopen: clean lines on Revit read-back (no text box touches a line, endpoints on grid \u2264 1e-6 ft, no collinear overlap)",
+      "result": "PASS",
+      "numbers": {
+        "textBoxes": 29,
+        "lines": 41,
+        "gridXs": 33,
+        "gridYs": 8,
+        "missingElements": 0,
+        "violationsBoundingBox": 0,
+        "violationsCoordWidth": 0,
+        "textCrossesLine": 0,
+        "endpointOffGrid": 0,
+        "collinearOverlap": 0,
+        "maxBoxAgreementMm": 0,
+        "maxAnchorErrorMm": 0,
+        "maxSizeDiffVsLayoutMm": 0,
+        "minTextToLineClearanceMm": 1.5
+      }
+    },
+    {
+      "criterion": "A9",
+      "name": "GI Large: chart reads back identical after save, close and reopen",
+      "result": "PASS",
+      "numbers": {
+        "viewFound": true,
+        "chartJsonIdentical": true,
+        "generatedIdsIdentical": true,
+        "generatedElementsPresent": 1886,
+        "generatedIds": 1886,
+        "loadStatus": "Ok"
+      }
+    },
+    {
+      "criterion": "A5",
+      "name": "GI Large after reopen: clean lines on Revit read-back (no text box touches a line, endpoints on grid \u2264 1e-6 ft, no collinear overlap)",
+      "result": "PASS",
+      "numbers": {
+        "textBoxes": 1229,
+        "lines": 357,
+        "gridXs": 53,
+        "gridYs": 304,
+        "missingElements": 0,
+        "violationsBoundingBox": 0,
+        "violationsCoordWidth": 0,
+        "textCrossesLine": 0,
+        "endpointOffGrid": 0,
+        "collinearOverlap": 0,
+        "maxBoxAgreementMm": 0,
+        "maxAnchorErrorMm": 0,
+        "maxSizeDiffVsLayoutMm": 0,
+        "minTextToLineClearanceMm": 1.5
+      }
+    },
+    {
+      "criterion": "A9",
+      "name": "duplicated legend after reopen: the copy gets a new Chart.Id, the source keeps its own",
+      "result": "PASS",
+      "numbers": {
+        "copyStoredIdEqualsSource": true,
+        "copyListedIdIsNew": true,
+        "sourceIdKept": true
+      }
+    },
+    {
+      "criterion": "A9",
+      "name": "duplicated legend: regenerated on its first edit with its new Id persisted; the source is untouched",
+      "result": "PASS",
+      "numbers": {
+        "status": "Ok",
+        "copyOwnedElementsBefore": 0,
+        "copyGeneratedIdsAfter": 139,
+        "copyGeneratedOwnedByCopy": 139,
+        "newIdPersisted": true,
+        "idStableOnRelist": true,
+        "sourceElementsIntact": 139,
+        "sourceGeneratedIds": 139
+      }
+    }
+  ],
+  "sections": {},
+  "timingsMs": {
+    "settings read back": 31,
+    "reopen GI Days": 111,
+    "reopen GI Months": 93,
+    "reopen GI Multi-year": 98,
+    "reopen GI Wrapped": 71,
+    "reopen GI Duration only": 33,
+    "reopen GI Large": 2478,
+    "duplicate after reopen": 447
+  },
+  "trigger": "autorun",
+  "request": {
+    "phase": "2",
+    "save": true
+  },
+  "dialogs": []
+}
