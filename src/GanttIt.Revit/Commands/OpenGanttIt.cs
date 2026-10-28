@@ -1,30 +1,48 @@
-using System.Reflection;
+using System.Windows.Interop;
 using Autodesk.Revit.Attributes;
 using Autodesk.Revit.DB;
 using Autodesk.Revit.UI;
+using GanttIt.Revit.Services;
+using GanttIt.Revit.UI;
 
 namespace GanttIt.Revit.Commands;
 
 /// <summary>
-/// The ribbon button. For now it confirms the add-in loaded (Phase 0, V2);
-/// the modal editor window replaces this placeholder in a later delivery.
+/// The ribbon button (D3): opens the modal Gantt-It window owned by Revit's
+/// main window (D7). Generate, Update and Delete run from the window's button
+/// handlers inside this command's API context, so no ExternalEvent is needed.
+/// After the window closes, "Open view" activates the chosen legend (§2.1).
 /// </summary>
 [Transaction(TransactionMode.Manual)]
 public sealed class OpenGanttIt : IExternalCommand
 {
     public Result Execute(ExternalCommandData commandData, ref string message, ElementSet elements)
     {
-        var version = typeof(OpenGanttIt).Assembly
-            .GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion ?? "unknown";
-        var revit = commandData.Application.Application;
-
-        var dialog = new TaskDialog("Gantt-It")
+        var uiapp = commandData.Application;
+        var uidoc = uiapp.ActiveUIDocument;
+        if (uidoc?.Document is not { } document || document.IsFamilyDocument)
         {
-            MainInstruction = "Gantt-It is loaded",
-            MainContent = $"Version {version} on Revit {revit.VersionNumber} ({revit.VersionBuild}).\n\n" +
-                          "The chart editor is not available yet.",
-        };
-        dialog.Show();
-        return Result.Succeeded;
+            TaskDialog.Show("Gantt-It", "Open a project model to create Gantt charts. Charts are legend views, which families don't have.");
+            return Result.Cancelled;
+        }
+
+        try
+        {
+            var backend = new RevitBackend(uiapp);
+            var session = new GanttItSession(backend, metrics => new WpfTextMeasurer(metrics), new DocumentDrafts(document));
+            var window = new GanttItWindow(session);
+            _ = new WindowInteropHelper(window) { Owner = uiapp.MainWindowHandle };
+            window.ShowDialog();
+
+            if (window.ViewToOpen is { } viewId && document.GetElement(viewId) is View view)
+                uidoc.ActiveView = view;
+            return Result.Succeeded;
+        }
+        catch (Exception ex)
+        {
+            // Revit reports a failed command with this message.
+            message = $"Gantt-It could not open: {ex.Message}";
+            return Result.Failed;
+        }
     }
 }
