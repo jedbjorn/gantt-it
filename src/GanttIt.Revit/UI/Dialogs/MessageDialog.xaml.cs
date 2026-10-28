@@ -18,7 +18,14 @@ public partial class MessageDialog : Window
         InitializeComponent();
         DataContext = model;
         AutomationProperties.SetAutomationId(this, automationId);
-        if (model.Danger) ConfirmButton.Style = (Style)FindResource("DangerFilledButton");
+        if (model.Danger)
+        {
+            // Destructive confirmations: Enter means Cancel; deleting takes a deliberate click.
+            ConfirmButton.Style = (Style)FindResource("DangerFilledButton");
+            ConfirmButton.IsDefault = false;
+            CancelButton.IsDefault = true;
+            Loaded += (_, _) => CancelButton.Focus();
+        }
     }
 
     private void OnConfirm(object sender, RoutedEventArgs e) => DialogResult = true;

@@ -1,5 +1,6 @@
 using System.ComponentModel;
 using System.Windows;
+using System.Windows.Input;
 using System.Windows.Threading;
 using GanttIt.Revit.UI.Dialogs;
 
@@ -40,6 +41,18 @@ public partial class GanttItWindow : Window
 
     /// <summary>The legend the user chose with Open view, for the command to activate after closing.</summary>
     public Autodesk.Revit.DB.ElementId? ViewToOpen => _model.ViewToOpen;
+
+    /// <summary>
+    /// Esc closes the window exactly like ×, so a §7.1 draft is parked. Bubbling KeyDown,
+    /// so an open combo box or date picker handles its own Esc first.
+    /// </summary>
+    protected override void OnKeyDown(KeyEventArgs e)
+    {
+        base.OnKeyDown(e);
+        if (e.Handled || e.Key != Key.Escape) return;
+        e.Handled = true;
+        Close();
+    }
 
     protected override void OnClosing(CancelEventArgs e)
     {

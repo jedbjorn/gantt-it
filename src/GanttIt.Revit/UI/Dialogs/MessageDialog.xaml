@@ -19,7 +19,7 @@
         <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,16,0,0">
             <Button x:Name="ConfirmButton" Content="{Binding ConfirmText}" IsDefault="True" Click="OnConfirm"
                     AutomationProperties.AutomationId="Dialog.Confirm" MinWidth="88" />
-            <Button Content="Cancel" IsCancel="True" Margin="8,0,0,0" MinWidth="88"
+            <Button x:Name="CancelButton" Content="Cancel" IsCancel="True" Margin="8,0,0,0" MinWidth="88"
                     Visibility="{Binding HasCancel, Converter={StaticResource BoolToVisible}}"
                     AutomationProperties.AutomationId="Dialog.Cancel" />
         </StackPanel>

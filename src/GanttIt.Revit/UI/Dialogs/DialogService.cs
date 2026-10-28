@@ -24,9 +24,9 @@ public sealed class DialogService(Window owner) : IDialogService
             "an existing legend. Your chart has not been generated, and nothing is downloaded or copied from another model.\n\n" +
             "Revit is paused while Gantt-It is open, so:",
             [
-                "Close Gantt-It. Your chart is kept for this model.",
+                "Close Gantt-It with × or Esc. Your chart is kept. (Cancel discards it.)",
                 "In Revit, choose View › Legends › Legend. Any name and scale will do.",
-                "Open Gantt-It again. The editor reopens with your chart; press Generate.",
+                "Open Gantt-It again and press Generate.",
             ]),
         MessageDialog.NoLegendId);
 
@@ -39,7 +39,7 @@ public sealed class DialogService(Window owner) : IDialogService
 
     public Rgb? PickColor(Rgb current, IReadOnlyList<Rgb> palette)
     {
-        var dialog = new ColorPickerDialog(current, palette, PointerOnScreen()) { Owner = owner };
+        var dialog = new ColorPickerDialog(current, palette, PointerOnScreen(), MonitorWorkArea.Of(owner)) { Owner = owner };
         return dialog.ShowDialog() == true ? dialog.Result : null;
     }
 
