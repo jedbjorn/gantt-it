@@ -1,0 +1,31 @@
+<Project>
+
+  <!--
+    Central package versions. Dependencies stay minimal (spec §8): the BCL,
+    the Revit API reference packages and the test stack.
+  -->
+
+  <PropertyGroup>
+    <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+    <CentralPackageTransitivePinningEnabled>true</CentralPackageTransitivePinningEnabled>
+  </PropertyGroup>
+
+  <!-- Revit API reference packages, one version per Revit major. Keyed off
+       $(RevitVersion) from Directory.Build.props, which is imported first. -->
+  <ItemGroup Condition="'$(RevitVersion)' == '2026'">
+    <PackageVersion Include="Nice3point.Revit.Api.RevitAPI"   Version="2026.4.0" />
+    <PackageVersion Include="Nice3point.Revit.Api.RevitAPIUI" Version="2026.4.0" />
+  </ItemGroup>
+  <ItemGroup Condition="'$(RevitVersion)' == '2027'">
+    <PackageVersion Include="Nice3point.Revit.Api.RevitAPI"   Version="2027.0.10" />
+    <PackageVersion Include="Nice3point.Revit.Api.RevitAPIUI" Version="2027.0.10" />
+  </ItemGroup>
+
+  <!-- Test stack. -->
+  <ItemGroup>
+    <PackageVersion Include="Microsoft.NET.Test.Sdk"    Version="17.14.1" />
+    <PackageVersion Include="xunit"                     Version="2.9.3" />
+    <PackageVersion Include="xunit.runner.visualstudio" Version="3.1.4" />
+  </ItemGroup>
+
+</Project>

@@ -1,0 +1,57 @@
+
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31903.59
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{5EEA52C9-DF25-4391-BDDF-6852BFE3769D}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{0F410117-0B2F-4B2B-B58F-A82D09879D8A}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GanttIt.Core", "src\GanttIt.Core\GanttIt.Core.csproj", "{89128AAD-6C35-4BE9-A3EA-72EBA62474E7}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GanttIt.Revit", "src\GanttIt.Revit\GanttIt.Revit.csproj", "{4DD3309C-3093-460F-9EC1-C8618FE1CD0C}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GanttIt.Core.Tests", "tests\GanttIt.Core.Tests\GanttIt.Core.Tests.csproj", "{3E13CB1F-A201-4348-A831-7084589F56F4}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug R26|Any CPU = Debug R26|Any CPU
+		Release R26|Any CPU = Release R26|Any CPU
+		Debug R27|Any CPU = Debug R27|Any CPU
+		Release R27|Any CPU = Release R27|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{89128AAD-6C35-4BE9-A3EA-72EBA62474E7}.Debug R26|Any CPU.ActiveCfg = Debug R26|Any CPU
+		{89128AAD-6C35-4BE9-A3EA-72EBA62474E7}.Debug R26|Any CPU.Build.0 = Debug R26|Any CPU
+		{89128AAD-6C35-4BE9-A3EA-72EBA62474E7}.Release R26|Any CPU.ActiveCfg = Release R26|Any CPU
+		{89128AAD-6C35-4BE9-A3EA-72EBA62474E7}.Release R26|Any CPU.Build.0 = Release R26|Any CPU
+		{89128AAD-6C35-4BE9-A3EA-72EBA62474E7}.Debug R27|Any CPU.ActiveCfg = Debug R27|Any CPU
+		{89128AAD-6C35-4BE9-A3EA-72EBA62474E7}.Debug R27|Any CPU.Build.0 = Debug R27|Any CPU
+		{89128AAD-6C35-4BE9-A3EA-72EBA62474E7}.Release R27|Any CPU.ActiveCfg = Release R27|Any CPU
+		{89128AAD-6C35-4BE9-A3EA-72EBA62474E7}.Release R27|Any CPU.Build.0 = Release R27|Any CPU
+		{4DD3309C-3093-460F-9EC1-C8618FE1CD0C}.Debug R26|Any CPU.ActiveCfg = Debug R26|Any CPU
+		{4DD3309C-3093-460F-9EC1-C8618FE1CD0C}.Debug R26|Any CPU.Build.0 = Debug R26|Any CPU
+		{4DD3309C-3093-460F-9EC1-C8618FE1CD0C}.Release R26|Any CPU.ActiveCfg = Release R26|Any CPU
+		{4DD3309C-3093-460F-9EC1-C8618FE1CD0C}.Release R26|Any CPU.Build.0 = Release R26|Any CPU
+		{4DD3309C-3093-460F-9EC1-C8618FE1CD0C}.Debug R27|Any CPU.ActiveCfg = Debug R27|Any CPU
+		{4DD3309C-3093-460F-9EC1-C8618FE1CD0C}.Debug R27|Any CPU.Build.0 = Debug R27|Any CPU
+		{4DD3309C-3093-460F-9EC1-C8618FE1CD0C}.Release R27|Any CPU.ActiveCfg = Release R27|Any CPU
+		{4DD3309C-3093-460F-9EC1-C8618FE1CD0C}.Release R27|Any CPU.Build.0 = Release R27|Any CPU
+		{3E13CB1F-A201-4348-A831-7084589F56F4}.Debug R26|Any CPU.ActiveCfg = Debug R26|Any CPU
+		{3E13CB1F-A201-4348-A831-7084589F56F4}.Debug R26|Any CPU.Build.0 = Debug R26|Any CPU
+		{3E13CB1F-A201-4348-A831-7084589F56F4}.Release R26|Any CPU.ActiveCfg = Release R26|Any CPU
+		{3E13CB1F-A201-4348-A831-7084589F56F4}.Release R26|Any CPU.Build.0 = Release R26|Any CPU
+		{3E13CB1F-A201-4348-A831-7084589F56F4}.Debug R27|Any CPU.ActiveCfg = Debug R27|Any CPU
+		{3E13CB1F-A201-4348-A831-7084589F56F4}.Debug R27|Any CPU.Build.0 = Debug R27|Any CPU
+		{3E13CB1F-A201-4348-A831-7084589F56F4}.Release R27|Any CPU.ActiveCfg = Release R27|Any CPU
+		{3E13CB1F-A201-4348-A831-7084589F56F4}.Release R27|Any CPU.Build.0 = Release R27|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{89128AAD-6C35-4BE9-A3EA-72EBA62474E7} = {5EEA52C9-DF25-4391-BDDF-6852BFE3769D}
+		{4DD3309C-3093-460F-9EC1-C8618FE1CD0C} = {5EEA52C9-DF25-4391-BDDF-6852BFE3769D}
+		{3E13CB1F-A201-4348-A831-7084589F56F4} = {0F410117-0B2F-4B2B-B58F-A82D09879D8A}
+	EndGlobalSection
+EndGlobal
