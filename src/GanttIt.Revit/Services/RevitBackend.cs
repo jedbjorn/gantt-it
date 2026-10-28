@@ -92,7 +92,8 @@ public sealed class RevitBackend : IGanttItBackend
         });
     }
 
-    public void SaveUserDefaults(ProjectSettings settings) => UserDefaults.Save(settings);
+    /// <summary>Never throws into the UI: a file that can't be written is traced and skipped.</summary>
+    public void SaveUserDefaults(ProjectSettings settings) => UserDefaults.TrySave(settings);
 
     /// <summary>
     /// Settings for a model that has none: the per-user default names first, then
@@ -129,16 +130,13 @@ public sealed class RevitBackend : IGanttItBackend
     public IReadOnlyList<ChartEntry> ListCharts()
     {
         var doc = Doc;
-        var loaded = ChartStore.All(doc)
+        // Live charts only (§7.2 v1.1): detached copies are plain legends and never listed.
+        var loaded = ChartStore.Live(doc)
             .Select(s => (Stored: s, Load: ChartJson.Deserialize(s.ChartJson)))
             .ToList();
 
         foreach (var (stored, load) in loaded)
             if (load.Value is not null) load.Value.Name = stored.View.Name; // the legend's name is the chart's name
-
-        // The copy rule (§7.2): in ElementId order, a later legend sharing a Chart.Id is a
-        // copy and gets a new Id here; it is persisted on its first Update.
-        ChartCopies.ReassignDuplicateIds(loaded.Where(l => l.Load.Value is not null).Select(l => l.Load.Value!));
 
         return loaded
             .Select(l => new ChartEntry(l.Stored.View.Id, l.Stored.View.Name, l.Load, RevitUtil.SheetsShowing(doc, l.Stored.View.Id)))

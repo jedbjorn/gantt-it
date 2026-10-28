@@ -12,13 +12,13 @@ internal static class LegendFactory
 {
     /// <summary>
     /// A legend to duplicate, or null when the model has none (the UI then shows the
-    /// explanatory modal, §7.1). Plain legends are preferred; Gantt-It's own chart
-    /// legends also serve.
+    /// explanatory modal, §7.1). Plain legends (detached copies included) are
+    /// preferred; live chart legends also serve.
     /// </summary>
     public static View? FindSource(Document doc)
     {
         var legends = RevitUtil.Legends(doc).Where(v => v.CanViewBeDuplicated(ViewDuplicateOption.Duplicate)).ToList();
-        return legends.FirstOrDefault(v => ChartStore.Read(v) is null) ?? legends.FirstOrDefault();
+        return legends.FirstOrDefault(v => ChartStore.ReadLive(v) is null) ?? legends.FirstOrDefault();
     }
 
     /// <summary>

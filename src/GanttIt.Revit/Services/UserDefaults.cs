@@ -27,6 +27,24 @@ internal static class UserDefaults
     public static string FilePath =>
         Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "GanttIt", "defaults.json");
 
+    /// <summary>
+    /// Saves the names; an IO, permission or serialization failure is traced and
+    /// swallowed, since the contract has no channel for it.
+    /// </summary>
+    public static bool TrySave(ProjectSettings settings)
+    {
+        try
+        {
+            Save(settings);
+            return true;
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or JsonException or NotSupportedException or System.Security.SecurityException)
+        {
+            System.Diagnostics.Trace.WriteLine($"Gantt-It: could not save {FilePath}: {ex.Message}");
+            return false;
+        }
+    }
+
     public static void Save(ProjectSettings settings)
     {
         var names = new Names(

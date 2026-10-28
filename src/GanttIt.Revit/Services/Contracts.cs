@@ -25,8 +25,8 @@ public sealed record TextStyleMetrics(
     double WidthCalibration,
     double LinePitchFt);
 
-/// <summary>One chart legend found in the active document (§2.1, §7.2).</summary>
-/// <param name="Load">The stored chart. A copy (§7.2) already carries its new Id here; it is persisted on its first Update.</param>
+/// <summary>One live chart legend in the active document (§2.1, §7.2). Detached copies are never listed.</summary>
+/// <param name="Load">The stored chart.</param>
 /// <param name="Sheets">"Number - Name" of every sheet the legend is placed on, empty when not placed.</param>
 public sealed record ChartEntry(ElementId ViewId, string ViewName, LoadResult<Chart> Load, IReadOnlyList<string> Sheets);
 

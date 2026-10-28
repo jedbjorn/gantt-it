@@ -70,9 +70,47 @@ internal static class ChartStore
             entity.Get<string>(AppVersionField) ?? "");
     }
 
-    /// <summary>Every legend with a valid chart entity, in ascending ElementId order (§7.2).</summary>
+    /// <summary>
+    /// Every legend carrying a chart entity, live or detached, in ascending ElementId
+    /// order. Internal use only (legend source choice, Self-Test cleanup); everything
+    /// user-facing works on <see cref="Live"/>.
+    /// </summary>
     public static List<StoredChart> All(Document doc) =>
         RevitUtil.Legends(doc).Select(Read).Where(c => c is not null).Select(c => c!).ToList();
+
+    /// <summary>
+    /// The live charts (§7.2 v1.1, decision #17): legends whose entity has at least one
+    /// GeneratedId that resolves to an element owned by that same view.
+    /// </summary>
+    public static List<StoredChart> Live(Document doc) =>
+        All(doc).Where(c => IsLive(doc, c)).ToList();
+
+    /// <summary>
+    /// True when at least one stored GeneratedId resolves to an element whose
+    /// OwnerViewId is the chart's own view. A legend duplicated in Revit (plain or
+    /// with detailing), pasted from another model, or whose generated elements were
+    /// all deleted by hand fails this test: it is <b>detached</b>, a plain legend that
+    /// Gantt-It never lists, updates, deletes or regenerates. No write is needed.
+    /// </summary>
+    public static bool IsLive(Document doc, StoredChart chart) =>
+        chart.GeneratedIds.Any(uid => Owned(doc, chart.View, uid) is not null);
+
+    /// <summary>Convenience: <see cref="Read"/> then <see cref="IsLive"/>.</summary>
+    public static StoredChart? ReadLive(View view) =>
+        Read(view) is { } stored && IsLive(view.Document, stored) ? stored : null;
+
+    private static Element? Owned(Document doc, View view, string? uid)
+    {
+        if (string.IsNullOrEmpty(uid)) return null;
+        try
+        {
+            return doc.GetElement(uid) is { } e && e.OwnerViewId == view.Id ? e : null;
+        }
+        catch (Exception)
+        {
+            return null;
+        }
+    }
 
     /// <summary>Writes (or overwrites) the chart entity. Must run inside a transaction.</summary>
     public static void Write(View view, Chart chart, IEnumerable<string> generatedIds)
@@ -84,37 +122,19 @@ internal static class ChartStore
         view.SetEntity(entity);
     }
 
-    /// <summary>Removes an inherited chart entity (a duplicated chart legend used as a source).</summary>
+    /// <summary>Removes an entity inherited from a chart legend that Gantt-It duplicated as a new chart's source.</summary>
     public static void Clear(View view)
     {
         if (Read(view) is not null) view.DeleteEntity(ChartSchema());
     }
 
     /// <summary>
-    /// The OwnerViewId hazard (§7.2 v0.8, V6): a copied legend carries its source's
-    /// entity verbatim, so its GeneratedIds can name the <i>source</i> chart's live
-    /// elements. Only ids whose element exists and is owned by <paramref name="view"/>
-    /// are returned; every other id is ignored, never deleted.
+    /// The ownership rule (§7.2): the ids, among <paramref name="uniqueIds"/>, whose
+    /// element exists and is owned by <paramref name="view"/>. Update deletes only
+    /// these; every other id (stale, or naming another view's elements) is ignored.
     /// </summary>
-    public static List<ElementId> OwnedGeneratedIds(Document doc, View view, IEnumerable<string> uniqueIds)
-    {
-        var result = new List<ElementId>();
-        foreach (var uid in uniqueIds)
-        {
-            if (string.IsNullOrEmpty(uid)) continue;
-            Element? e;
-            try
-            {
-                e = doc.GetElement(uid);
-            }
-            catch (Exception)
-            {
-                continue;
-            }
-            if (e is not null && e.OwnerViewId == view.Id) result.Add(e.Id);
-        }
-        return result;
-    }
+    public static List<ElementId> OwnedGeneratedIds(Document doc, View view, IEnumerable<string> uniqueIds) =>
+        uniqueIds.Select(uid => Owned(doc, view, uid)).Where(e => e is not null).Select(e => e!.Id).ToList();
 
     // ------------------------------------------------------------------ settings
 

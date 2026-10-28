@@ -60,7 +60,8 @@ internal sealed class ChartGenerator
         var source = LegendFactory.FindSource(_doc);
         if (source is null) return new ActionResult(ActionStatus.NoLegend, NoLegendMessage);
 
-        EnsureUniqueChartId(chart, null);
+        // Defensive: a new chart never shares an Id with a live chart.
+        if (ChartStore.Live(_doc).Any(c => ChartJson.Deserialize(c.ChartJson).Value?.Id == chart.Id)) chart.Id = Guid.NewGuid();
         return GanttItTransaction.Run(_doc, GanttItTransaction.Name("Generate", chart.Name), () =>
         {
             var view = LegendFactory.Create(_doc, source, chart.Name);
@@ -74,12 +75,9 @@ internal sealed class ChartGenerator
     {
         chart.Name = chart.Name?.Trim() ?? "";
         if (LoadChartView(viewId, out var view, out var stored) is { } notChart) return notChart;
-        var load = ChartJson.Deserialize(stored!.ChartJson);
-        if (load.Status == LoadStatus.NewerVersion)
-            return Blocked(load.Error ?? "This chart was written by a newer version of Gantt-It.");
+        if (ChartJson.Deserialize(stored!.ChartJson).Status == LoadStatus.NewerVersion) return Blocked(NewerChartMessage);
         if (Refuse(chart, settings, view, out var styles) is { } refused) return refused;
 
-        EnsureUniqueChartId(chart, view);
         return GanttItTransaction.Run(_doc, GanttItTransaction.Name("Update", chart.Name), () =>
         {
             var drawn = Redraw(view!, stored, chart, settings, styles!, new FillTypes(_doc));
@@ -90,7 +88,9 @@ internal sealed class ChartGenerator
 
     public ActionResult Delete(ElementId viewId)
     {
-        if (LoadChartView(viewId, out var view, out _) is { } notChart) return notChart;
+        if (LoadChartView(viewId, out var view, out var stored) is { } notChart) return notChart;
+        if (ChartJson.Deserialize(stored!.ChartJson).Status == LoadStatus.NewerVersion)
+            return Blocked(NewerChartMessage + " It can still be deleted by hand in Revit.");
         if (EditableProblem(view) is { } owned) return Blocked(owned);
 
         var name = view!.Name;
@@ -105,6 +105,8 @@ internal sealed class ChartGenerator
 
     public ActionResult RegenerateAll(ProjectSettings settings)
     {
+        if (settings.SchemaVersion > SchemaVersions.Settings)
+            return Blocked("The settings were written by a newer version of Gantt-It and are read-only here.");
         var styles = StyleReader.Resolve(_doc, settings, out var styleProblem);
         if (styles is null) return Blocked(styleProblem!);
         if (ChartValidator.ValidateSettings(settings) is { Count: > 0 } settingIssues)
@@ -112,20 +114,18 @@ internal sealed class ChartGenerator
 
         var skipped = new List<string>();
         var work = new List<(View View, StoredChart Stored, Chart Chart)>();
-        foreach (var stored in ChartStore.All(_doc))
+        foreach (var stored in ChartStore.Live(_doc))
         {
             var load = ChartJson.Deserialize(stored.ChartJson);
             if (!load.IsEditable || load.Value is null)
             {
+                // Newer-version charts are read-only (§7.2); unreadable ones are reported.
                 skipped.Add($"\"{stored.View.Name}\" ({load.Error})");
                 continue;
             }
             load.Value.Name = stored.View.Name;
             work.Add((stored.View, stored, load.Value));
         }
-
-        // The copy rule (§7.2): a later legend sharing a Chart.Id is a copy and gets a new Id.
-        ChartCopies.ReassignDuplicateIds(work.Select(w => w.Chart));
 
         var ready = new List<(View View, StoredChart Stored, Chart Chart)>();
         foreach (var w in work)
@@ -188,30 +188,24 @@ internal sealed class ChartGenerator
         return Worksharing.CheckEditable(_doc, ids);
     }
 
+    /// <summary>
+    /// Update and Delete act on live charts only (§7.2 v1.1, decision #17). A detached
+    /// legend (a Revit duplicate, a legend pasted from another model, or a chart whose
+    /// generated elements were all deleted by hand) is a plain legend: Blocked, even when
+    /// the caller still holds its ViewId.
+    /// </summary>
     private ActionResult? LoadChartView(ElementId viewId, out View? view, out StoredChart? stored)
     {
         view = _doc.GetElement(viewId) as View;
         stored = view is null ? null : ChartStore.Read(view);
-        return stored is null ? Blocked("That view is not a Gantt-It chart (or it no longer exists).") : null;
+        if (stored is null) return Blocked("That view is not a Gantt-It chart (or it no longer exists).");
+        if (!ChartStore.IsLive(_doc, stored))
+            return Blocked($"\"{view!.Name}\" is a plain legend, not a live Gantt-It chart: it holds none of the elements "
+                           + "Gantt-It drew (a copy made in Revit, or a chart whose elements were deleted). Use New chart instead.");
+        return null;
     }
 
-    /// <summary>
-    /// The copy rule on write: a chart whose Id is already used by an earlier chart
-    /// legend (or by any chart, for a new one) gets a new Id.
-    /// </summary>
-    private void EnsureUniqueChartId(Chart chart, View? self)
-    {
-        foreach (var other in ChartStore.All(_doc))
-        {
-            if (self is not null && other.View.Id == self.Id) continue;
-            if (self is not null && other.View.Id.Value > self.Id.Value) continue;
-            if (ChartJson.Deserialize(other.ChartJson).Value?.Id == chart.Id)
-            {
-                ChartCopies.AssignNewId(chart);
-                return;
-            }
-        }
-    }
+    private const string NewerChartMessage = "This chart was written by a newer version of Gantt-It and is read-only here.";
 
     private static ActionResult Blocked(string message) => new(ActionStatus.Blocked, message);
 
