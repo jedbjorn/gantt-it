@@ -115,6 +115,23 @@ public class EditorInputTests
         Assert.Equal(SupportedDates.Max, SupportedDates.Min.AddDays(EditorInput.MaxDurationDays - 1));
 
     [Fact]
+    public void Unique_chart_name_skips_taken_names_case_insensitively()
+    {
+        Assert.Equal("Gantt Chart 1", EditorInput.UniqueChartName([]));
+        Assert.Equal("Gantt Chart 3", EditorInput.UniqueChartName(["gantt chart 1", " Gantt Chart 2 ", "Level 1"]));
+    }
+
+    [Fact]
+    public void Unique_chart_name_passes_validation()
+    {
+        var names = new[] { "Gantt Chart 1" };
+        var chart = Sequential(1, D(2026, 1, 1));
+        chart.Name = EditorInput.UniqueChartName(names);
+        Assert.DoesNotContain(Core.Validation.ChartValidator.Validate(chart, new ProjectSettings(), names),
+            i => i.Code == Core.Validation.IssueCode.ChartNameInUse);
+    }
+
+    [Fact]
     public void Title_follows_a_rename_while_it_equals_the_name() =>
         Assert.Equal("Phase 2", EditorInput.TitleAfterRename("Phase 1", "Phase 2", "Phase 1"));
 

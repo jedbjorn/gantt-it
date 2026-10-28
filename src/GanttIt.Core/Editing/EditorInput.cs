@@ -34,6 +34,21 @@ public static class EditorInput
     }
 
     /// <summary>
+    /// The default name of a new chart: "Gantt Chart 1", "Gantt Chart 2", … — the
+    /// first not used by any view, compared the way <c>ChartValidator</c> does
+    /// (trimmed, case-insensitive), so a new chart never starts with a name error.
+    /// </summary>
+    public static string UniqueChartName(IEnumerable<string> viewNames)
+    {
+        var taken = new HashSet<string>(viewNames.Select(n => n.Trim()), StringComparer.OrdinalIgnoreCase);
+        for (var i = 1; ; i++)
+        {
+            var name = $"Gantt Chart {i.ToString(CultureInfo.InvariantCulture)}";
+            if (!taken.Contains(name)) return name;
+        }
+    }
+
+    /// <summary>
     /// The title defaults to the name (§2.2): while the title still equals the
     /// old name, it follows a rename; once the user has typed their own title it stays.
     /// </summary>
