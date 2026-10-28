@@ -136,6 +136,7 @@ public sealed class HomeViewModel : ObservableObject
         get
         {
             var state = _main.Session.Settings;
+            if (_main.Session.SettingsReadOnly) return null; // the Error banner says why; nothing to replace
             if (!state.Stored) return "This model has no Gantt-It settings yet. They open the first time you create a chart.";
             return state.MissingStyles.Count == 0
                 ? null

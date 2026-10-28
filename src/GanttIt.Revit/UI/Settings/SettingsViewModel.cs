@@ -44,6 +44,7 @@ public sealed class SettingsViewModel : ObservableObject
         _settings = state.Settings.Clone();
         LoadError = state.Error;
         IsFirstRun = !state.Stored;
+        IsReadOnly = session.SettingsReadOnly;
 
         var backend = session.Backend;
         var textStyles = Safe(backend.TextStyles);
@@ -83,6 +84,11 @@ public sealed class SettingsViewModel : ObservableObject
     public bool IsFirstRun { get; }
 
     public string? LoadError { get; }
+
+    /// <summary>Settings from a newer Gantt-It: shown, never saved over (§7.2).</summary>
+    public bool IsReadOnly { get; }
+
+    public bool IsEditable => !IsReadOnly;
 
     public StylePickerViewModel TitleText { get; }
 
@@ -156,7 +162,7 @@ public sealed class SettingsViewModel : ObservableObject
     }
 
     public bool CanSave =>
-        Pickers.All(p => p.Selected is not null) && DateFormatError is null && CellPaddingError is null;
+        !IsReadOnly && Pickers.All(p => p.Selected is not null) && DateFormatError is null && CellPaddingError is null;
 
     public ICommand SaveCommand { get; }
 

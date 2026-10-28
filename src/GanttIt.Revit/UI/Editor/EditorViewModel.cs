@@ -387,7 +387,12 @@ public sealed class EditorViewModel : ObservableObject
         lines.AddRange(issues.Select(i => i.Message));
 
         // With stored settings, every style must exist (§2.3). Without, Generate opens Settings first (§2.1).
-        if (session.Settings.Stored)
+        if (session.SettingsReadOnly)
+        {
+            // §7.2: settings from a newer Gantt-It can't be drawn with or saved over here.
+            lines.Add($"Settings: {session.Settings.Error ?? "the settings were written by a newer version of Gantt-It and are read-only here."}");
+        }
+        else if (session.Settings.Stored)
         {
             foreach (var missing in session.Settings.MissingStyles)
                 lines.Add($"Settings: the {missing.ToLowerInvariant()} no longer exists. Choose a replacement in Settings.");

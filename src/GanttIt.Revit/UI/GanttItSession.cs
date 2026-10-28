@@ -34,6 +34,16 @@ public sealed class GanttItSession
 
     public SettingsState Settings { get; private set; }
 
+    /// <summary>
+    /// The model's stored settings were written by a newer Gantt-It (§7.2): they are
+    /// read-only here, Settings can't save over them and charts can't be drawn with them.
+    /// The backend reports this as a stored state with an error (unreadable settings are
+    /// "not stored", so they can simply be saved again).
+    /// </summary>
+    public bool SettingsReadOnly =>
+        Settings.Settings.SchemaVersion > Core.Model.SchemaVersions.Settings
+        || (Settings.Stored && Settings.Error is not null);
+
     /// <summary>Reads settings again after Settings saved them; the next preview recalibrates.</summary>
     public void ReloadSettings()
     {

@@ -73,7 +73,7 @@
                        AutomationProperties.AutomationId="Settings.MissingStyles" />
         </Border>
 
-        <Border Style="{StaticResource Panel}">
+        <Border Style="{StaticResource Panel}" IsEnabled="{Binding IsEditable}">
             <StackPanel>
                 <TextBlock Text="Text styles" Style="{StaticResource SectionText}" />
                 <ContentControl Content="{Binding TitleText}" ContentTemplate="{StaticResource StylePickerRow}" Focusable="False" />
@@ -145,6 +145,7 @@
         </Border>
 
         <CheckBox Content="Use as my default for new projects" IsChecked="{Binding UseAsDefault}" Margin="0,12,0,0"
+                  IsEnabled="{Binding IsEditable}"
                   AutomationProperties.AutomationId="Settings.UseAsDefault"
                   ToolTip="Saves the style names to your Gantt-It defaults; new models match styles by these names first." />
 
