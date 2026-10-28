@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Gantt-It — Revit add-in manifest (spec §8).
+
+  Dev deployment: copy the build output folder to
+  %AppData%\Autodesk\Revit\Addins\<year>\GanttIt\ and this file next to that
+  folder, in Addins\<year>\.
+
+  ClientId is Gantt-It's permanent application id. NEVER change it once
+  shipped: Revit identifies the add-in across upgrades by it.
+  VendorId DSOS (Designs/OS, D10) must match the Extensible Storage schemas.
+-->
+<RevitAddIns>
+  <AddIn Type="Application">
+    <Name>Gantt-It</Name>
+    <Assembly>GanttIt\GanttIt.Revit.dll</Assembly>
+    <FullClassName>GanttIt.Revit.App</FullClassName>
+    <ClientId>9920fb42-542b-4ce1-9659-a078489af6b0</ClientId>
+    <VendorId>DSOS</VendorId>
+    <VendorDescription>Designs/OS</VendorDescription>
+  </AddIn>
+</RevitAddIns>
