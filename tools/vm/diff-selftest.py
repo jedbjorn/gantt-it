@@ -21,8 +21,10 @@ IGNORED_KEYS = {
 
 
 def ignored(key: str) -> bool:
+    # Case-sensitive "Id" suffix (viewId, sheetId, viewportId): a lowercase "id" ending
+    # would also drop keys like endpointOffGrid.
     k = key.lower()
-    return key in IGNORED_KEYS or k.endswith("id") or "uniqueid" in k or k.startswith("elements")
+    return key in IGNORED_KEYS or key == "id" or key.endswith("Id") or "uniqueid" in k or k.startswith("elements")
 
 
 def flatten(node, prefix=""):

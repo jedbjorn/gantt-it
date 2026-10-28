@@ -105,8 +105,8 @@ internal sealed class ChartGenerator
 
     public ActionResult RegenerateAll(ProjectSettings settings)
     {
-        if (settings.SchemaVersion > SchemaVersions.Settings)
-            return Blocked("The settings were written by a newer version of Gantt-It and are read-only here.");
+        if (settings.SchemaVersion > SchemaVersions.Settings || StoredSettingsAreNewer())
+            return Blocked(NewerSettingsMessage);
         var styles = StyleReader.Resolve(_doc, settings, out var styleProblem);
         if (styles is null) return Blocked(styleProblem!);
         if (ChartValidator.ValidateSettings(settings) is { Count: > 0 } settingIssues)
@@ -159,8 +159,8 @@ internal sealed class ChartGenerator
         styles = null;
         if (chart.SchemaVersion > SchemaVersions.Chart)
             return Blocked("This chart was written by a newer version of Gantt-It and is read-only here.");
-        if (settings.SchemaVersion > SchemaVersions.Settings)
-            return Blocked("The settings were written by a newer version of Gantt-It and are read-only here.");
+        if (settings.SchemaVersion > SchemaVersions.Settings || StoredSettingsAreNewer())
+            return Blocked(NewerSettingsMessage);
 
         var issues = ChartValidator.Validate(chart, settings, RevitUtil.OtherViewNames(_doc, self?.Id));
         if (issues.Count > 0) return Blocked(string.Join(" ", issues.Select(i => i.Message).Distinct()));
@@ -204,6 +204,17 @@ internal sealed class ChartGenerator
                            + "Gantt-It drew (a copy made in Revit, or a chart whose elements were deleted). Use New chart instead.");
         return null;
     }
+
+    private const string NewerSettingsMessage =
+        "The model's Gantt-It settings were written by a newer version of Gantt-It and are read-only here.";
+
+    /// <summary>
+    /// True when the model's stored settings have a newer SchemaVersion (§7.2 v1.1). Checked
+    /// on the stored document, not the passed-in settings: when no preview could be read,
+    /// LoadSettings falls back to defaults, which must not be used to draw either.
+    /// </summary>
+    private bool StoredSettingsAreNewer() =>
+        ChartStore.ReadSettingsJson(_doc) is { } json && SettingsJson.Deserialize(json).Status == LoadStatus.NewerVersion;
 
     private const string NewerChartMessage = "This chart was written by a newer version of Gantt-It and is read-only here.";
 

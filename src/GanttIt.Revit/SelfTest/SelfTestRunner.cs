@@ -822,7 +822,7 @@ internal sealed class SelfTestRunner
         gen = _backend.Generate(part, _settings);
         if (gen.ViewId is null || ChartGenerator.LastDraw is null)
         {
-            _r.Check("A7", "partly hand-deleted: chart generated", false, detail: gen.Message);
+            _r.Check("Beyond Intention", "partly hand-deleted: chart generated", false, detail: gen.Message);
             return;
         }
         view = (View)_doc.GetElement(gen.ViewId);
@@ -836,7 +836,7 @@ internal sealed class SelfTestRunner
         listed = _backend.ListCharts().Any(e => e.ViewId == view.Id);
         update = _backend.Update(view.Id, part, _settings);
         var oldLeft = stored.GeneratedIds.Count(u => _doc.GetElement(u) is not null);
-        _r.Check("A7", "some generated elements deleted by hand: still listed, and Update redraws it completely",
+        _r.Check("Beyond Intention", "some generated elements deleted by hand: still listed, and Update redraws it completely",
             listed && update.Succeeded && oldLeft == 0,
             new JsonObject
             {
@@ -850,7 +850,7 @@ internal sealed class SelfTestRunner
             CheckChart(new FixtureRun(part, view.Id, draw), "after partial hand delete and Update", []);
         var partId = view.Id;
         var removed = _backend.Delete(partId);
-        _r.Check("A7", "the partly hand-deleted chart deletes cleanly", removed.Succeeded && _doc.GetElement(partId) is null,
+        _r.Check("Beyond Intention", "the partly hand-deleted chart deletes cleanly", removed.Succeeded && _doc.GetElement(partId) is null,
             new JsonObject { ["status"] = removed.Status.ToString() }, removed.Message);
     }
 
