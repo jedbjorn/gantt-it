@@ -20,7 +20,7 @@ public static class PreviewRenderer
     private static readonly Dictionary<Rgb, Brush> Fills = [];
     private static readonly Dictionary<(string, bool, bool), Typeface> Typefaces = [];
 
-    /// <summary>Draws <paramref name="layout"/> scaled to fit <paramref name="target"/>, centred horizontally, top-aligned.</summary>
+    /// <summary>Draws <paramref name="layout"/> scaled to fit <paramref name="target"/>, centred horizontally, top-aligned (centred both ways for a thumbnail).</summary>
     public static void Draw(
         DrawingContext dc,
         ChartLayout layout,
@@ -35,8 +35,14 @@ public static class PreviewRenderer
         if (!(width > 0) || !(height > 0) || target.Width <= 0 || target.Height <= 0) return;
 
         var scale = Math.Min(target.Width / width, target.Height / height);
+        // A very tall chart (hundreds of sections) shrunk to fit a card tile is an unreadable
+        // black strip, so its thumbnail fills the tile's width and shows the top rows, clipped.
+        var cropped = thumbnail && target.Width / width > 2 * scale;
+        if (cropped) scale = target.Width / width;
         var ox = target.Left + (target.Width - width * scale) / 2;
-        var oy = target.Top;
+        // The editor preview hangs from the top; a card thumbnail sits in the middle of its tile.
+        var oy = thumbnail && !cropped ? target.Top + (target.Height - height * scale) / 2 : target.Top;
+        if (cropped) dc.PushClip(new RectangleGeometry(target));
 
         Rect ToRect(Box b) => new(ox + b.Left * scale, oy - b.Top * scale, b.Width * scale, b.Height * scale);
         Point ToPoint(Point2 p) => new(ox + p.X * scale, oy - p.Y * scale);
@@ -58,6 +64,8 @@ public static class PreviewRenderer
         foreach (var p in layout.Primitives)
             if (p is TextPrimitive text && metrics.TryGetValue(text.Style, out var m))
                 DrawText(dc, text, m, scale, ToRect(text.MeasuredBox).TopLeft, pixelsPerDip);
+
+        if (cropped) dc.Pop();
     }
 
     /// <summary>

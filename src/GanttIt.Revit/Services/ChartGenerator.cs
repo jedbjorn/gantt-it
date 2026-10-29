@@ -86,12 +86,19 @@ internal sealed class ChartGenerator
         });
     }
 
-    public ActionResult Delete(ElementId viewId)
+    /// <param name="viewId">The chart's legend view.</param>
+    /// <param name="leaveView">
+    /// Runs after every check has passed and before the transaction starts. It must
+    /// make sure the view isn't the active view (Revit refuses to delete that) and
+    /// returns a problem message when it can't.
+    /// </param>
+    public ActionResult Delete(ElementId viewId, Func<string?>? leaveView = null)
     {
         if (LoadChartView(viewId, out var view, out var stored) is { } notChart) return notChart;
         if (ChartJson.Deserialize(stored!.ChartJson).Status == LoadStatus.NewerVersion)
             return Blocked(NewerChartMessage + " It can still be deleted by hand in Revit.");
         if (EditableProblem(view) is { } owned) return Blocked(owned);
+        if (leaveView?.Invoke() is { } stuck) return Blocked(stuck);
 
         var name = view!.Name;
         return GanttItTransaction.Run(_doc, GanttItTransaction.Name("Delete", name), () =>

@@ -25,10 +25,11 @@ namespace GanttIt.Revit.SelfTest;
 /// identical, the copies are still detached, and updating then deleting the
 /// original leaves each copy's elements untouched (A9).</item>
 /// <item><c>undo-check</c>: after one GUI Undo, the "GI Undo" chart is gone (A11).</item>
+/// <item><c>place-sheets</c> / <c>a8-check</c>: the A8 helpers in <c>SelfTestRunner.Sheets.cs</c>.</item>
 /// </list>
 /// Every check records PASS/FAIL and its numbers in the report.
 /// </summary>
-internal sealed class SelfTestRunner
+internal sealed partial class SelfTestRunner
 {
     private const string UndoChartName = "GI Undo";
     private const string FaultChartName = "GI Fault";
@@ -104,6 +105,12 @@ internal sealed class SelfTestRunner
                 break;
             case "undo-check":
                 UndoCheck();
+                break;
+            case "place-sheets":
+                _r.Step("A8", "place on sheets", PlaceOnSheets);
+                break;
+            case "a8-check":
+                _r.Step("A8", "after Delete", CheckAfterDelete);
                 break;
             default:
                 _r.Check("setup", $"unknown phase '{phase}'", false);
