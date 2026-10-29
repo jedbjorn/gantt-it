@@ -26,6 +26,12 @@ public static class LayoutEngine
     /// </summary>
     public static readonly double MinTickSpacing = Units.FromMillimeters(1);
 
+    /// <summary>
+    /// An unlabelled edge cell (a sliver) joins its neighbour only when it covers
+    /// at most this share of the neighbour's period; otherwise it stays a blank cell (§6.2).
+    /// </summary>
+    public const double MaxSliverShare = 0.25;
+
     public const string NameHeader = "Section";
     public const string StartHeader = "Start";
     public const string EndHeader = "End";
@@ -255,67 +261,114 @@ public static class LayoutEngine
     }
 
     /// <summary>
-    /// Fits labels to one tier (§6.2). For group sizes k = 1, 2, 4, … (k
-    /// neighbouring tick cells merged into one labelled cell, so "every 2nd,
-    /// then 4th tick" is labelled), try each shortening level in turn and accept
-    /// the first (k, level) at which every full group's label fits with padding
-    /// on both sides. Partial groups (clipped at an axis end, or the short
-    /// remainder group) take the longest candidate at or after that level that
-    /// fits, or stay blank, so one short edge cell never forces thinning. Past
-    /// k = 4 the doubling simply continues, which keeps huge spans bounded. If a
-    /// single group spanning the whole axis can't hold a label, the tier stays
-    /// unlabelled. A label is only ever placed inside a cell it fits, so labels
-    /// never overlap and never touch a line.
+    /// Fits labels to one tier (§6.2).
+    /// <list type="number">
+    /// <item>Tick cells are merged into groups of k for each thinning step k
+    /// in turn (<see cref="TimescaleLabels.ThinningSteps"/>; calendar-aligned
+    /// for months, quarters and years), so every k-th tick is labelled. A group
+    /// is full when it holds k whole units; partial groups (a cell clipped at an
+    /// axis end, or a group cut short by an axis end or by the alignment) only
+    /// occur at the ends.</item>
+    /// <item>A partial group narrower than its own shortest label plus padding
+    /// is a sliver. Every other group is labelled.</item>
+    /// <item>Accept the first k at which some format fits every labelled group
+    /// with padding on both sides (and at least one group is labelled); the
+    /// whole tier then uses the longest such format. A partial group that is
+    /// not a sliver always fits the shortest format, so an edge can shorten
+    /// the format but never forces more thinning.</item>
+    /// <item>A sliver that covers at most <see cref="MaxSliverShare"/> of its
+    /// neighbour's period (k units) joins that neighbour: the divider between
+    /// them is dropped, so the cell overstates its period by less than one
+    /// label and at most a quarter of it. The label keeps its own left edge, so
+    /// it still starts exactly at its date. A longer sliver keeps its divider
+    /// and stays blank: no allowed label fits it, and joining would misname too
+    /// much time.</item>
+    /// </list>
+    /// A group is named by its first cell, unless that cell is a sliver clipped
+    /// at the axis start and the rest of the group can hold the next cell's
+    /// label: then the next cell names it, so three days of September don't
+    /// name a group that is otherwise October. If a single group spanning the
+    /// whole axis can't hold a label, the tier stays unlabelled. A label is only
+    /// ever placed inside a cell it fits, so labels never overlap and never
+    /// touch a line.
     /// </summary>
     private static TierLayout SolveTier(
         TimelineMap timeline, TierCells tier, double top, double bottom, double pad, TextSizes sizes, List<PlacedText> texts)
     {
         var n = tier.Cells.Count;
-        var levels = tier.Candidates.Max(c => c.Count);
+        var formats = tier.Candidates.Max(c => c.Count);
+        var slots = tier.Cells.Select(c => TimescaleLabels.ThinningSlot(tier.Unit, c.Start, timeline.Axis.Start)).ToList();
 
-        for (var k = 1; ; k *= 2)
+        foreach (var k in TimescaleLabels.ThinningSteps(tier.Unit))
         {
             var groups = Groups(k);
-            for (var level = 0; level < levels; level++)
+            var slivers = groups.Select(g => g.Partial && g.Right - g.Left < Shortest(g.Name)).ToList();
+            for (var format = 0; format < formats && slivers.Contains(false); format++)
             {
-                if (!groups.All(g => g.Partial || Fits(g, Candidate(tier, g.First, level))))
+                if (groups.Where((g, i) => !slivers[i] && !Fits(g, Candidate(tier, g.Name, format))).Any())
                     continue;
 
-                foreach (var g in groups)
+                // Short slivers join their neighbour; interior groups are full, so never slivers.
+                var spans = groups.Select((g, i) => new Span(g, slivers[i] ? null : Candidate(tier, g.Name, format))).ToList();
+                if (spans.Count > 1 && spans[0].Label is null && spans[1].Label is not null && MayJoin(spans[0].Group, spans[1].Group, k))
                 {
-                    var label = g.Partial ? LongestFitting(g, level) : Candidate(tier, g.First, level);
-                    if (label is not null)
-                        texts.Add(new PlacedText(label, sizes[label], new Box(g.Left, bottom, g.Right, top), TextAlign.Left));
+                    spans[1] = spans[1] with { Left = spans[0].Left };
+                    spans.RemoveAt(0);
                 }
-                return new TierLayout(tier.Unit, top, bottom, k, groups.Skip(1).Select(g => g.Left).ToList());
+                if (spans.Count > 1 && spans[^1].Label is null && spans[^2].Label is not null && MayJoin(spans[^1].Group, spans[^2].Group, k))
+                {
+                    spans[^2] = spans[^2] with { Right = spans[^1].Right };
+                    spans.RemoveAt(spans.Count - 1);
+                }
+
+                foreach (var s in spans)
+                    if (s.Label is { } label)
+                        texts.Add(new PlacedText(label, sizes[label], new Box(s.Group.LabelLeft, bottom, s.Right, top), TextAlign.Left));
+                return new TierLayout(tier.Unit, top, bottom, k, spans.Skip(1).Select(s => s.Left).ToList());
             }
 
-            if (k >= n)
+            if (groups.Count == 1)
                 return new TierLayout(tier.Unit, top, bottom, k, []);
         }
+        return new TierLayout(tier.Unit, top, bottom, n, []);
 
-        bool Fits(Group g, TextRequest label) => sizes[label].Width + 2 * pad <= g.Right - g.Left;
+        bool Fits(Group g, TextRequest label) => sizes[label].Width + 2 * pad <= g.Right - g.LabelLeft;
 
-        TextRequest? LongestFitting(Group g, int fromLevel)
+        // A sliver may join a neighbour whose period (its k-unit block) is at least 1 / MaxSliverShare times as long.
+        bool MayJoin(Group sliver, Group neighbour, int k)
         {
-            var candidates = tier.Candidates[g.First];
-            for (var level = Math.Min(fromLevel, candidates.Count - 1); level < candidates.Count; level++)
-                if (Fits(g, candidates[level])) return candidates[level];
-            return null;
+            var days = tier.Cells[sliver.Last].End.DayNumber - tier.Cells[sliver.First].Start.DayNumber + 1;
+            var (from, to) = TimescaleLabels.ThinningBlock(tier.Unit, tier.Cells[neighbour.Name].Start, k, timeline.Axis.Start);
+            return days <= MaxSliverShare * (to.DayNumber - from.DayNumber + 1);
         }
+
+        // Width the cell's shortest format needs, padding included.
+        double Shortest(int cell) => sizes[tier.Candidates[cell][^1]].Width + 2 * pad;
+
+        double Left(int cell) => timeline.XOfDate(tier.Cells[cell].Start);
 
         List<Group> Groups(int k)
         {
-            var result = new List<Group>((n + k - 1) / k);
-            for (var first = 0; first < n; first += k)
+            var result = new List<Group>();
+            for (var first = 0; first < n;)
             {
-                var last = Math.Min(first + k, n) - 1;
+                var last = first;
+                while (last + 1 < n && slots[last + 1] % k != 0) last++;
                 var start = tier.Cells[first].Start;
                 var end = tier.Cells[last].End;
+                var right = timeline.XOfDate(end.AddDays(1));
                 var partial = last - first + 1 < k
                               || TimescaleRules.UnitStart(tier.Unit, start) != start
                               || TimescaleRules.UnitEnd(tier.Unit, end) != end;
-                result.Add(new Group(first, timeline.XOfDate(start), timeline.XOfDate(end.AddDays(1)), partial));
+                var name = first == 0
+                           && last > first
+                           && TimescaleRules.UnitStart(tier.Unit, start) != start
+                           && Left(1) - Left(0) < Shortest(0)
+                           && right - Left(1) >= Shortest(1)
+                    ? 1
+                    : first;
+                result.Add(new Group(first, last, name, Left(first), Left(name), right, partial));
+                first = last + 1;
             }
             return result;
         }
@@ -391,5 +444,17 @@ public static class LayoutEngine
 
     private static TextRequest Body(string text) => new(text, TextStyleKey.Body);
 
-    private readonly record struct Group(int First, double Left, double Right, bool Partial);
+    /// <summary>
+    /// Tick cells <see cref="First"/>..<see cref="Last"/>; <see cref="Name"/> is the cell
+    /// whose label it takes, starting at <see cref="LabelLeft"/>.
+    /// </summary>
+    private readonly record struct Group(int First, int Last, int Name, double Left, double LabelLeft, double Right, bool Partial);
+
+    /// <summary>A solved tier cell: its labelled group, widened where a sliver joined it.</summary>
+    private readonly record struct Span(Group Group, TextRequest? Label)
+    {
+        public double Left { get; init; } = Group.Left;
+
+        public double Right { get; init; } = Group.Right;
+    }
 }
