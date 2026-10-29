@@ -85,4 +85,41 @@ public static class TimescaleLabels
         TimeUnit.Year => cellStart.Year,
         _ => throw new ArgumentOutOfRangeException(nameof(unit), unit, null),
     };
+
+    /// <summary>
+    /// The full period (inclusive dates, not clipped to the axis) of the
+    /// k-unit thinning group that holds the cell starting on <paramref name="cellStart"/>.
+    /// A period reaching past the calendar's range (only for a huge k) is cut
+    /// at <see cref="DateOnly.MinValue"/> / <see cref="DateOnly.MaxValue"/>.
+    /// </summary>
+    public static (DateOnly Start, DateOnly End) ThinningBlock(TimeUnit unit, DateOnly cellStart, int k, DateOnly axisStart)
+    {
+        long slot = ThinningSlot(unit, cellStart, axisStart) / k * k;
+        switch (unit)
+        {
+            case TimeUnit.Day:
+            case TimeUnit.Week:
+                var days = unit == TimeUnit.Day ? 1L : 7L;
+                var origin = unit == TimeUnit.Day ? axisStart : TimescaleRules.UnitStart(unit, axisStart);
+                var first = origin.DayNumber + slot * days;
+                var last = Math.Min(first + k * days - 1, DateOnly.MaxValue.DayNumber);
+                return (DateOnly.FromDayNumber((int)first), DateOnly.FromDayNumber((int)last));
+            default:
+                // Months since 1 January of year 0.
+                var months = unit switch
+                {
+                    TimeUnit.Month => 1L,
+                    TimeUnit.Quarter => 3L,
+                    TimeUnit.Year => 12L,
+                    _ => throw new ArgumentOutOfRangeException(nameof(unit), unit, null),
+                };
+                var start = slot * months;
+                var next = start + k * months;
+                return (
+                    start < 12 ? DateOnly.MinValue : MonthStart(start),
+                    next >= 10000 * 12 ? DateOnly.MaxValue : MonthStart(next).AddDays(-1));
+        }
+
+        static DateOnly MonthStart(long monthIndex) => new((int)(monthIndex / 12), (int)(monthIndex % 12) + 1, 1);
+    }
 }

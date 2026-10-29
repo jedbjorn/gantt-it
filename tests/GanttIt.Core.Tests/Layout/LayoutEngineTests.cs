@@ -240,7 +240,8 @@ public class LayoutEngineTests
     public void MonthThinning_StaysOnQuarters_WhenTheAxisStartsMidQuarter()
     {
         // Feb 2026..Jan 2027 at 40 mm: every 3rd month, on Jan/Apr/Jul/Oct. The
-        // Feb–Mar and Jan edge groups can't hold "Feb"/"Jan" and join their neighbour.
+        // Feb–Mar and Jan edge groups can't hold "Feb"/"Jan", and each is over a
+        // quarter of its neighbour's three months, so they stay blank cells.
         var chart = Chart.Create("Year", Id(1));
         chart.TimelineWidth = Mm(40);
         chart.Sections.Add(Section(1, D(2026, 2, 1), D(2027, 1, 31)));
@@ -250,12 +251,13 @@ public class LayoutEngineTests
 
         Assert.Equal(3, grid.Tiers[1].GroupSize);
         Assert.Equal(["Apr", "Jul", "Oct"], TierLabels(layout, 1));
-        Assert.Equal([grid.XOfDate(D(2026, 7, 1)), grid.XOfDate(D(2026, 10, 1))], grid.Tiers[1].Dividers);
-        Assert.Equal(grid.XOfDate(D(2026, 4, 1)), TierTexts(layout, 1)[0].Cell.Left);
+        Assert.Equal(
+            [grid.XOfDate(D(2026, 4, 1)), grid.XOfDate(D(2026, 7, 1)), grid.XOfDate(D(2026, 10, 1)), grid.XOfDate(D(2027, 1, 1))],
+            grid.Tiers[1].Dividers);
         Assert.True(GeometryChecker.Check(layout.Primitives, grid).IsClean);
     }
 
-    // ---- Timescale labels: one format per tier, no blank edges ------------------------
+    // ---- Timescale labels: one format per tier, edge slivers ---------------------------
 
     private static Chart EdgeChart(Timescale timescale, DateOnly first, DateOnly last, double timelineMm)
     {
@@ -298,16 +300,18 @@ public class LayoutEngineTests
 
     /// <summary>
     /// The header's intent, per tier: every cell (between dividers, edge to
-    /// edge) holds exactly one label that fits it; one format names every
-    /// label; and every cell lies within the period its label names, except
-    /// that a cell at either end of the timeline may run past it by less than
-    /// one sliver. A merged edge never hides more than a label's width of
-    /// another period.
+    /// edge) holds exactly one label that fits it, except a blank cell at
+    /// either end that is too narrow for any label; one format names every
+    /// label; and every labelled cell lies within the period its label names,
+    /// except that a cell at either end of the timeline may run past it by
+    /// less than one sliver width and by at most a quarter
+    /// (<see cref="LayoutEngine.MaxSliverShare"/>) of that period.
     /// </summary>
     private static void AssertHeaderNamesItsPeriods(Chart chart, ChartLayout layout, string at)
     {
         var grid = layout.Grid;
         var axis = grid.Axis!;
+        var dayWidth = (grid.Width - grid.TimelineLeft) / axis.Days;
         var cells = LayoutEngine.BuildCells(chart, Settings());
 
         for (var t = 0; t < 2; t++)
@@ -316,27 +320,38 @@ public class LayoutEngineTests
             var k = grid.Tiers[t].GroupSize;
             var sliver = SliverWidth(tier);
             var edges = grid.Tiers[t].Dividers.Prepend(grid.TimelineLeft).Append(grid.Width).ToList();
+            var cellCount = edges.Count - 1;
             var texts = TierTexts(layout, t);
             var labels = string.Join(" | ", texts.Select(x => x.Request.Text));
-            Assert.True(texts.Count == edges.Count - 1, $"{at}: tier {t + 1} has {edges.Count - 1} cells, {texts.Count} labels: {labels}");
+            Assert.True(texts.Count > 0, $"{at}: tier {t + 1} has no labels");
 
             var formats = Enumerable.Range(0, tier.Candidates.Max(c => c.Count)).ToHashSet();
-            for (var i = 0; i < texts.Count; i++)
+            var placed = 0;
+            for (var i = 0; i < cellCount; i++)
             {
-                var text = texts[i];
-                Assert.True(text.Cell.Right == edges[i + 1] && text.Cell.Left >= edges[i], $"{at}: tier {t + 1} label {i} is not in its cell");
+                var inCell = texts.Where(x => x.Cell.Right == edges[i + 1] && x.Cell.Left >= edges[i]).ToList();
+                if (inCell.Count == 0)
+                {
+                    Assert.True(i == 0 || i == cellCount - 1, $"{at}: tier {t + 1} cell {i} of {cellCount} is blank ({labels})");
+                    Assert.True(edges[i + 1] - edges[i] < sliver, $"{at}: tier {t + 1} blank edge cell {i} could hold a label ({labels})");
+                    continue;
+                }
+                var text = Assert.Single(inCell);
+                placed++;
                 Assert.True(text.Size.Width + 2 * Pad <= text.Cell.Width + Eps, $"{at}: '{text.Request.Text}' overflows");
 
                 var cell = Enumerable.Range(0, tier.Cells.Count).Single(c => grid.XOfDate(tier.Cells[c].Start) == text.Cell.Left);
                 formats.RemoveWhere(f => tier.Candidates[cell][Math.Min(f, tier.Candidates[cell].Count - 1)] != text.Request);
 
                 var (from, to) = NamedPeriod(tier.Unit, tier.Cells[cell].Start, k, axis.Start);
+                var allowed = Math.Min(sliver - Eps, LayoutEngine.MaxSliverShare * (to.DayNumber - from.DayNumber + 1) * dayWidth);
                 var before = grid.XOfDate(from) - edges[i];
                 var after = edges[i + 1] - grid.XOfDate(to.AddDays(1));
                 var what = $"{at}: tier {t + 1} cell '{text.Request.Text}' ({labels}) runs past {from}..{to} by";
-                Assert.True(before < (i == 0 ? sliver : Eps), $"{what} {Units.ToMillimeters(before):F2} mm at the start");
-                Assert.True(after < (i == texts.Count - 1 ? sliver : Eps), $"{what} {Units.ToMillimeters(after):F2} mm at the end");
+                Assert.True(before <= (i == 0 ? allowed : 0) + Eps, $"{what} {Units.ToMillimeters(before):F2} mm at the start");
+                Assert.True(after <= (i == cellCount - 1 ? allowed : 0) + Eps, $"{what} {Units.ToMillimeters(after):F2} mm at the end");
             }
+            Assert.True(placed == texts.Count, $"{at}: tier {t + 1} has labels outside its cells ({labels})");
             Assert.True(formats.Count > 0, $"{at}: tier {t + 1} mixes formats: {labels}");
         }
 
@@ -362,17 +377,37 @@ public class LayoutEngineTests
     }
 
     [Fact]
-    public void Tier1Weeks_EdgesTooNarrowForAnyLabel_JoinTheirNeighbour_LabelsKeepTheirDates()
+    public void Tier1Weeks_SliversOverAQuarterOfAWeek_StayBlankCells()
     {
         // The same chart at 150 mm: the 2-day edges (12 mm) are narrower than
-        // "31 Oct" plus padding (13.8 mm), so they are slivers.
+        // "31 Oct" plus padding (13.8 mm), so they are slivers. Two days are
+        // over a quarter of a week, so each keeps its divider and stays blank.
         var chart = EdgeChart(Timescale.Auto, D(2026, 10, 31), D(2026, 11, 24), 150);
 
         var layout = Run(chart);
         var grid = layout.Grid;
 
         Assert.Equal(["2026-11-02", "2026-11-09", "2026-11-16"], TierLabels(layout, 0));
-        Assert.Equal([grid.XOfDate(D(2026, 11, 9)), grid.XOfDate(D(2026, 11, 16))], grid.Tiers[0].Dividers);
+        Assert.Equal(
+            [grid.XOfDate(D(2026, 11, 2)), grid.XOfDate(D(2026, 11, 9)), grid.XOfDate(D(2026, 11, 16)), grid.XOfDate(D(2026, 11, 23))],
+            grid.Tiers[0].Dividers);
+        AssertHeaderNamesItsPeriods(chart, layout, "150 mm");
+    }
+
+    [Fact]
+    public void Tier1Weeks_ASliverOfAtMostAQuarterOfAWeek_JoinsItsNeighbour_LabelsKeepTheirDates()
+    {
+        // Sun 1 Nov..Mon 30 Nov at 150 mm: each edge is one day (5 mm, a sliver)
+        // and 1/7 of a week, so it joins its neighbour week.
+        var chart = EdgeChart(Timescale.Auto, D(2026, 11, 1), D(2026, 11, 30), 150);
+
+        var layout = Run(chart);
+        var grid = layout.Grid;
+
+        Assert.Equal(["2026-11-02", "2026-11-09", "2026-11-16", "2026-11-23"], TierLabels(layout, 0));
+        Assert.Equal(
+            [grid.XOfDate(D(2026, 11, 9)), grid.XOfDate(D(2026, 11, 16)), grid.XOfDate(D(2026, 11, 23))],
+            grid.Tiers[0].Dividers);
         var texts = TierTexts(layout, 0);
         Assert.Equal(grid.XOfDate(D(2026, 11, 2)), texts[0].Cell.Left);
         Assert.Equal(grid.Width, texts[^1].Cell.Right);
@@ -403,10 +438,11 @@ public class LayoutEngineTests
     }
 
     [Fact]
-    public void GIMonths_June1To20_JoinsMayOnlyWhenNarrowerThanItsLabel()
+    public void GIMonths_June1To20_TooNarrowForALabel_StaysABlankCell_NotMay()
     {
         // At 180 mm June 1–20 is 13.5 mm, narrower than "Jun '27" plus padding
-        // (15.6 mm): a true sliver, so May's cell runs over it by less than one label.
+        // (15.6 mm): a sliver. But 20 days are 65% of May, so June keeps its
+        // divider and stays blank rather than reading as May.
         var chart = EdgeChart(Timescale.Weeks, D(2026, 10, 1), D(2027, 6, 19), 180);
 
         var layout = Run(chart);
@@ -415,8 +451,62 @@ public class LayoutEngineTests
         Assert.Equal(
             ["Oct 2026", "Nov 2026", "Dec 2026", "Jan 2027", "Feb 2027", "Mar 2027", "Apr 2027", "May 2027"],
             TierLabels(layout, 0));
-        Assert.True(grid.Width - grid.XOfDate(D(2027, 6, 1)) < 7 * FakeMeasurer.HeaderCharWidth + 2 * Pad);
+        Assert.Equal(grid.XOfDate(D(2027, 6, 1)), grid.Tiers[0].Dividers[^1]);
+        Assert.Equal(grid.XOfDate(D(2027, 6, 1)), TierTexts(layout, 0)[^1].Cell.Right);
+        Assert.DoesNotContain(grid.XOfDate(D(2026, 10, 1)), grid.Tiers[0].Dividers); // 3 of 31 days: joins October
         AssertHeaderNamesItsPeriods(chart, layout, "180 mm");
+    }
+
+    [Fact]
+    public void GIMonths_At120mm_TheSepOctGroupStaysBlank_NovemberStartsOn1Nov()
+    {
+        // Every 2nd month at 120 mm: the 34-day Sep–Oct edge group (15.3 mm) is a
+        // sliver, but 34 of Nov–Dec's 61 days, so it stays a blank cell.
+        var chart = EdgeChart(Timescale.Weeks, D(2026, 10, 1), D(2027, 6, 19), 120);
+
+        var layout = Run(chart);
+        var grid = layout.Grid;
+
+        Assert.Equal(2, grid.Tiers[0].GroupSize);
+        Assert.Equal(["November 2026", "January 2027", "March 2027", "May 2027"], TierLabels(layout, 0));
+        Assert.Equal(grid.XOfDate(D(2026, 11, 1)), grid.Tiers[0].Dividers[0]);
+        Assert.Equal(grid.XOfDate(D(2026, 11, 1)), TierTexts(layout, 0)[0].Cell.Left);
+        AssertHeaderNamesItsPeriods(chart, layout, "120 mm");
+    }
+
+    [Fact]
+    public void Years_TwoMonthSliversAtBothEnds_JoinTheYearBetween()
+    {
+        // Months timescale, 15 Nov 2026..10 Feb 2028 at 60 mm: Nov–Dec 2026 (7.5 mm)
+        // and Jan–Feb 2028 (7.6 mm) can't hold "'26"/"'28" and are each about a
+        // sixth of 2027, so both join it.
+        var chart = EdgeChart(Timescale.Months, D(2026, 11, 15), D(2028, 2, 10), 60);
+
+        var layout = Run(chart);
+        var grid = layout.Grid;
+
+        Assert.Equal(["2027"], TierLabels(layout, 0));
+        Assert.Empty(grid.Tiers[0].Dividers);
+        Assert.Equal(grid.XOfDate(D(2027, 1, 1)), TierTexts(layout, 0)[0].Cell.Left);
+        AssertHeaderNamesItsPeriods(chart, layout, "60 mm");
+    }
+
+    [Fact]
+    public void Months_ThinnedEdgeGroupsOfOverAQuarter_StayBlankCells()
+    {
+        // Weeks timescale, 30 Jan..3 Aug at 60 mm: every 2nd month. The 34-day
+        // Jan–Feb and 40-day Jul–Aug edge groups are slivers but over a quarter
+        // of their 61-day neighbours, so they keep their dividers.
+        var chart = EdgeChart(Timescale.Weeks, D(2026, 1, 30), D(2026, 8, 3), 60);
+
+        var layout = Run(chart);
+        var grid = layout.Grid;
+
+        Assert.Equal(["Mar 2026", "May 2026"], TierLabels(layout, 0));
+        Assert.Equal(
+            [grid.XOfDate(D(2026, 3, 1)), grid.XOfDate(D(2026, 5, 1)), grid.XOfDate(D(2026, 7, 1))],
+            grid.Tiers[0].Dividers);
+        AssertHeaderNamesItsPeriods(chart, layout, "60 mm");
     }
 
     [Fact]
@@ -455,13 +545,12 @@ public class LayoutEngineTests
     }
 
     [Fact]
-    public void Tier2_TheShortRemainderGroupJoinsThePreviousGroup()
+    public void Tier2_ALoneRemainderDay_IsHalfAGroup_SoItStaysABlankCell()
     {
         // The GI-Days chart (2..24 Nov, 23 days) thinned to every 2nd day: the
-        // lone 24th used to be a blank cell at the right edge.
-        var chart = Chart.Create("Days", Id(1));
-        chart.TimelineWidth = Mm(100);
-        chart.Sections.Add(Section(1, D(2026, 11, 2), D(2026, 11, 24)));
+        // lone 24th can't hold "24" and is half of a 2-day group, so it keeps
+        // its divider rather than reading as part of "22".
+        var chart = EdgeChart(Timescale.Auto, D(2026, 11, 2), D(2026, 11, 24), 100);
 
         var layout = Run(chart);
         var grid = layout.Grid;
@@ -470,9 +559,9 @@ public class LayoutEngineTests
         var labels = TierLabels(layout, 1);
         Assert.Equal(11, labels.Count);
         Assert.Equal("22", labels[^1]);
-        Assert.Equal(grid.Width, TierTexts(layout, 1)[^1].Cell.Right);
-        Assert.Equal(10, grid.Tiers[1].Dividers.Count);
-        Assert.True(GeometryChecker.Check(layout.Primitives, grid).IsClean);
+        Assert.Equal(grid.XOfDate(D(2026, 11, 24)), TierTexts(layout, 1)[^1].Cell.Right);
+        Assert.Equal(11, grid.Tiers[1].Dividers.Count);
+        AssertHeaderNamesItsPeriods(chart, layout, "100 mm");
     }
 
     public static TheoryData<Timescale, DateOnly, DateOnly> EdgeCases() => new()

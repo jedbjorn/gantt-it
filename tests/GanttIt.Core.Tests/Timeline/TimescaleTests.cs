@@ -166,6 +166,19 @@ public class TimescaleTests
     }
 
     [Fact]
+    public void ThinningBlocks_AreTheFullKUnitPeriod_ClampedToTheCalendar()
+    {
+        var axisStart = D(2026, 10, 29); // a Thursday
+        Assert.Equal((D(2026, 11, 1), D(2026, 12, 31)), TimescaleLabels.ThinningBlock(TimeUnit.Month, D(2026, 12, 1), 2, axisStart));
+        Assert.Equal((D(2026, 7, 1), D(2026, 12, 31)), TimescaleLabels.ThinningBlock(TimeUnit.Quarter, D(2026, 10, 1), 2, axisStart));
+        Assert.Equal((D(2024, 1, 1), D(2027, 12, 31)), TimescaleLabels.ThinningBlock(TimeUnit.Year, D(2026, 1, 1), 4, axisStart));
+        Assert.Equal((D(2026, 10, 31), D(2026, 11, 1)), TimescaleLabels.ThinningBlock(TimeUnit.Day, D(2026, 11, 1), 2, axisStart));
+        Assert.Equal((D(2026, 10, 26), D(2026, 11, 1)), TimescaleLabels.ThinningBlock(TimeUnit.Week, axisStart, 1, axisStart));
+        Assert.Equal((DateOnly.MinValue, D(4095, 12, 31)), TimescaleLabels.ThinningBlock(TimeUnit.Year, D(2040, 1, 1), 4096, axisStart));
+        Assert.Equal(DateOnly.MaxValue, TimescaleLabels.ThinningBlock(TimeUnit.Year, D(9000, 1, 1), 8192, axisStart).End);
+    }
+
+    [Fact]
     public void ThinningSlots_AreCalendarAlignedForMonthsQuartersYears_AxisRelativeForDaysWeeks()
     {
         var axisStart = D(2026, 10, 29); // a Thursday

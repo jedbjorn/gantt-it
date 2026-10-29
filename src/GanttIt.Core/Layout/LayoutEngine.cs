@@ -26,6 +26,12 @@ public static class LayoutEngine
     /// </summary>
     public static readonly double MinTickSpacing = Units.FromMillimeters(1);
 
+    /// <summary>
+    /// An unlabelled edge cell (a sliver) joins its neighbour only when it covers
+    /// at most this share of the neighbour's period; otherwise it stays a blank cell (§6.2).
+    /// </summary>
+    public const double MaxSliverShare = 0.25;
+
     public const string NameHeader = "Section";
     public const string StartHeader = "Start";
     public const string EndHeader = "End";
@@ -270,9 +276,13 @@ public static class LayoutEngine
     /// whole tier then uses the longest such format. A partial group that is
     /// not a sliver always fits the shortest format, so an edge can shorten
     /// the format but never forces more thinning.</item>
-    /// <item>A sliver joins its neighbour (the divider between them is
-    /// dropped), so a cell overstates its period by less than one label. The
-    /// label keeps its own left edge, so it still starts exactly at its date.</item>
+    /// <item>A sliver that covers at most <see cref="MaxSliverShare"/> of its
+    /// neighbour's period (k units) joins that neighbour: the divider between
+    /// them is dropped, so the cell overstates its period by less than one
+    /// label and at most a quarter of it. The label keeps its own left edge, so
+    /// it still starts exactly at its date. A longer sliver keeps its divider
+    /// and stays blank: no allowed label fits it, and joining would misname too
+    /// much time.</item>
     /// </list>
     /// A group is named by its first cell, unless that cell is a sliver clipped
     /// at the axis start and the rest of the group can hold the next cell's
@@ -298,16 +308,14 @@ public static class LayoutEngine
                 if (groups.Where((g, i) => !slivers[i] && !Fits(g, Candidate(tier, g.Name, format))).Any())
                     continue;
 
-                // Slivers join their neighbour; interior groups are full, so never slivers.
-                var spans = groups
-                    .Select((g, i) => new Span(g.Left, g.Right, g.LabelLeft, slivers[i] ? null : Candidate(tier, g.Name, format)))
-                    .ToList();
-                while (spans.Count > 1 && spans[0].Label is null)
+                // Short slivers join their neighbour; interior groups are full, so never slivers.
+                var spans = groups.Select((g, i) => new Span(g, slivers[i] ? null : Candidate(tier, g.Name, format))).ToList();
+                if (spans.Count > 1 && spans[0].Label is null && spans[1].Label is not null && MayJoin(spans[0].Group, spans[1].Group, k))
                 {
                     spans[1] = spans[1] with { Left = spans[0].Left };
                     spans.RemoveAt(0);
                 }
-                while (spans.Count > 1 && spans[^1].Label is null)
+                if (spans.Count > 1 && spans[^1].Label is null && spans[^2].Label is not null && MayJoin(spans[^1].Group, spans[^2].Group, k))
                 {
                     spans[^2] = spans[^2] with { Right = spans[^1].Right };
                     spans.RemoveAt(spans.Count - 1);
@@ -315,7 +323,7 @@ public static class LayoutEngine
 
                 foreach (var s in spans)
                     if (s.Label is { } label)
-                        texts.Add(new PlacedText(label, sizes[label], new Box(s.LabelLeft, bottom, s.Right, top), TextAlign.Left));
+                        texts.Add(new PlacedText(label, sizes[label], new Box(s.Group.LabelLeft, bottom, s.Right, top), TextAlign.Left));
                 return new TierLayout(tier.Unit, top, bottom, k, spans.Skip(1).Select(s => s.Left).ToList());
             }
 
@@ -325,6 +333,14 @@ public static class LayoutEngine
         return new TierLayout(tier.Unit, top, bottom, n, []);
 
         bool Fits(Group g, TextRequest label) => sizes[label].Width + 2 * pad <= g.Right - g.LabelLeft;
+
+        // A sliver may join a neighbour whose period (its k-unit block) is at least 1 / MaxSliverShare times as long.
+        bool MayJoin(Group sliver, Group neighbour, int k)
+        {
+            var days = tier.Cells[sliver.Last].End.DayNumber - tier.Cells[sliver.First].Start.DayNumber + 1;
+            var (from, to) = TimescaleLabels.ThinningBlock(tier.Unit, tier.Cells[neighbour.Name].Start, k, timeline.Axis.Start);
+            return days <= MaxSliverShare * (to.DayNumber - from.DayNumber + 1);
+        }
 
         // Width the cell's shortest format needs, padding included.
         double Shortest(int cell) => sizes[tier.Candidates[cell][^1]].Width + 2 * pad;
@@ -351,7 +367,7 @@ public static class LayoutEngine
                            && right - Left(1) >= Shortest(1)
                     ? 1
                     : first;
-                result.Add(new Group(name, Left(first), Left(name), right, partial));
+                result.Add(new Group(first, last, name, Left(first), Left(name), right, partial));
                 first = last + 1;
             }
             return result;
@@ -428,9 +444,17 @@ public static class LayoutEngine
 
     private static TextRequest Body(string text) => new(text, TextStyleKey.Body);
 
-    /// <summary>A group of tick cells; <see cref="Name"/> is the cell whose label it takes, starting at <see cref="LabelLeft"/>.</summary>
-    private readonly record struct Group(int Name, double Left, double LabelLeft, double Right, bool Partial);
+    /// <summary>
+    /// Tick cells <see cref="First"/>..<see cref="Last"/>; <see cref="Name"/> is the cell
+    /// whose label it takes, starting at <see cref="LabelLeft"/>.
+    /// </summary>
+    private readonly record struct Group(int First, int Last, int Name, double Left, double LabelLeft, double Right, bool Partial);
 
-    /// <summary>A solved tier cell: <see cref="LabelLeft"/> is where its label's cell starts (≥ <see cref="Left"/>).</summary>
-    private readonly record struct Span(double Left, double Right, double LabelLeft, TextRequest? Label);
+    /// <summary>A solved tier cell: its labelled group, widened where a sliver joined it.</summary>
+    private readonly record struct Span(Group Group, TextRequest? Label)
+    {
+        public double Left { get; init; } = Group.Left;
+
+        public double Right { get; init; } = Group.Right;
+    }
 }
