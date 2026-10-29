@@ -37,7 +37,7 @@ Each chart card has three buttons:
 - **Open view** closes Gantt-It and opens the chart's legend view in Revit.
 - **Delete** deletes the chart (see [Deleting a chart](#deleting-a-chart)).
 
-While Gantt-It is open, Revit waits for it. Close Gantt-It (with **×** or Esc) to go back to working in Revit.
+While Gantt-It is open you can't work in Revit. Close it (**×** or Esc) to get back to your model.
 
 ## Settings
 
@@ -54,13 +54,13 @@ The styles are the ones already in your project. To get a different look, create
 | Setting | What it changes on the chart |
 |---|---|
 | Title text style | The chart's title. |
-| Header text style | The column headings and the dates along the top of the timeline. |
+| Header text style | The column headings and the labels along the top of the timeline. |
 | Body text style | Section names, dates and number of days. |
 | Chart line style | The lines between rows and the grid lines of the timeline. |
 | Header line style | The lines under the headings and the outer border. |
 | Date format | How dates are written, for example `2026-12-31`, `12/31/2026`, `31/12/2026` or `31.12.2026`. Choose **Custom pattern…** to type your own, such as `d MMM yyyy`. A sample shows the result. |
 | Cell padding | The space between the text and the lines around it, in your project's units. |
-| Chart language | The language of the words drawn on the chart. See [Languages](#languages-and-dark-mode). |
+| Chart language | The language of the words drawn on the chart. See [Languages](#languages). |
 
 Two more options sit at the bottom:
 
@@ -77,7 +77,7 @@ Click **New chart** on the Home screen. The editor opens with one section to sta
 
 ![The chart editor with three sections, link tick boxes and colours](images/editor.png)
 
-<!-- TODO(screenshot): Full chart editor from the current build (dates in the chart's date format, e.g. 2026-10-29, and the live preview at the bottom), e.g. the "Phase Plan" chart: Survey, Schematic design, Detailed design, with row 1 "Relates to following" ticked. Light theme. Replace images/editor.png. -->
+<!-- TODO(screenshot): Full chart editor from the current build (dates in the chart's date format, e.g. 2026-10-29, and the live preview at the bottom), e.g. the "Phase Plan" chart: Survey, Schematic design, Detailed design, with row 1 "Relates to following" ticked. Light theme. Replace images/editor.png (also used by README step 3). -->
 
 ### Name, title and timescale
 
@@ -104,7 +104,7 @@ Click **New chart** on the Home screen. The editor opens with one section to sta
 
 Each row is one bar on the chart.
 
-1. Click **+ Add section** to add a row. It starts the day after the last section ends, lasts 7 days, and gets the next colour.
+1. Click **Add section** to add a row. It starts the day after the last section ends, lasts 7 days, and gets the next colour.
 2. Type the section's **Name**.
 3. Set its dates in any of three ways:
    - change **Start** to move the section; it keeps its length;
@@ -142,10 +142,10 @@ If something needs fixing, such as an empty name or an end date before the start
 
 ## Colours
 
-Click a section's colour swatch to choose its colour. The colour window offers:
+Click the swatch in a section's **Color** column. The **Section color** window opens. It offers:
 
 - **Palette**: twelve ready colours. New sections take them in turn.
-- **Recent**: colours you chose recently, kept until you close Revit.
+- **Recent**: colours you chose recently, kept until you close Revit (appears after your first pick).
 - **Hex**: type a colour code such as `#4F8EF7` and click **Apply**.
 - **Pick from screen**: the eyedropper button next to **Apply** (see below).
 - **More…**: opens the Windows colour window, with the full colour range.
@@ -159,7 +159,7 @@ Clicking a colour applies it and closes the window.
 Use the eyedropper to match a colour you can already see, such as a colour used on your plans.
 
 1. Before opening Gantt-It, set up Revit so the colour you want is visible on screen. Revit can't be moved or zoomed while Gantt-It is open.
-2. Open the colour window and click the eyedropper button.
+2. Open the **Section color** window and click the eyedropper button.
 3. Gantt-It steps out of the way. A magnifier follows the pointer and shows the colour code under it.
 4. Move to the colour with the mouse. For fine positioning, use the arrow keys (hold Shift to move faster).
 5. Click to pick the colour. Enter or Space also pick it.
@@ -186,6 +186,8 @@ A legend can go on as many sheets as you like, so you can put the same chart on 
 
 ![A sheet with the Gantt-It chart placed on it next to the title block](images/chart-on-sheet.png)
 
+<!-- TODO(screenshot): Recapture without the test names "GI Months" (viewport title) and "GI Self-Test Sheet" (title block), e.g. a sheet named "A101 - Programme" with the chart "North wing programme". Replace images/chart-on-sheet.png (also used by README step 5). -->
+
 The chart is drawn at a scale of 1:1, so the sizes you set are its size on paper.
 
 ## Updating a chart
@@ -210,6 +212,8 @@ Gantt-It asks you to confirm. If the chart is on sheets, it lists them: deleting
 
 ![The Delete chart window listing the two sheets the chart is placed on](images/delete-confirm.png)
 
+<!-- TODO(screenshot): Recapture with real-looking sheet names instead of the test names "A101 - GI A8 Sheet 1" / "A102 - GI A8 Sheet 2". Replace images/delete-confirm.png. -->
+
 Click **Delete** to delete the chart and its legend view, or **Cancel** to keep it.
 
 ## When the project has no legend
@@ -226,7 +230,7 @@ To fix it:
 2. In Revit, choose **View › Legends › Legend**. Any name and scale will do.
 3. Open Gantt-It again. Your chart is back in the editor, with a note saying it was restored. Click **Generate**.
 
-Your chart is kept until you close Revit.
+Your chart is kept until you close the project or Revit.
 
 You only need to do this once per project. After that, Gantt-It can copy any legend, including its own charts.
 
@@ -237,7 +241,7 @@ You only need to do this once per project. After that, Gantt-It can copy any leg
 Gantt-It speaks English, French, Spanish and German.
 
 - **Gantt-It's windows** use Revit's language. In French, Spanish or German Revit they appear in that language; in any other language they appear in English.
-- **The chart** uses the **Chart language** chosen in Settings. It sets the words drawn on the chart: column headings, month and quarter names, and the name a new chart starts with.
+- **The chart** uses the **Chart language** chosen in Settings. It sets the words drawn on the chart: column headings, month and quarter names, and the default names of new charts and sections.
 
 The chart language belongs to the project. It starts as your Revit language when the project's settings are first saved, and then stays put. So a chart doesn't change language when a colleague with a different Revit language updates it.
 
@@ -257,13 +261,13 @@ The chart preview stays white, like paper, so you see the colours as they will p
 
 **Revit asks to load Gantt-It after installing and after each upgrade.** Gantt-It is not digitally signed yet, so Revit asks each time a new version is installed. Choose **Always Load**.
 
-**A chart copied with Revit's Duplicate becomes a plain legend.** It no longer appears in Gantt-It, and Gantt-It never changes it. To make a variant of a chart, click **New chart** and build it in Gantt-It.
+**A chart copied with Revit's Duplicate becomes a plain legend.** The copy doesn't appear in Gantt-It and Gantt-It never changes it; the original chart is unaffected. To make a variant of a chart, click **New chart** and build it in Gantt-It.
 
 **A chart made with a newer version of Gantt-It is read-only.** Its card says so, and **Edit** and **Delete** are off. Install the newer Gantt-It to change it. You can still open it, or delete its legend view by hand in Revit.
 
 **In a shared (workshared) project, someone else may be editing the chart or the settings.** Gantt-It then tells you who, and changes nothing. Ask them to synchronise and give up the element, then try again.
 
-**Gantt-It tidies up its own fill types.** Each bar colour uses a fill type named `Gantt-It Fill #RRGGBB`. When a colour is no longer used anywhere in the project, Gantt-It removes its fill type. A fill type still in use is always kept.
+**Gantt-It tidies up its own fill types.** Each bar colour uses a fill type named like `Gantt-It Fill #4F8EF7`. When a colour is no longer used anywhere in the project, Gantt-It removes its fill type. A fill type still in use is always kept.
 
 **Every action can be undone.** Generate, Update, Delete, saving Settings and Regenerate all charts are each one step in Revit's Undo list, named after the action (for example "Gantt-It: Update Project Schedule"). Close Gantt-It, then use Revit's **Undo**.
 

@@ -21,13 +21,12 @@
 ## Install
 
 1. Download `GanttIt-<version>.msi` from the [latest release](https://github.com/jedbjorn/gantt-it/releases/latest).
-2. Close Revit, then run the file. One installer covers Revit 2026 and 2027. It installs for you only and needs no administrator rights.
-3. If Windows says "Windows protected your PC", choose **More info**, then **Run anyway**.
-4. Start Revit. Revit asks whether to load Gantt-It: choose **Always Load**.
+2. Close Revit, then run the file.
+3. If Windows says "Windows protected your PC", choose **More info**, then **Run anyway**. Windows asks this because Gantt-It is not digitally signed yet. That is expected.
+4. Accept the licence and click **Install**. One installer covers Revit 2026 and 2027. It installs for you only and needs no administrator rights.
+5. Start Revit. Revit asks whether to load Gantt-It, for the same reason: choose **Always Load**.
 
 Gantt-It now appears on the **Add-Ins** tab.
-
-Windows and Revit ask these questions because Gantt-It is not digitally signed yet. That is expected.
 
 **Upgrade:** close Revit, then run the newer installer. It replaces the old version. Revit asks again whether to load Gantt-It on the next start: choose **Always Load** again.
 
@@ -36,7 +35,7 @@ Windows and Revit ask these questions because Gantt-It is not digitally signed y
 - Windows 11: **Settings › Apps › Installed apps**, find **Gantt-It**, open its **⋯** menu and choose **Uninstall**.
 - Windows 10: **Settings › Apps › Apps & features**, select **Gantt-It** and choose **Uninstall**.
 
-Charts you already made stay in your projects as ordinary legend views.
+Charts you already made stay in your projects as ordinary legend views. Reinstall Gantt-It to edit them again.
 
 ## Quick start
 
@@ -50,9 +49,9 @@ Charts you already made stay in your projects as ordinary legend views.
    ![The chart editor: name, title and timescale at the top, then three sections with dates, days, link tick boxes and colour swatches](docs/images/editor.png)
 
 4. Click **Generate**. Gantt-It creates a legend view holding your chart.
-5. Open a sheet and drag the chart from **Legends** in the Project Browser onto it, as you would any legend.
+5. Close Gantt-It. Open a sheet and drag the chart from **Legends** in the Project Browser onto it, as you would any legend.
 
-   ![A sheet with the Gantt-It chart placed on it next to the title block](docs/images/chart-on-sheet.png)
+   ![A sheet with the Gantt-It chart placed on it, next to the title block](docs/images/chart-on-sheet.png)
 
 To change the chart later, open Gantt-It again, click **Edit** on its card, make your changes and click **Update**.
 
