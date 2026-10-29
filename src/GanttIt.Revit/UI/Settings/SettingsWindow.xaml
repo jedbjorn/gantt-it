@@ -8,7 +8,7 @@
         WindowStartupLocation="CenterOwner"
         FontFamily="Segoe UI" FontSize="12" UseLayoutRounding="True"
         TextOptions.TextFormattingMode="Display"
-        Background="{DynamicResource WindowBrush}"
+        Background="{DynamicResource WindowBrush}" Foreground="{DynamicResource TextBrush}"
         AutomationProperties.AutomationId="SettingsWindow">
     <Window.Resources>
         <ResourceDictionary>

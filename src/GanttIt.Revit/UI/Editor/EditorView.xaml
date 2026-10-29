@@ -28,15 +28,15 @@
                 <Setter Property="Background" Value="{StaticResource SurfaceBrush}" />
                 <Style.Triggers>
                     <DataTrigger Binding="{Binding DropMarker}" Value="Above">
-                        <Setter Property="BorderBrush" Value="{StaticResource AccentBrush}" />
+                        <Setter Property="BorderBrush" Value="{StaticResource AccentForegroundBrush}" />
                         <Setter Property="BorderThickness" Value="0,2,0,1" />
                     </DataTrigger>
                     <DataTrigger Binding="{Binding DropMarker}" Value="Below">
-                        <Setter Property="BorderBrush" Value="{StaticResource AccentBrush}" />
+                        <Setter Property="BorderBrush" Value="{StaticResource AccentForegroundBrush}" />
                         <Setter Property="BorderThickness" Value="0,0,0,2" />
                     </DataTrigger>
                     <DataTrigger Binding="{Binding HasError}" Value="True">
-                        <Setter Property="Background" Value="#FFFBFA" />
+                        <Setter Property="Background" Value="{StaticResource ErrorRowBrush}" />
                     </DataTrigger>
                 </Style.Triggers>
             </Style>
@@ -48,10 +48,10 @@
                     <Setter.Value>
                         <ControlTemplate TargetType="Button">
                             <Border x:Name="Chip" Width="34" Height="20" CornerRadius="3"
-                                    Background="{TemplateBinding Background}" BorderBrush="#40000000" BorderThickness="1" />
+                                    Background="{TemplateBinding Background}" BorderBrush="{StaticResource ChipBorderBrush}" BorderThickness="1" />
                             <ControlTemplate.Triggers>
                                 <Trigger Property="IsMouseOver" Value="True">
-                                    <Setter TargetName="Chip" Property="BorderBrush" Value="#A0000000" />
+                                    <Setter TargetName="Chip" Property="BorderBrush" Value="{StaticResource ChipHoverBorderBrush}" />
                                 </Trigger>
                             </ControlTemplate.Triggers>
                         </ControlTemplate>

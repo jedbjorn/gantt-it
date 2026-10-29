@@ -39,7 +39,7 @@
                         <Rectangle x:Name="CentreInner" Stroke="White" StrokeThickness="1" SnapsToDevicePixels="True" />
                     </Canvas>
                     <StackPanel Orientation="Horizontal" Margin="0,6,0,0">
-                        <Border x:Name="Swatch" Width="18" Height="18" CornerRadius="3" BorderBrush="#33000000"
+                        <Border x:Name="Swatch" Width="18" Height="18" CornerRadius="3" BorderBrush="{StaticResource ChipBorderBrush}"
                                 BorderThickness="1" Margin="0,0,6,0" />
                         <TextBlock x:Name="HexText" FontFamily="Consolas" FontSize="14" FontWeight="SemiBold"
                                    VerticalAlignment="Center" Foreground="{StaticResource TextBrush}"

@@ -1,5 +1,6 @@
 using System.Windows;
 using System.Windows.Automation;
+using GanttIt.Revit.UI.Theming;
 
 namespace GanttIt.Revit.UI.Dialogs;
 
@@ -16,6 +17,7 @@ public partial class MessageDialog : Window
     public MessageDialog(MessageDialogModel model, string automationId)
     {
         InitializeComponent();
+        DarkTitleBar.Attach(this);
         DataContext = model;
         AutomationProperties.SetAutomationId(this, automationId);
         if (model.Danger)
