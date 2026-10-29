@@ -3,15 +3,11 @@ name: build
 # CI for every PR and push to main (spec §8, decision #12). This is the only
 # off-VM build seat: the host has no .NET SDK.
 #
-#   • test   — GanttIt.Core.Tests on net8.0 and net10.0 (A2–A4).
-#   • build  — GanttIt.sln in all four configurations (A1). Every leg is
-#              required; R27 is not soft-fail. The Debug legs stage the add-in
-#              as an artifact laid out like %AppData%\Autodesk\Revit\Addins\<year>\
-#              (GanttIt.addin + GanttIt\ folder) for the VM lanes:
-#                gh run download <run-id> -n GanttIt-Debug-R26
-#
-# Linux can build the net8.0-windows / net10.0-windows targets thanks to
-# EnableWindowsTargeting and the reference-only Nice3point Revit API packages.
+# Delegates to the reusable _build.yml so release.yml builds exactly the same
+# pipeline: Core tests, the four configuration builds (Debug R26/R27 upload
+# the GanttIt-Debug-R26 / -R27 add-in artifacts), and the Windows MSI job
+# (GanttIt-msi, GanttIt-zips). Every job is required. Push/PR builds carry the
+# dev version (0.0.0-dev; MSI ProductVersion 0.0.0).
 
 on:
   push:
@@ -27,66 +23,5 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-
-  test:
-    name: Core tests
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v6
-      - uses: actions/setup-dotnet@v5
-        with:
-          dotnet-version: |
-            8.0.x
-            10.0.x
-      - name: dotnet test (net8.0 + net10.0)
-        run: >-
-          dotnet test tests/GanttIt.Core.Tests/GanttIt.Core.Tests.csproj
-          -c "Release R26" --nologo
-          --logger "console;verbosity=normal"
-
   build:
-    name: Build ${{ matrix.configuration }}
-    needs: test
-    runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - configuration: Debug R26
-            tfm: net8.0-windows
-            artifact: GanttIt-Debug-R26
-          - configuration: Release R26
-            tfm: net8.0-windows
-          - configuration: Debug R27
-            tfm: net10.0-windows
-            artifact: GanttIt-Debug-R27
-          - configuration: Release R27
-            tfm: net10.0-windows
-    steps:
-      - uses: actions/checkout@v6
-      - uses: actions/setup-dotnet@v5
-        with:
-          dotnet-version: |
-            8.0.x
-            10.0.x
-      - name: dotnet build
-        run: dotnet build GanttIt.sln -c "${{ matrix.configuration }}" --nologo
-
-      - name: Stage add-in
-        if: matrix.artifact
-        env:
-          OUT: src/GanttIt.Revit/bin/${{ matrix.configuration }}/${{ matrix.tfm }}
-        run: |
-          set -euo pipefail
-          mkdir -p stage/GanttIt
-          cp "$OUT/GanttIt.addin" stage/
-          cp -r "$OUT/." stage/GanttIt/
-          rm stage/GanttIt/GanttIt.addin
-          find stage -type f | sort
-
-      - uses: actions/upload-artifact@v6
-        if: matrix.artifact
-        with:
-          name: ${{ matrix.artifact }}
-          path: stage/
-          if-no-files-found: error
+    uses: ./.github/workflows/_build.yml

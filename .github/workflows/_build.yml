@@ -1,0 +1,198 @@
+name: _build (reusable)
+
+# The one build pipeline, shared by build.yml (every PR and push to main) and
+# release.yml (v* tags), so a release builds exactly what CI builds. Leading
+# underscore = internal, not triggered directly (rst-c convention).
+#
+#   • test   — GanttIt.Core.Tests on net8.0 and net10.0 (A2–A4).
+#   • build  — GanttIt.sln in all four configurations (A1). Every leg is
+#              required; R27 is not soft-fail (decision #12). The Debug legs
+#              stage the add-in as an artifact laid out like
+#              %AppData%\Autodesk\Revit\Addins\<year>\ (GanttIt.addin +
+#              GanttIt\ folder) for the VM lanes:
+#                gh run download <run-id> -n GanttIt-Debug-R26
+#   • msi    — Windows runner (WiX emits MSIs on Windows only). Builds
+#              Release R26 + Release R27, stages both with installer/stage.sh,
+#              builds the unified per-user installer/GanttIt.Installer.wixproj,
+#              checks it with installer/inspect-msi.ps1 and uploads:
+#                GanttIt-msi   GanttIt-<version>.msi
+#                GanttIt-zips  GanttIt-<version>-Revit2026.zip / -Revit2027.zip
+#                              (the Addins\<year>\ contents, for manual installs)
+#
+# Linux builds the net8.0-windows / net10.0-windows targets thanks to
+# EnableWindowsTargeting and the reference-only Nice3point Revit API packages.
+
+on:
+  workflow_call:
+    inputs:
+      version:
+        description: >-
+          Version to stamp, the release tag without its "v" (1.0.0, 1.0.0-rc.1).
+          Empty for push/PR builds: the dev version from Directory.Build.props
+          applies (0.0.0-dev, MSI ProductVersion 0.0.0).
+        type: string
+        required: false
+        default: ''
+
+permissions:
+  contents: read
+
+jobs:
+
+  test:
+    name: Core tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: |
+            8.0.x
+            10.0.x
+      - name: dotnet test (net8.0 + net10.0)
+        run: >-
+          dotnet test tests/GanttIt.Core.Tests/GanttIt.Core.Tests.csproj
+          -c "Release R26" --nologo
+          --logger "console;verbosity=normal"
+
+  build:
+    name: Build ${{ matrix.configuration }}
+    needs: test
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - configuration: Debug R26
+            tfm: net8.0-windows
+            artifact: GanttIt-Debug-R26
+          - configuration: Release R26
+            tfm: net8.0-windows
+          - configuration: Debug R27
+            tfm: net10.0-windows
+            artifact: GanttIt-Debug-R27
+          - configuration: Release R27
+            tfm: net10.0-windows
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: |
+            8.0.x
+            10.0.x
+      - name: dotnet build
+        run: dotnet build GanttIt.sln -c "${{ matrix.configuration }}" --nologo
+
+      - name: Stage add-in
+        if: matrix.artifact
+        env:
+          OUT: src/GanttIt.Revit/bin/${{ matrix.configuration }}/${{ matrix.tfm }}
+        run: |
+          set -euo pipefail
+          mkdir -p stage/GanttIt
+          cp "$OUT/GanttIt.addin" stage/
+          cp -r "$OUT/." stage/GanttIt/
+          rm stage/GanttIt/GanttIt.addin
+          find stage -type f | sort
+
+      - uses: actions/upload-artifact@v6
+        if: matrix.artifact
+        with:
+          name: ${{ matrix.artifact }}
+          path: stage/
+          if-no-files-found: error
+
+  msi:
+    name: MSI (Release R26 + R27)
+    runs-on: windows-latest
+    defaults:
+      run:
+        shell: bash
+    env:
+      # Passed even when empty: Directory.Build.props falls back to the dev
+      # version (an empty global property cannot be reassigned, so it derives
+      # the local $(Version) instead — rst-c's "effective version" trick).
+      GANTTIT_VERSION: ${{ inputs.version }}
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: |
+            8.0.x
+            10.0.x
+
+      - name: dotnet build Release R26 + Release R27
+        run: |
+          set -euo pipefail
+          for cfg in "Release R26" "Release R27"; do
+            dotnet build src/GanttIt.Revit/GanttIt.Revit.csproj -c "$cfg" --nologo \
+              "-p:GanttItVersion=${GANTTIT_VERSION}"
+          done
+
+      - name: Stage add-in (2026, 2027)
+        run: |
+          set -euo pipefail
+          bash installer/stage.sh 2026
+          bash installer/stage.sh 2027
+
+      - name: Build MSI
+        run: >-
+          dotnet build installer/GanttIt.Installer.wixproj -c Release --nologo
+          "-p:GanttItVersion=${GANTTIT_VERSION}"
+
+      - name: Locate MSI
+        id: msi
+        run: |
+          set -euo pipefail
+          shopt -s globstar nullglob
+          found=(installer/bin/**/GanttIt-*.msi)
+          if [[ ${#found[@]} -ne 1 ]]; then
+            echo "::error::expected one GanttIt-*.msi, found ${#found[@]}: ${found[*]}"
+            exit 1
+          fi
+          msi="${found[0]}"
+          name="$(basename "$msi" .msi)"       # GanttIt-1.0.0-rc.1
+          version="${name#GanttIt-}"           # 1.0.0-rc.1
+          numeric="$(grep -oE '^[0-9]+\.[0-9]+\.[0-9]+' <<<"$version")"
+          {
+            echo "path=$msi"
+            echo "version=$version"
+            echo "numeric=$numeric"
+          } >> "$GITHUB_OUTPUT"
+          echo "$msi (version $version, ProductVersion $numeric)"
+          if [[ -n "$GANTTIT_VERSION" && "$version" != "$GANTTIT_VERSION" ]]; then
+            echo "::error::MSI version $version does not match requested $GANTTIT_VERSION"
+            exit 1
+          fi
+
+      - name: Inspect MSI (identity + layout)
+        shell: powershell
+        run: >-
+          ./installer/inspect-msi.ps1
+          -Msi "${{ steps.msi.outputs.path }}"
+          -ExpectVersion "${{ steps.msi.outputs.numeric }}"
+
+      - name: Zip add-in folders (manual install)
+        shell: pwsh
+        env:
+          VERSION: ${{ steps.msi.outputs.version }}
+        run: |
+          $ErrorActionPreference = 'Stop'
+          New-Item -ItemType Directory -Force -Path zips | Out-Null
+          foreach ($year in '2026', '2027') {
+            Compress-Archive -Path "installer/stage/$year/*" `
+              -DestinationPath "zips/GanttIt-$env:VERSION-Revit$year.zip" -Force
+          }
+          Get-ChildItem zips | Format-Table Name, Length
+
+      - uses: actions/upload-artifact@v6
+        with:
+          name: GanttIt-msi
+          path: ${{ steps.msi.outputs.path }}
+          if-no-files-found: error
+
+      - uses: actions/upload-artifact@v6
+        with:
+          name: GanttIt-zips
+          path: zips/*.zip
+          if-no-files-found: error
