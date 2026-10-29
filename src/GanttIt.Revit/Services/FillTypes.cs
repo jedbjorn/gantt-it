@@ -97,24 +97,104 @@ internal sealed class FillTypes
         ?? throw new InvalidOperationException("The <Invisible lines> style was not found.");
 
     /// <summary>
-    /// Deletes Gantt-It fill types that no filled region uses (§7.3). Types owned by
-    /// another user in a workshared model are left alone. Must run inside a transaction.
+    /// Deletes the Gantt-It fill types nothing uses (§7.3). <see cref="GanttItTransaction.Run"/>
+    /// calls it at the end of every Gantt-It action, inside the action's transaction,
+    /// so it is part of the same Undo step and rolls back with it. Must run inside a
+    /// transaction.
+    /// <para>
+    /// Deleting a <see cref="FilledRegionType"/> deletes every element of that type,
+    /// so a type is deleted only when its name is a Gantt-It name and nothing
+    /// references it. It is kept when:
+    /// </para>
+    /// <list type="bullet">
+    /// <item>any <see cref="FilledRegion"/> in the document uses it: a chart, a detached
+    /// copy (decision #17), or the user's own region, also inside a detail group or a
+    /// design option (a document-wide collector returns those);</item>
+    /// <item>Revit reports any element that would be deleted with it
+    /// (<see cref="Element.GetDependentElements"/>), which also covers references the
+    /// collector can't see, such as the members of a group type with no placed
+    /// instance;</item>
+    /// <item>another user owns it, or it is out of date with central, in a workshared
+    /// model (editing it would fail the whole action);</item>
+    /// <item>it is the model's last filled region type;</item>
+    /// <item>checking or deleting it throws: each type is tried in its own
+    /// sub-transaction, so one refusal keeps that type and never fails the action.</item>
+    /// </list>
+    /// Being the Filled Region tool's default type is not a use: Revit allows deleting
+    /// the default type (the Self-Test records what the default becomes).
     /// </summary>
-    public static List<string> DeleteUnused(Document doc)
+    public static FillPurge DeleteUnused(Document doc)
     {
         var used = new FilteredElementCollector(doc)
             .OfClass(typeof(FilledRegion))
             .Select(e => e.GetTypeId())
             .ToHashSet();
-        var deleted = new List<string>();
-        foreach (var type in new FilteredElementCollector(doc).OfClass(typeof(FilledRegionType)).Cast<FilledRegionType>().ToList())
+        var all = new FilteredElementCollector(doc).OfClass(typeof(FilledRegionType)).Cast<FilledRegionType>().ToList();
+        var remaining = all.Count;
+        var purge = new FillPurge();
+        foreach (var type in all)
         {
-            if (!IsGanttItName(type.Name) || used.Contains(type.Id)) continue;
-            if (Worksharing.OwnedByOther(doc, type.Id, out _)) continue;
             var name = type.Name;
-            doc.Delete(type.Id);
-            deleted.Add(name);
+            if (!IsGanttItName(name) || used.Contains(type.Id)) continue;
+
+            using var sub = new SubTransaction(doc);
+            try
+            {
+                var reason = KeepReason(doc, type, remaining);
+                if (reason is not null)
+                {
+                    purge.Kept.Add((name, reason));
+                    continue;
+                }
+                sub.Start();
+                doc.Delete(type.Id);
+                sub.Commit();
+                remaining--;
+                purge.Deleted.Add(name);
+            }
+            catch (Exception ex)
+            {
+                if (sub.HasStarted() && !sub.HasEnded()) sub.RollBack();
+                purge.Kept.Add((name, $"Revit refused: {ex.Message}"));
+            }
         }
-        return deleted;
+#if DEBUG
+        LastPurge = purge;
+#endif
+        return purge;
     }
+
+    /// <summary>Why an unused Gantt-It type must stay, or null when it can be deleted.</summary>
+    private static string? KeepReason(Document doc, FilledRegionType type, int remaining)
+    {
+        if (remaining <= 1) return "the model's last filled region type";
+        if (Worksharing.OwnedByOther(doc, type.Id, out var owner)) return $"owned by {(owner.Length > 0 ? owner : "another user")}";
+        if (Worksharing.OutOfDate(doc, type.Id)) return "out of date with central";
+        var dependents = type.GetDependentElements(null).Where(id => id != type.Id).ToList();
+        if (dependents.Count > 0)
+            return $"deleting it would also delete {dependents.Count} element{(dependents.Count == 1 ? "" : "s")}: "
+                   + string.Join(", ", dependents.Take(5).Select(id => Describe(doc, id)))
+                   + (dependents.Count > 5 ? ", …" : "");
+        return null;
+    }
+
+    /// <summary>An element's id, class and category, for a kept type's reason (VM diagnosis).</summary>
+    private static string Describe(Document doc, ElementId id)
+    {
+        var e = doc.GetElement(id);
+        return e is null ? $"{id.Value} (not found)" : $"{id.Value} {e.GetType().Name}/{e.Category?.Name ?? "no category"}";
+    }
+
+#if DEBUG
+    /// <summary>The last purge, for the Self-Test's checks.</summary>
+    internal static FillPurge? LastPurge { get; private set; }
+#endif
+}
+
+/// <summary>What one fill-type purge deleted, and which unused Gantt-It types it kept and why.</summary>
+internal sealed class FillPurge
+{
+    public List<string> Deleted { get; } = [];
+
+    public List<(string Name, string Reason)> Kept { get; } = [];
 }
