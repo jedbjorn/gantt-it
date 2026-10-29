@@ -11,9 +11,9 @@ and 2027.
 
 1. Download `GanttIt-<version>.msi` from the
    [latest release](https://github.com/jedbjorn/gantt-it/releases/latest).
-2. Close Revit, then run the MSI. It installs for the current Windows user
-   only and needs no administrator rights. One installer covers Revit 2026 and
-   Revit 2027.
+2. Close every running Revit, then run the MSI. It installs for the current
+   Windows user only and needs no administrator rights. One installer covers
+   Revit 2026 and Revit 2027.
 3. Start Revit. Gantt-It is not code-signed in v1, so Revit asks whether to
    load it: choose **Always Load**. The **Gantt-It** panel appears on the
    **Add-Ins** tab.
@@ -21,10 +21,19 @@ and 2027.
 Because the MSI is unsigned too, Windows SmartScreen may warn when you run it
 ("Windows protected your PC"): choose **More info**, then **Run anyway**.
 
-To upgrade, close Revit and run a newer MSI; it replaces the installed version
-in place. To uninstall, use **Settings › Apps › Installed apps › Gantt-It ›
-Uninstall**. Charts already generated stay in your models as ordinary legend
-views.
+**Upgrade:** close every running Revit (it locks the add-in's files), then run
+the newer MSI; it replaces the installed version in place, keeping one entry
+in the apps list. Revit treats the upgraded add-in as new and shows its
+unsigned add-in prompt again on the next start: choose **Always Load** again.
+
+**Uninstall:** close Revit, then
+
+- Windows 11: **Settings › Apps › Installed apps**, find **Gantt-It**, open
+  its **⋯** menu and choose **Uninstall**;
+- Windows 10: **Settings › Apps › Apps & features**, select **Gantt-It** and
+  choose **Uninstall**.
+
+Charts already generated stay in your models as ordinary legend views.
 
 The installer puts the add-in in the per-user Revit add-ins folders:
 

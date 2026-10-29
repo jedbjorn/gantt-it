@@ -3,22 +3,26 @@ name: release
 # Tag-driven GitHub Release (docs/RELEASING.md).
 #
 # Push a tag v<a.b.c>[-<prerelease>] (v1.0.0, v1.0.0-rc.1) and this workflow:
-#   1. prepare — validates the tag and resolves the version from it
-#                (v1.0.0-rc.1 -> 1.0.0-rc.1; MSI ProductVersion 1.0.0).
+#   1. prepare — validates the tag, resolves the version from it
+#                (v1.0.0-rc.1 -> 1.0.0-rc.1; MSI ProductVersion 1.0.0) and
+#                checks the tagged commit is reachable from origin/main.
 #   2. build   — runs the full _build.yml pipeline (tests, the four
 #                configuration builds, the MSI) against the tagged commit,
 #                stamping that version into the assemblies (and so into the
 #                AppVersion every chart records) and the MSI.
-#   3. release — creates the GitHub Release for the tag with
-#                GanttIt-<version>.msi and the two manual-install zips
-#                attached and auto-generated notes; marked pre-release when
-#                the tag has a hyphenated suffix.
+#   3. assets  — collects GanttIt-<version>.msi, the two manual-install zips
+#                and SHA256SUMS.txt (read-only).
+#   4. publish — the only job with contents: write: creates the GitHub
+#                Release for the tag with those assets and auto-generated
+#                notes; marked pre-release when the tag has a hyphenated
+#                suffix.
 #
 # Nothing else publishes a release; pushes to main never tag.
 #
 # Manual runs (Actions > release > Run workflow) are ALWAYS dry runs: they take
-# a version, run prepare + build exactly as a tag would, and stop short of
-# creating the release, printing what would have been published instead. Use
+# a version, run prepare + build + assets exactly as a tag would, and skip
+# publish (so they never hold write access), printing what would have been
+# published instead. Use
 # them to rehearse a release or to produce a test MSI with a chosen version.
 
 on:
@@ -31,7 +35,7 @@ on:
         type: string
         required: true
 
-# Read-only by default; only the release job may write (create the release).
+# Read-only by default; only the publish job may write (create the release).
 permissions:
   contents: read
 
@@ -84,18 +88,39 @@ jobs:
           } >> "$GITHUB_OUTPUT"
           echo "tag $tag -> version $version (MSI ProductVersion ${version%%-*}); prerelease=$prerelease publish=$publish"
 
+      # Releases ship only what is on main: the tagged commit must be
+      # reachable from origin/main, or nothing is built. A dry run from
+      # another branch only warns.
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+      - name: Check the commit is on main
+        env:
+          PUBLISH: ${{ steps.v.outputs.publish }}
+        run: |
+          set -euo pipefail
+          commit="$(git rev-parse "${GITHUB_SHA}^{commit}")"
+          if git merge-base --is-ancestor "$commit" origin/main; then
+            echo "$commit is reachable from origin/main"
+          elif [[ "$PUBLISH" == "true" ]]; then
+            echo "::error::$GITHUB_REF_NAME points at $commit, which is not on origin/main. Tag a commit on main."
+            exit 1
+          else
+            echo "::warning::$commit is not on origin/main (dry run, continuing)"
+          fi
+
   build:
     needs: prepare
     uses: ./.github/workflows/_build.yml
     with:
       version: ${{ needs.prepare.outputs.version }}
 
-  release:
-    name: GitHub Release${{ needs.prepare.outputs.publish != 'true' && ' (dry run)' || '' }}
+  # Read-only: gathers and checks the release assets. On a dry run it is the
+  # last job; on a tag it hands the assets to publish.
+  assets:
+    name: Release assets${{ needs.prepare.outputs.publish != 'true' && ' (dry run)' || '' }}
     needs: [prepare, build]
     runs-on: ubuntu-latest
-    permissions:
-      contents: write
     steps:
       - uses: actions/download-artifact@v7
         with:
@@ -117,19 +142,53 @@ jobs:
           done
           (cd dist && sha256sum -- * | tee SHA256SUMS.txt)
 
+      - name: Planned release
+        env:
+          TAG: ${{ needs.prepare.outputs.tag }}
+          PRERELEASE: ${{ needs.prepare.outputs.prerelease }}
+          PUBLISH: ${{ needs.prepare.outputs.publish }}
+        run: |
+          set -euo pipefail
+          prerel=""
+          [[ "$PRERELEASE" == "true" ]] && prerel=" --prerelease"
+          assets="$(cd dist && printf 'dist/%s ' *)"
+          if [[ "$PUBLISH" == "true" ]]; then
+            what="Publishing (job publish)"
+          else
+            what="Dry run, nothing is published. Would run"
+          fi
+          echo "$what: gh release create $TAG ${assets}--title \"Gantt-It $TAG\" --generate-notes --verify-tag$prerel"
+
+      - uses: actions/upload-artifact@v6
+        with:
+          name: release-assets
+          path: dist/
+          if-no-files-found: error
+
+  # The only job with write access. It runs only for a pushed tag, so a dry
+  # run never holds contents: write.
+  publish:
+    name: Publish GitHub Release
+    needs: [prepare, assets]
+    if: needs.prepare.outputs.publish == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v7
+        with:
+          name: release-assets
+          path: dist/
+
       - name: Create GitHub Release
         env:
           GH_TOKEN: ${{ github.token }}
           GH_REPO: ${{ github.repository }}
           TAG: ${{ needs.prepare.outputs.tag }}
           PRERELEASE: ${{ needs.prepare.outputs.prerelease }}
-          PUBLISH: ${{ needs.prepare.outputs.publish }}
         run: |
           set -euo pipefail
           args=(release create "$TAG" dist/* --title "Gantt-It $TAG" --generate-notes --verify-tag)
           [[ "$PRERELEASE" == "true" ]] && args+=(--prerelease)
-          if [[ "$PUBLISH" != "true" ]]; then
-            echo "Dry run — would run: gh ${args[*]}"
-            exit 0
-          fi
           gh "${args[@]}"
+

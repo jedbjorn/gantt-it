@@ -43,25 +43,30 @@
     <OutputType>Package</OutputType>
     <Configurations>Debug;Release</Configurations>
     <!-- The MSI ICE validation suite was authored for the per-machine
-         install model. Three of its rules fire spuriously on every
-         per-user (Scope="perUser") harvest and the WiX team has
-         acknowledged the gap (wixtoolset/issues#8633):
-           ICE91 — "directory doesn't vary based on ALLUSERS"; that's
+         install model; some of its rules fire on every per-user
+         (Scope="perUser") harvest, a gap the WiX team acknowledges
+         (wixtoolset/issues#8633). Combined with the repo-wide
+         TreatWarningsAsErrors=true they would block the build:
+           ICE91 — "directory doesn't vary based on ALLUSERS"; that is
                    the *intent* of perUser scope.
-           ICE38 — components in user profile "should" have an HKCU
+           ICE38 — components in the user profile "should" have an HKCU
                    KeyPath instead of a file KeyPath; auto-harvested
-                   components cannot express that.
-           ICE64 — per-user directories must be in the RemoveFile
-                   table; for files laid down by the MSI itself, normal
-                   uninstall removes them — the RemoveFile table is for
-                   files the *app* creates at runtime, which we don't.
-         Combined with the repo-wide TreatWarningsAsErrors=true these
-         block the build despite being non-issues for a perUser MSI.
-         ICE61 — warns that MajorUpgrade/@AllowSameVersionUpgrades also
-                 replaces an install of the same ProductVersion. That is
-                 deliberate (Product.wxs): an rc and its final share the
-                 numeric a.b.c, and must not end up side by side. -->
-    <SuppressIces>ICE38;ICE64;ICE91;ICE61</SuppressIces>
+                   per-file components cannot express that. (The
+                   folder-cleanup components in Product.wxs do use an HKCU
+                   KeyPath.)
+           ICE64 — every directory the package lays out in the user
+                   profile must be listed in the RemoveFile table
+                   (RemoveFolder), or it is left behind on uninstall.
+                   Product.wxs lists the folders Gantt-It owns
+                   (GanttIt\, Resources\, icons\ per year). It deliberately
+                   does not list Autodesk\Revit\Addins\<year>\ and its
+                   parents: Revit owns them and other add-ins live there,
+                   so ICE64 still fires for those four directories.
+           ICE61 — warns that MajorUpgrade/@AllowSameVersionUpgrades also
+                   replaces an install of the same ProductVersion. That is
+                   deliberate (Product.wxs): an rc and its final share the
+                   numeric a.b.c, and must not end up side by side. -->
+    <SuppressIces>ICE38;ICE91;ICE61</SuppressIces>
   </PropertyGroup>
 
   <!-- WixUI dialog set for the branded setup UI (WixUI_Minimal). The SDK

@@ -68,23 +68,66 @@
 
     <!-- Per-user directory layout under %AppData% (Roaming). No admin
          elevation is needed to install. -->
+    <!-- Every folder the MSI creates is declared here (not left to the
+         harvest), so the folder-cleanup components below can name it. -->
     <StandardDirectory Id="AppDataFolder">
       <Directory Id="AutodeskFolder" Name="Autodesk">
         <Directory Id="RevitFolder" Name="Revit">
           <Directory Id="RevitAddinsFolder" Name="Addins">
-            <Directory Id="Addins2026Dir" Name="2026" />
-            <Directory Id="Addins2027Dir" Name="2027" />
+            <Directory Id="Addins2026Dir" Name="2026">
+              <Directory Id="GanttIt2026Dir" Name="GanttIt">
+                <Directory Id="Resources2026Dir" Name="Resources">
+                  <Directory Id="Icons2026Dir" Name="icons" />
+                </Directory>
+              </Directory>
+            </Directory>
+            <Directory Id="Addins2027Dir" Name="2027">
+              <Directory Id="GanttIt2027Dir" Name="GanttIt">
+                <Directory Id="Resources2027Dir" Name="Resources">
+                  <Directory Id="Icons2027Dir" Name="icons" />
+                </Directory>
+              </Directory>
+            </Directory>
           </Directory>
         </Directory>
       </Directory>
     </StandardDirectory>
 
     <!-- One feature: install everything. <Files Include> harvests each staged
-         tree (subfolders included) into per-file components bound to this
-         feature. Paths are relative to this .wxs (installer/). -->
+         folder into per-file components bound to this feature. The globs are
+         per folder (not one recursive **) so every file lands in a declared
+         directory; a file in a new subfolder would be left out, which
+         inspect-msi.ps1's exact file-set check catches in CI. Paths are
+         relative to this .wxs (installer/). -->
     <Feature Id="Main" Title="Gantt-It" Level="1">
-      <Files Include="stage\2026\**" Directory="Addins2026Dir" />
-      <Files Include="stage\2027\**" Directory="Addins2027Dir" />
+      <Files Include="stage\2026\*.addin"                      Directory="Addins2026Dir" />
+      <Files Include="stage\2026\GanttIt\*"                    Directory="GanttIt2026Dir" />
+      <Files Include="stage\2026\GanttIt\Resources\icons\*"    Directory="Icons2026Dir" />
+      <Files Include="stage\2027\*.addin"                      Directory="Addins2027Dir" />
+      <Files Include="stage\2027\GanttIt\*"                    Directory="GanttIt2027Dir" />
+      <Files Include="stage\2027\GanttIt\Resources\icons\*"    Directory="Icons2027Dir" />
+
+      <!-- Folder cleanup on uninstall. Windows Installer only removes a
+           folder it created when the RemoveFile table lists it, so each
+           year gets a component that removes GanttIt\Resources\icons,
+           GanttIt\Resources and GanttIt (each only if empty). A per-user
+           component needs an HKCU registry KeyPath, hence the marker value.
+           Addins\<year> is deliberately NOT removed: other add-ins live
+           there, and Revit owns it. -->
+      <Component Id="Folders2026" Directory="GanttIt2026Dir">
+        <RegistryValue Root="HKCU" Key="Software\Designs/OS\Gantt-It\2026"
+                       Name="Installed" Type="integer" Value="1" KeyPath="yes" />
+        <RemoveFolder Id="RemoveIcons2026"     Directory="Icons2026Dir"     On="uninstall" />
+        <RemoveFolder Id="RemoveResources2026" Directory="Resources2026Dir" On="uninstall" />
+        <RemoveFolder Id="RemoveGanttIt2026"   Directory="GanttIt2026Dir"   On="uninstall" />
+      </Component>
+      <Component Id="Folders2027" Directory="GanttIt2027Dir">
+        <RegistryValue Root="HKCU" Key="Software\Designs/OS\Gantt-It\2027"
+                       Name="Installed" Type="integer" Value="1" KeyPath="yes" />
+        <RemoveFolder Id="RemoveIcons2027"     Directory="Icons2027Dir"     On="uninstall" />
+        <RemoveFolder Id="RemoveResources2027" Directory="Resources2027Dir" On="uninstall" />
+        <RemoveFolder Id="RemoveGanttIt2027"   Directory="GanttIt2027Dir"   On="uninstall" />
+      </Component>
     </Feature>
 
   </Package>

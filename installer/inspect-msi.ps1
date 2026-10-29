@@ -1,20 +1,35 @@
 <#
-  inspect-msi.ps1 — print and check what a Gantt-It MSI installs (Windows only).
+  inspect-msi.ps1 - print and check what a Gantt-It MSI installs (Windows only).
 
-    powershell -File installer/inspect-msi.ps1 -Msi GanttIt-1.0.0.msi [-ExpectVersion 1.0.0]
+    powershell -File installer/inspect-msi.ps1 -Msi <path.msi> -Version 1.0.0-rc.1
+    powershell -File installer/inspect-msi.ps1 -Msi <path.msi> -Version 0.0.0-dev -AllowBuildMetadata
 
-  Reads the MSI database through the Windows Installer COM API (no install,
-  no admin) and prints the package identity (ProductVersion, UpgradeCode,
-  ProductCode, install scope) and every file with its install path. Fails
-  when the identity or the layout is not what Product.wxs promises: the
-  fixed UpgradeCode, a per-user package that needs no elevation, the
-  expected ProductVersion, and exactly the expected add-in files in both
-  Revit years' folders (no more, no fewer).
+  Reads the MSI database through the Windows Installer COM API and prints
+  the package identity (ProductVersion, UpgradeCode, ProductCode, install
+  scope), every file with its install path and the folders removed on
+  uninstall. Then extracts the package with an administrative install
+  (msiexec /a: unpacks files only, installs nothing) and reads the version
+  resource of GanttIt.Revit.dll for each Revit year.
+
+  -Version is the version the build was asked to stamp (the release tag
+  without its v, or the dev version). Fails unless:
+    - UpgradeCode, name and manufacturer are Gantt-It's;
+    - the package is per-user and needs no elevation;
+    - the MSI is named GanttIt-<Version>.msi and its ProductVersion is the
+      numeric a.b.c of -Version;
+    - it holds exactly the expected add-in files for both Revit years;
+    - it removes GanttIt\, Resources\ and icons\ (per year) on uninstall,
+      and never Addins\<year>\;
+    - each year's GanttIt.Revit.dll has ProductVersion (the assembly's
+      InformationalVersion, which the add-in stamps as AppVersion) equal to
+      -Version; with -AllowBuildMetadata a "+<commit>" suffix is accepted
+      (dev builds).
   CI runs it on every MSI it builds.
 #>
 param(
   [Parameter(Mandatory = $true)] [string] $Msi,
-  [string] $ExpectVersion = ''
+  [Parameter(Mandatory = $true)] [string] $Version,
+  [switch] $AllowBuildMetadata
 )
 
 $ErrorActionPreference = 'Stop'
@@ -95,9 +110,13 @@ if ($props['ProductName'] -ne 'Gantt-It') { $problems += "ProductName is '$($pro
 if ($props['Manufacturer'] -ne 'Designs/OS') { $problems += "Manufacturer is '$($props['Manufacturer'])'" }
 if ($props['ALLUSERS'] -and $props['ALLUSERS'] -ne '2') { $problems += "ALLUSERS is '$($props['ALLUSERS'])' (per-machine)" }
 if (($wordCount -band 8) -eq 0) { $problems += "summary Word Count ${wordCount}: package requests elevation" }
-if ($ExpectVersion -and $props['ProductVersion'] -ne $ExpectVersion) {
-  $problems += "ProductVersion is $($props['ProductVersion']), expected $ExpectVersion"
+$numeric = [regex]::Match($Version, '^\d+\.\d+\.\d+').Value
+if (-not $numeric) { $problems += "-Version '$Version' does not start with a numeric a.b.c" }
+if ($props['ProductVersion'] -ne $numeric) {
+  $problems += "ProductVersion is $($props['ProductVersion']), expected $numeric (from $Version)"
 }
+$msiName = Split-Path -Leaf $Msi
+if ($msiName -ne "GanttIt-$Version.msi") { $problems += "MSI is named $msiName, expected GanttIt-$Version.msi" }
 # The exact file set, per Revit year (8 files each, 16 in all): PDBs ship,
 # XML doc files do not (installer/stage.sh drops them). A file added to the
 # add-in output must be added here too, deliberately.
@@ -125,8 +144,48 @@ if ($actual.Count -ne $expected.Count) {
   $problems += "MSI has $($actual.Count) files, expected $($expected.Count)"
 }
 
+# Folder cleanup on uninstall (RemoveFile rows with no file name = RemoveFolder).
+$removed = @(
+  foreach ($r in (Query 'SELECT `DirProperty`, `FileName`, `InstallMode` FROM `RemoveFile`' 3)) {
+    if ([string]::IsNullOrEmpty($r[1]) -and ([int]$r[2] -band 2)) { DirPath $r[0] }
+  }
+) | Sort-Object
+Write-Host "Folders removed on uninstall ($($removed.Count)):"
+$removed | ForEach-Object { Write-Host "  $_" }
+foreach ($year in '2026', '2027') {
+  $base = "AppDataFolder\Autodesk\Revit\Addins\$year"
+  foreach ($sub in 'GanttIt', 'GanttIt\Resources', 'GanttIt\Resources\icons') {
+    if ($removed -notcontains "$base\$sub") { $problems += "uninstall does not remove $base\$sub" }
+  }
+  if ($removed -contains $base) { $problems += "uninstall removes $base (Revit's folder, shared with other add-ins)" }
+}
+
+# Version resource of the packed add-in: extract with an administrative
+# install (unpacks the files to a folder; installs and registers nothing).
+$msiFull = (Resolve-Path $Msi).Path
+$extract = Join-Path ([System.IO.Path]::GetTempPath()) ("ganttit-msi-" + [guid]::NewGuid().ToString('N'))
+$log = "$extract.log"
+$p = Start-Process -FilePath 'msiexec.exe' -Wait -PassThru -ArgumentList @(
+  '/a', "`"$msiFull`"", '/qn', "TARGETDIR=`"$extract`"", '/l*v', "`"$log`"")
+if ($p.ExitCode -ne 0) {
+  $problems += "administrative extract (msiexec /a) failed with exit code $($p.ExitCode); log: $log"
+} else {
+  foreach ($year in '2026', '2027') {
+    $dll = Get-ChildItem -Path $extract -Recurse -Filter 'GanttIt.Revit.dll' |
+      Where-Object { $_.FullName -match "\\Addins\\$year\\GanttIt\\GanttIt\.Revit\.dll$" } |
+      Select-Object -First 1
+    if ($null -eq $dll) { $problems += "extract has no Addins\$year\GanttIt\GanttIt.Revit.dll"; continue }
+    $vi = [System.Diagnostics.FileVersionInfo]::GetVersionInfo($dll.FullName)
+    Write-Host ("GanttIt.Revit.dll {0}: ProductVersion {1}  FileVersion {2}" -f $year, $vi.ProductVersion, $vi.FileVersion)
+    $ok = ($vi.ProductVersion -eq $Version) -or
+          ($AllowBuildMetadata -and $vi.ProductVersion.StartsWith("$Version+"))
+    if (-not $ok) { $problems += "Addins\$year GanttIt.Revit.dll ProductVersion is '$($vi.ProductVersion)', expected '$Version'" }
+  }
+  Remove-Item -Recurse -Force $extract -ErrorAction SilentlyContinue
+}
+
 if ($problems.Count) {
   $problems | ForEach-Object { Write-Host "::error::$_" }
   exit 1
 }
-Write-Host 'MSI identity and layout OK.'
+Write-Host 'MSI identity, layout, folder cleanup and version stamps OK.'

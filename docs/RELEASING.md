@@ -21,7 +21,8 @@ version lives in a file that has to be edited before a release.
 
 A tag with a hyphen (`v1.0.0-rc.1`, `v1.1.0-beta.2`) is published as a
 **pre-release**; it does not become "latest". Tags that are not
-`v<a>.<b>.<c>[-<suffix>]` fail the workflow before anything is built.
+`v<a>.<b>.<c>[-<suffix>]` fail the workflow before anything is built, and so
+does a tag on a commit that is not on `main`.
 
 ## What the workflow does
 
@@ -29,16 +30,20 @@ A tag with a hyphen (`v1.0.0-rc.1`, `v1.1.0-beta.2`) is published as a
 
 1. **Resolve version.** `v1.0.0-rc.1` → version `1.0.0-rc.1`. The MSI's
    ProductVersion is the numeric part, `1.0.0` (Windows Installer only accepts
-   numbers; major and minor at most 255, patch at most 65535).
+   numbers; major and minor at most 255, patch at most 65535). Fails unless
+   the tagged commit is reachable from `origin/main`.
 2. **Build.** Runs the same reusable pipeline as every PR (`_build.yml`)
    against the tagged commit, with `-p:GanttItVersion=<version>`:
    - Core tests (net8.0 and net10.0) and the four configuration builds.
    - On Windows: `Release R26` and `Release R27`, staged with
      `installer/stage.sh`, packed into one per-user MSI, and checked by
-     `installer/inspect-msi.ps1` (UpgradeCode, per-user scope, ProductVersion,
-     both Revit years' files).
-3. **Release.** Creates the GitHub Release for the tag with auto-generated
-   notes and these assets:
+     `installer/inspect-msi.ps1`: UpgradeCode, per-user scope, file name and
+     ProductVersion against the tag, the exact file set for both Revit years,
+     folder cleanup on uninstall, and each year's `GanttIt.Revit.dll`
+     ProductVersion (the AppVersion it stamps) equal to the tag version.
+3. **Release.** The read-only `assets` job collects and checksums the assets;
+   then `publish`, the only job with write access, creates the GitHub Release
+   for the tag with auto-generated notes and these assets:
    - `GanttIt-<version>.msi` — the installer (Revit 2026 + 2027).
    - `GanttIt-<version>-Revit2026.zip`, `GanttIt-<version>-Revit2027.zip` —
      the contents of `Addins\<year>\` for a manual install.
@@ -68,12 +73,22 @@ version in place (one entry in Settings › Apps); an older one refuses to
 install over a newer one. An MSI with the *same* ProductVersion also replaces
 it, so `1.0.0` installs cleanly over `1.0.0-rc.1`.
 
+The flip side: an rc and its final share one ProductVersion (`1.0.0-rc.1`
+and `1.0.0` are both `1.0.0` to Windows), so **an rc MSI silently replaces an
+installed final of the same a.b.c**, with no downgrade warning, and Settings ›
+Apps shows the same version, `1.0.0`, for either. To tell which build is
+installed, check the Product version of
+`%AppData%\Autodesk\Revit\Addins\<year>\GanttIt\GanttIt.Revit.dll` (file
+Properties › Details), or the `AppVersion` a newly saved chart records. Don't
+hand rc MSIs to users once the final is out.
+
 ## Rehearse without publishing
 
 **Actions › release › Run workflow** asks for a version (for example
-`1.0.0-rc.1`) and runs the resolve and build steps exactly as a tag would, then
-stops: the last job prints the release it *would* create and publishes
-nothing. Its artifacts (`GanttIt-msi`, `GanttIt-zips`) carry the chosen
+`1.0.0-rc.1`) and runs the resolve, build and assets jobs exactly as a tag
+would, then skips `publish`: the assets job prints the release it *would*
+create, nothing is published, and no job gets write access. Run it from
+`main`; on another branch the "on main" check only warns. Its artifacts (`GanttIt-msi`, `GanttIt-zips`) carry the chosen
 version, which also makes it the way to get test MSIs with distinct versions:
 
 ```sh
@@ -88,9 +103,10 @@ dev version `0.0.0-dev`.
 
 1. The release page lists the MSI, both zips and `SHA256SUMS.txt`, and is
    marked pre-release exactly when the tag has a suffix.
-2. The **Inspect MSI** step of the release run's MSI job printed
-   `ProductVersion` equal to the tag's numeric part and both
-   `Addins\2026\` and `Addins\2027\` file lists.
+2. The **Inspect MSI** step of the release run's MSI job passed and printed
+   `ProductVersion` equal to the tag's numeric part, both `Addins\2026\` and
+   `Addins\2027\` file lists, and each year's `GanttIt.Revit.dll`
+   ProductVersion equal to the tag version.
 3. On a Windows machine with Revit: install the MSI (no admin prompt), confirm
    Settings › Apps shows **Gantt-It** with the new version, start Revit 2026 or
    2027, choose **Always Load**, and open the Gantt-It panel. Generate or

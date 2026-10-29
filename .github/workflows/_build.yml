@@ -150,27 +150,30 @@ jobs:
             echo "::error::expected one GanttIt-*.msi, found ${#found[@]}: ${found[*]}"
             exit 1
           fi
-          msi="${found[0]}"
-          name="$(basename "$msi" .msi)"       # GanttIt-1.0.0-rc.1
-          version="${name#GanttIt-}"           # 1.0.0-rc.1
-          numeric="$(grep -oE '^[0-9]+\.[0-9]+\.[0-9]+' <<<"$version")"
+          # The version the build was asked for, independent of the build's
+          # outputs: the input, else the dev fallback of Directory.Build.props.
+          version="${GANTTIT_VERSION:-0.0.0-dev}"
           {
-            echo "path=$msi"
+            echo "path=${found[0]}"
             echo "version=$version"
-            echo "numeric=$numeric"
           } >> "$GITHUB_OUTPUT"
-          echo "$msi (version $version, ProductVersion $numeric)"
-          if [[ -n "$GANTTIT_VERSION" && "$version" != "$GANTTIT_VERSION" ]]; then
-            echo "::error::MSI version $version does not match requested $GANTTIT_VERSION"
-            exit 1
-          fi
+          echo "${found[0]} (expected version $version)"
 
-      - name: Inspect MSI (identity + layout)
+      # Checks the MSI against the requested version, not against itself: file
+      # name, ProductVersion and each year's GanttIt.Revit.dll ProductVersion
+      # (= InformationalVersion = the AppVersion the add-in stamps). Dev builds
+      # carry "+<commit>" build metadata, hence -AllowBuildMetadata.
+      - name: Inspect MSI (identity, layout, version stamps)
         shell: powershell
-        run: >-
-          ./installer/inspect-msi.ps1
-          -Msi "${{ steps.msi.outputs.path }}"
-          -ExpectVersion "${{ steps.msi.outputs.numeric }}"
+        env:
+          MSI_PATH: ${{ steps.msi.outputs.path }}
+          VERSION: ${{ steps.msi.outputs.version }}
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $extra = @{}
+          if (-not $env:GANTTIT_VERSION) { $extra['AllowBuildMetadata'] = $true }
+          & ./installer/inspect-msi.ps1 -Msi $env:MSI_PATH -Version $env:VERSION @extra
+          exit $LASTEXITCODE
 
       - name: Zip add-in folders (manual install)
         shell: pwsh
