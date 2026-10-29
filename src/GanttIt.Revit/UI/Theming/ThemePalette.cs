@@ -20,16 +20,15 @@ public sealed class ThemePalette : ResourceDictionary
         if (!GanttItTheme.IsDark) return;
 
         // Dark only: the built-in WPF templates that draw with system colors (the
-        // default focus rectangle, text box context menus, scroll viewer corners)
-        // pick these up instead of the light Windows colors.
+        // default focus rectangle, scroll viewer corners) pick these up instead of
+        // the light Windows colors. Menu colors are not overridden: the Windows menu
+        // keeps a fixed light background, so Theme.xaml replaces the menus instead.
         var palette = UiPalette.For(UiTheme.Dark);
         Add(SystemColors.WindowBrushKey, Brush(palette[UiPalette.Surface]));
         Add(SystemColors.WindowTextBrushKey, Brush(palette[UiPalette.Text]));
         Add(SystemColors.ControlBrushKey, Brush(palette[UiPalette.ScrollTrack]));
         Add(SystemColors.ControlTextBrushKey, Brush(palette[UiPalette.Text]));
         Add(SystemColors.GrayTextBrushKey, Brush(palette[UiPalette.MutedText]));
-        Add(SystemColors.MenuBrushKey, Brush(palette[UiPalette.Surface]));
-        Add(SystemColors.MenuTextBrushKey, Brush(palette[UiPalette.Text]));
         Add(SystemColors.InfoBrushKey, Brush(palette[UiPalette.ToolTip]));
         Add(SystemColors.InfoTextBrushKey, Brush(palette[UiPalette.ToolTipText]));
     }

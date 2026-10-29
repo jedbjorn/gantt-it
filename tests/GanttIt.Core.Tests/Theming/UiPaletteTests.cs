@@ -1,3 +1,4 @@
+using System.Text.RegularExpressions;
 using GanttIt.Core.Theming;
 using Xunit.Abstractions;
 
@@ -41,6 +42,39 @@ public class UiPaletteTests(ITestOutputHelper output)
             Assert.True(palette[r.Foreground].IsOpaque, r.Foreground);
             Assert.True(palette[r.Background].IsOpaque, r.Background);
         }
+    }
+
+    [Fact]
+    public void EveryBrushKeyTheXamlUses_IsInThePalette()
+    {
+        // A {StaticResource …Brush} missing from the palette only fails at runtime in Revit,
+        // when the window's XAML loads. Keys a file defines itself (x:Key) are its own.
+        var ui = Path.Combine(RepositoryRoot(), "src", "GanttIt.Revit", "UI");
+        var files = Directory.GetFiles(ui, "*.xaml", SearchOption.AllDirectories);
+        Assert.NotEmpty(files);
+        var palette = UiPalette.For(UiTheme.Light).Keys.ToHashSet(StringComparer.Ordinal);
+        var missing = new List<string>();
+        var used = 0;
+        foreach (var file in files)
+        {
+            var xaml = File.ReadAllText(file);
+            var local = Regex.Matches(xaml, @"x:Key=""(\w+)""").Select(m => m.Groups[1].Value).ToHashSet(StringComparer.Ordinal);
+            foreach (Match m in Regex.Matches(xaml, @"\{(?:Static|Dynamic)Resource (\w+Brush)\}"))
+            {
+                used++;
+                var key = m.Groups[1].Value;
+                if (!palette.Contains(key) && !local.Contains(key)) missing.Add($"{Path.GetFileName(file)}: {key}");
+            }
+        }
+        Assert.True(used > 50, $"only {used} brush references found; is the scan looking at the right files?");
+        Assert.Empty(missing);
+    }
+
+    private static string RepositoryRoot()
+    {
+        for (var dir = new DirectoryInfo(AppContext.BaseDirectory); dir is not null; dir = dir.Parent)
+            if (File.Exists(Path.Combine(dir.FullName, "GanttIt.sln"))) return dir.FullName;
+        throw new InvalidOperationException("GanttIt.sln not found above " + AppContext.BaseDirectory);
     }
 
     [Fact]

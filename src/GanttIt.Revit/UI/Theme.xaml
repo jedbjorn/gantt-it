@@ -152,6 +152,95 @@
         <Setter Property="Foreground" Value="{StaticResource MutedTextBrush}" />
     </Style>
 
+    <!--
+        Menus: palette-colored context menus. The Windows (Aero2) menu paints a fixed
+        light background, so it is replaced rather than recolored.
+    -->
+    <Style TargetType="ContextMenu">
+        <Setter Property="Background" Value="{StaticResource SurfaceBrush}" />
+        <Setter Property="BorderBrush" Value="{StaticResource BorderBrush}" />
+        <Setter Property="Foreground" Value="{StaticResource TextBrush}" />
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="Padding" Value="2" />
+        <Setter Property="FontFamily" Value="Segoe UI" />
+        <Setter Property="FontSize" Value="12" />
+        <Setter Property="HasDropShadow" Value="False" />
+        <Setter Property="Grid.IsSharedSizeScope" Value="True" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="ContextMenu">
+                    <Border Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}"
+                            BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="3"
+                            Padding="{TemplateBinding Padding}" SnapsToDevicePixels="True">
+                        <ItemsPresenter KeyboardNavigation.DirectionalNavigation="Cycle" />
+                    </Border>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- Menu items of the context menus (Gantt-It has no menu bar and no submenus). -->
+    <Style TargetType="MenuItem">
+        <Setter Property="Foreground" Value="{StaticResource TextBrush}" />
+        <Setter Property="Padding" Value="10,4" />
+        <Setter Property="MinWidth" Value="140" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="MenuItem">
+                    <Border x:Name="Bd" Background="Transparent" CornerRadius="2" Padding="{TemplateBinding Padding}"
+                            SnapsToDevicePixels="True">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" SharedSizeGroup="MenuItemGesture" />
+                            </Grid.ColumnDefinitions>
+                            <ContentPresenter ContentSource="Header" RecognizesAccessKey="True" VerticalAlignment="Center" />
+                            <TextBlock Grid.Column="1" Text="{TemplateBinding InputGestureText}" Margin="24,0,0,0"
+                                       Foreground="{StaticResource MutedTextBrush}" VerticalAlignment="Center" />
+                        </Grid>
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsHighlighted" Value="True">
+                            <Setter TargetName="Bd" Property="Background" Value="{StaticResource HoverBrush}" />
+                        </Trigger>
+                        <Trigger Property="IsEnabled" Value="False">
+                            <Setter Property="Opacity" Value="0.45" />
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <Style x:Key="MenuSeparator" TargetType="Separator">
+        <Setter Property="Margin" Value="6,3" />
+        <Setter Property="Focusable" Value="False" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Separator">
+                    <Border Height="1" Background="{StaticResource DividerBrush}" SnapsToDevicePixels="True" />
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+    <!-- Menus look separators up by this key, not by their type. -->
+    <Style x:Key="{x:Static MenuItem.SeparatorStyleKey}" TargetType="Separator" BasedOn="{StaticResource MenuSeparator}" />
+
+    <!--
+        The text boxes' Cut/Copy/Paste menu. WPF's built-in one is a private ContextMenu
+        subclass that implicit styles can't reach, so every text box gets this copy instead
+        (one per text box: x:Shared="False"). Headers and shortcuts come from the commands,
+        in Windows' language, as in the built-in menu.
+    -->
+    <ContextMenu x:Key="TextBoxContextMenu" x:Shared="False">
+        <MenuItem Command="ApplicationCommands.Cut"
+                  CommandTarget="{Binding PlacementTarget, RelativeSource={RelativeSource AncestorType=ContextMenu}}" />
+        <MenuItem Command="ApplicationCommands.Copy"
+                  CommandTarget="{Binding PlacementTarget, RelativeSource={RelativeSource AncestorType=ContextMenu}}" />
+        <MenuItem Command="ApplicationCommands.Paste"
+                  CommandTarget="{Binding PlacementTarget, RelativeSource={RelativeSource AncestorType=ContextMenu}}" />
+    </ContextMenu>
+
     <!-- Fields: consistent height and padding; red border when Behaviors.HasError -->
     <Style TargetType="TextBox">
         <Setter Property="Padding" Value="4,2" />
@@ -161,6 +250,7 @@
         <Setter Property="Background" Value="{StaticResource SurfaceBrush}" />
         <Setter Property="Foreground" Value="{StaticResource TextBrush}" />
         <Setter Property="CaretBrush" Value="{StaticResource TextBrush}" />
+        <Setter Property="ContextMenu" Value="{DynamicResource TextBoxContextMenu}" />
         <Style.Triggers>
             <Trigger Property="mvvm:Behaviors.HasError" Value="True">
                 <Setter Property="BorderBrush" Value="{StaticResource ErrorBrush}" />
@@ -290,27 +380,6 @@
         </Style.Triggers>
     </Style>
 
-    <Style TargetType="DatePicker">
-        <Setter Property="MinHeight" Value="26" />
-        <Setter Property="VerticalContentAlignment" Value="Center" />
-        <Setter Property="BorderBrush" Value="{StaticResource BorderBrush}" />
-        <Style.Triggers>
-            <Trigger Property="mvvm:Behaviors.HasError" Value="True">
-                <Setter Property="BorderBrush" Value="{StaticResource ErrorBrush}" />
-                <Setter Property="Background" Value="{StaticResource ErrorSoftBrush}" />
-            </Trigger>
-        </Style.Triggers>
-    </Style>
-
-    <!--
-        The DatePicker template stretches its text box to the full row height with
-        VerticalContentAlignment="Stretch", so the date sat at the top of the field.
-        Centring the text box itself lines the date up with the other row fields.
-    -->
-    <Style TargetType="DatePickerTextBox">
-        <Setter Property="VerticalAlignment" Value="Center" />
-    </Style>
-
     <!-- Check boxes: a flat box that follows the palette (the Windows one is always white with a black tick). -->
     <Style TargetType="CheckBox">
         <Setter Property="VerticalContentAlignment" Value="Center" />
@@ -331,10 +400,10 @@
                                 Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}">
                             <Grid>
                                 <Path x:Name="Mark" Visibility="Collapsed" Data="M 2,6 L 5,9 L 10,3"
-                                      Stroke="{StaticResource OnAccentBrush}" StrokeThickness="1.8"
+                                      Stroke="{StaticResource CheckMarkBrush}" StrokeThickness="1.8"
                                       StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round" />
                                 <Rectangle x:Name="Indeterminate" Visibility="Collapsed" Width="6" Height="6"
-                                           Fill="{StaticResource AccentBrush}" />
+                                           Fill="{StaticResource CheckFillBrush}" />
                             </Grid>
                         </Border>
                         <ContentPresenter x:Name="Content" Grid.Column="1" Margin="6,0,0,0" RecognizesAccessKey="True"
@@ -353,16 +422,16 @@
                         </Trigger>
                         <Trigger Property="IsChecked" Value="True">
                             <Setter TargetName="Mark" Property="Visibility" Value="Visible" />
-                            <Setter TargetName="Box" Property="Background" Value="{StaticResource AccentBrush}" />
-                            <Setter TargetName="Box" Property="BorderBrush" Value="{StaticResource AccentBrush}" />
+                            <Setter TargetName="Box" Property="Background" Value="{StaticResource CheckFillBrush}" />
+                            <Setter TargetName="Box" Property="BorderBrush" Value="{StaticResource CheckFillBrush}" />
                         </Trigger>
                         <MultiTrigger>
                             <MultiTrigger.Conditions>
                                 <Condition Property="IsChecked" Value="True" />
                                 <Condition Property="IsMouseOver" Value="True" />
                             </MultiTrigger.Conditions>
-                            <Setter TargetName="Box" Property="Background" Value="{StaticResource AccentHoverBrush}" />
-                            <Setter TargetName="Box" Property="BorderBrush" Value="{StaticResource AccentHoverBrush}" />
+                            <Setter TargetName="Box" Property="Background" Value="{StaticResource CheckFillHoverBrush}" />
+                            <Setter TargetName="Box" Property="BorderBrush" Value="{StaticResource CheckFillHoverBrush}" />
                         </MultiTrigger>
                         <Trigger Property="IsChecked" Value="{x:Null}">
                             <Setter TargetName="Indeterminate" Property="Visibility" Value="Visible" />
@@ -574,7 +643,8 @@
                                 </Grid.ColumnDefinitions>
                                 <!-- Style="{x:Null}": not the implicit Button style above -->
                                 <Button x:Name="PART_PreviousButton" Style="{x:Null}" Template="{StaticResource CalendarNavButton}"
-                                        Width="28" Height="24" Focusable="False" Cursor="Hand">
+                                        Width="28" Height="24" Focusable="False" Cursor="Hand"
+                                        AutomationProperties.Name="Previous month">
                                     <Path Width="6" Height="10" Stretch="Fill" Fill="{StaticResource MutedTextBrush}"
                                           Data="M288.75,232.25 L288.75,240.625 L283,236.625 z" />
                                 </Button>
@@ -582,7 +652,8 @@
                                         Template="{StaticResource CalendarNavButton}" Padding="8,3" HorizontalAlignment="Center"
                                         FontWeight="SemiBold" Foreground="{TemplateBinding Foreground}" Focusable="False" Cursor="Hand" />
                                 <Button x:Name="PART_NextButton" Grid.Column="2" Style="{x:Null}" Template="{StaticResource CalendarNavButton}"
-                                        Width="28" Height="24" Focusable="False" Cursor="Hand">
+                                        Width="28" Height="24" Focusable="False" Cursor="Hand"
+                                        AutomationProperties.Name="Next month">
                                     <Path Width="6" Height="10" Stretch="Fill" Fill="{StaticResource MutedTextBrush}"
                                           Data="M282.875,231.875 L282.875,240.375 L288.625,236 z" />
                                 </Button>
@@ -700,6 +771,14 @@
                             <Setter TargetName="Bd" Property="Background" Value="{StaticResource AccentBrush}" />
                             <Setter Property="Foreground" Value="{StaticResource OnAccentBrush}" />
                         </Trigger>
+                        <!-- Today's ring stays visible on the selected (accent) day. -->
+                        <MultiTrigger>
+                            <MultiTrigger.Conditions>
+                                <Condition Property="IsToday" Value="True" />
+                                <Condition Property="IsSelected" Value="True" />
+                            </MultiTrigger.Conditions>
+                            <Setter TargetName="Bd" Property="BorderBrush" Value="{StaticResource OnAccentBrush}" />
+                        </MultiTrigger>
                         <Trigger Property="IsBlackedOut" Value="True">
                             <Setter TargetName="Blackout" Property="Visibility" Value="Visible" />
                         </Trigger>

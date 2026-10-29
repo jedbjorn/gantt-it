@@ -1,3 +1,4 @@
+using System.Windows;
 using Autodesk.Revit.UI;
 using GanttIt.Core.Theming;
 using Microsoft.Win32;
@@ -6,8 +7,10 @@ namespace GanttIt.Revit.UI.Theming;
 
 /// <summary>
 /// Which palette Gantt-It's windows use (spec §2.5, decision #21): Revit's UI theme.
-/// Read when the Gantt-It window opens; the window is modal (D7), so Revit's theme
-/// can't change while it, or any dialog it owns, is open.
+/// Read when the Gantt-It window opens. The window is modal (D7), so Revit's own
+/// theme option can't change while it is open; with Revit's "Use system setting",
+/// though, Windows' theme can. The window and its dialogs then keep the theme they
+/// opened with until Gantt-It is opened again.
 /// </summary>
 public static class GanttItTheme
 {
@@ -24,7 +27,9 @@ public static class GanttItTheme
     /// (<see cref="UIThemeManager.FollowSystemColorTheme"/>) the Windows app theme is
     /// read directly, so the result is right whether or not
     /// <see cref="UIThemeManager.CurrentTheme"/> resolves the system setting itself.
-    /// Anything unreadable falls back to light.
+    /// Anything unreadable falls back to light. So does Windows high contrast: the
+    /// palettes don't follow the high-contrast colors (a known limitation), and the
+    /// light one is what Gantt-It showed there before dark mode.
     /// </summary>
     public static UiTheme Detect()
     {
@@ -36,6 +41,7 @@ public static class GanttItTheme
             case "light": return UiTheme.Light;
         }
 #endif
+        if (SystemParameters.HighContrast) return UiTheme.Light;
         try
         {
             if (UIThemeManager.FollowSystemColorTheme && WindowsAppTheme() is { } system) return system;

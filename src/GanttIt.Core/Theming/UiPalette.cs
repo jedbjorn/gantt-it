@@ -106,6 +106,9 @@ public static class UiPalette
     public const string ScrollThumbHover = "ScrollThumbHoverBrush";
     public const string ScrollThumbPressed = "ScrollThumbPressedBrush";
     public const string ScrollGlyph = "ScrollGlyphBrush";
+    public const string CheckFill = "CheckFillBrush";
+    public const string CheckFillHover = "CheckFillHoverBrush";
+    public const string CheckMark = "CheckMarkBrush";
 
     /// <summary>
     /// Light: the original Gantt-It palette. Accent and danger keep one hue for fills
@@ -150,12 +153,16 @@ public static class UiPalette
         (ScrollThumb, "#CDCDCD"),
         (ScrollThumbHover, "#A6A6A6"),
         (ScrollThumbPressed, "#606060"),
-        (ScrollGlyph, "#606060"));
+        (ScrollGlyph, "#606060"),
+        (CheckFill, "#2F6AD0"),
+        (CheckFillHover, "#2559B4"),
+        (CheckMark, "#FFFFFF"));
 
     /// <summary>
     /// Dark: neutral blue-greys that sit with Revit's dark frame. Filled accent and
     /// danger buttons keep the light hues (white text stays above 4.5:1); accent and
-    /// danger used as text or strokes on dark surfaces are lighter tints.
+    /// danger used as text or strokes on dark surfaces, and the checked check box
+    /// (with a dark tick), are lighter tints.
     /// </summary>
     private static readonly IReadOnlyDictionary<string, UiColor> DarkPalette = Build(
         (Window, "#1F2329"),
@@ -196,7 +203,10 @@ public static class UiPalette
         (ScrollThumb, "#5E6773"),
         (ScrollThumbHover, "#76808C"),
         (ScrollThumbPressed, "#949EAA"),
-        (ScrollGlyph, "#AEB6C1"));
+        (ScrollGlyph, "#AEB6C1"),
+        (CheckFill, "#79AEFF"),
+        (CheckFillHover, "#9CC3FF"),
+        (CheckMark, "#1F2329"));
 
     /// <summary>The palette for <paramref name="theme"/>: resource key to color.</summary>
     public static IReadOnlyDictionary<string, UiColor> For(UiTheme theme) =>
@@ -210,17 +220,23 @@ public static class UiPalette
     public static IReadOnlyList<ContrastRequirement> Requirements { get; } =
     [
         .. Text4(Text, [Window, Surface, SurfaceAlt, Hover, Pressed, AccentSoft, InfoSoft, WarningSoft, ErrorSoft, ErrorRow], "body text"),
-        .. Text4(MutedText, [Window, Surface, SurfaceAlt, Hover, Pressed], "labels, hints, icon buttons"),
-        .. Text4(Error, [Window, Surface, ErrorSoft], "validation messages"),
+        .. Text4(MutedText, [Window, Surface, SurfaceAlt, Hover, Pressed, ErrorRow, InfoSoft, WarningSoft, ErrorSoft],
+            "labels, hints, icon buttons, menu shortcuts"),
+        .. Text4(Error, [Window, Surface, ErrorSoft, ErrorRow], "validation messages"),
         .. Text4(DangerForeground, [Surface, Hover, Pressed], "outlined delete buttons"),
         .. Text4(WarningText, [Surface], "card status line"),
-        .. Text4(OnAccent, [Accent, AccentHover], "primary buttons, selected calendar day, check marks"),
+        .. Text4(OnAccent, [Accent, AccentHover], "primary buttons, selected calendar day (and its today ring)"),
         .. Text4(OnDanger, [Danger, DangerHover], "filled delete button"),
         new(ToolTipText, ToolTip, 4.5, "tooltips"),
         new(AccentForeground, Window, 3, "focus ring"),
         new(AccentForeground, Surface, 3, "focus ring, today in the calendar, drop marker"),
         new(AccentForeground, SurfaceAlt, 3, "New chart glyph"),
         new(StrongBorder, Surface, 3, "check box outline"),
+        new(CheckFill, Surface, 3, "checked check box"),
+        new(CheckFill, ErrorRow, 3, "checked check box in an invalid row"),
+        new(CheckFillHover, Surface, 3, "checked check box under the pointer"),
+        new(CheckMark, CheckFill, 3, "check mark"),
+        new(CheckMark, CheckFillHover, 3, "check mark under the pointer"),
         new(ScrollGlyph, ScrollTrack, 3, "scroll bar arrows"),
     ];
 
