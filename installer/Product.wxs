@@ -1,0 +1,135 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  GanttIt-<version>.msi — one per-user installer for Revit 2026 and 2027.
+
+  Lays the add-in into the per-user Revit add-ins folder of both supported
+  Revit years, exactly as build.yml's "Stage add-in" step lays out the Debug
+  artifacts (installer/stage.sh produces the same tree from Release builds):
+
+    %AppData%\Autodesk\Revit\Addins\2026\
+      GanttIt.addin                         manifest (Assembly=GanttIt\GanttIt.Revit.dll)
+      GanttIt\
+        GanttIt.Revit.dll, GanttIt.Core.dll, *.pdb, GanttIt.Revit.deps.json
+        Resources\icons\gantt_16.png, gantt_32.png
+    %AppData%\Autodesk\Revit\Addins\2027\
+      (same, built for net10.0-windows)
+
+  PDBs ship (useful stack traces in bug reports); XML doc files do not
+  (installer/stage.sh drops them).
+
+  Both years are always installed (no feature selection): the folder of a
+  Revit year that is not installed just sits idle until it is. User data
+  lives in the Revit models, not on disk, so there is nothing else to keep
+  across upgrades or uninstall.
+
+  UpgradeCode is the stable identity of the Gantt-It product family. NEVER
+  change it once shipped: it is how Windows Installer knows a new MSI
+  upgrades a prior install in place instead of installing side by side.
+-->
+<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs"
+     xmlns:ui="http://wixtoolset.org/schemas/v4/wxs/ui">
+
+  <Package Name="Gantt-It"
+           Manufacturer="Designs/OS"
+           Version="$(var.GanttItMsiVersion)"
+           UpgradeCode="644FCAD5-E631-4441-9A11-75F175565136"
+           Scope="perUser"
+           Compressed="yes">
+
+    <SummaryInformation Description="Gantt-It: Gantt charts as native Revit legend views (Revit 2026 and 2027)" />
+
+    <!-- Replace any prior install of the product family in place.
+         AllowSameVersionUpgrades: the MSI version is the tag's numeric a.b.c,
+         so v1.0.0-rc.1 and v1.0.0 (and every push/PR build, 0.0.0) share a
+         ProductVersion. Without it, installing the second over the first
+         would leave two entries in Settings > Apps. (Raises ICE61; see the
+         .wixproj.) -->
+    <MajorUpgrade AllowSameVersionUpgrades="yes"
+                  DowngradeErrorMessage="A newer version of [ProductName] is already installed." />
+
+    <MediaTemplate EmbedCab="yes" />
+
+    <!-- Branded setup UI. WixUI_Minimal fits a per-user install with nothing
+         to configure: welcome + license -> progress -> finish. The banner
+         shows on every page; the dialog bitmap backs the welcome/exit pages.
+         Needs WixToolset.UI.wixext (see the .wixproj). Artwork is generated
+         by tools/make_installer_branding.py. -->
+    <ui:WixUI Id="WixUI_Minimal" />
+    <WixVariable Id="WixUIBannerBmp"  Value="branding\banner.bmp" />
+    <WixVariable Id="WixUIDialogBmp"  Value="branding\dialog.bmp" />
+    <WixVariable Id="WixUILicenseRtf" Value="branding\License.rtf" />
+
+    <!-- Settings > Apps identity and links. -->
+    <Icon Id="GanttItIcon.ico" SourceFile="branding\ganttit.ico" />
+    <Property Id="ARPPRODUCTICON"   Value="GanttItIcon.ico" />
+    <Property Id="ARPHELPLINK"      Value="https://github.com/jedbjorn/gantt-it#install" />
+    <Property Id="ARPURLINFOABOUT"  Value="https://github.com/jedbjorn/gantt-it" />
+    <Property Id="ARPURLUPDATEINFO" Value="https://github.com/jedbjorn/gantt-it/releases/latest" />
+
+    <!-- Per-user directory layout under %AppData% (Roaming). No admin
+         elevation is needed to install. -->
+    <!-- Every folder the MSI creates is declared here (not left to the
+         harvest), so the folder-cleanup components below can name it. -->
+    <StandardDirectory Id="AppDataFolder">
+      <Directory Id="AutodeskFolder" Name="Autodesk">
+        <Directory Id="RevitFolder" Name="Revit">
+          <Directory Id="RevitAddinsFolder" Name="Addins">
+            <Directory Id="Addins2026Dir" Name="2026">
+              <Directory Id="GanttIt2026Dir" Name="GanttIt">
+                <Directory Id="Resources2026Dir" Name="Resources">
+                  <Directory Id="Icons2026Dir" Name="icons" />
+                </Directory>
+              </Directory>
+            </Directory>
+            <Directory Id="Addins2027Dir" Name="2027">
+              <Directory Id="GanttIt2027Dir" Name="GanttIt">
+                <Directory Id="Resources2027Dir" Name="Resources">
+                  <Directory Id="Icons2027Dir" Name="icons" />
+                </Directory>
+              </Directory>
+            </Directory>
+          </Directory>
+        </Directory>
+      </Directory>
+    </StandardDirectory>
+
+    <!-- One feature: install everything. <Files Include> harvests each staged
+         folder into per-file components bound to this feature. The globs are
+         per folder (not one recursive **) so every file lands in a declared
+         directory; a file in a new subfolder would be left out, which
+         inspect-msi.ps1's exact file-set check catches in CI. Paths are
+         relative to this .wxs (installer/). -->
+    <Feature Id="Main" Title="Gantt-It" Level="1">
+      <Files Include="stage\2026\*.addin"                      Directory="Addins2026Dir" />
+      <Files Include="stage\2026\GanttIt\*"                    Directory="GanttIt2026Dir" />
+      <Files Include="stage\2026\GanttIt\Resources\icons\*"    Directory="Icons2026Dir" />
+      <Files Include="stage\2027\*.addin"                      Directory="Addins2027Dir" />
+      <Files Include="stage\2027\GanttIt\*"                    Directory="GanttIt2027Dir" />
+      <Files Include="stage\2027\GanttIt\Resources\icons\*"    Directory="Icons2027Dir" />
+
+      <!-- Folder cleanup on uninstall. Windows Installer only removes a
+           folder it created when the RemoveFile table lists it, so each
+           year gets a component that removes GanttIt\Resources\icons,
+           GanttIt\Resources and GanttIt (each only if empty). A per-user
+           component needs an HKCU registry KeyPath, hence the marker value.
+           Addins\<year> is deliberately NOT removed: other add-ins live
+           there, and Revit owns it. -->
+      <Component Id="Folders2026" Directory="GanttIt2026Dir">
+        <RegistryValue Root="HKCU" Key="Software\Designs/OS\Gantt-It\2026"
+                       Name="Installed" Type="integer" Value="1" KeyPath="yes" />
+        <RemoveFolder Id="RemoveIcons2026"     Directory="Icons2026Dir"     On="uninstall" />
+        <RemoveFolder Id="RemoveResources2026" Directory="Resources2026Dir" On="uninstall" />
+        <RemoveFolder Id="RemoveGanttIt2026"   Directory="GanttIt2026Dir"   On="uninstall" />
+      </Component>
+      <Component Id="Folders2027" Directory="GanttIt2027Dir">
+        <RegistryValue Root="HKCU" Key="Software\Designs/OS\Gantt-It\2027"
+                       Name="Installed" Type="integer" Value="1" KeyPath="yes" />
+        <RemoveFolder Id="RemoveIcons2027"     Directory="Icons2027Dir"     On="uninstall" />
+        <RemoveFolder Id="RemoveResources2027" Directory="Resources2027Dir" On="uninstall" />
+        <RemoveFolder Id="RemoveGanttIt2027"   Directory="GanttIt2027Dir"   On="uninstall" />
+      </Component>
+    </Feature>
+
+  </Package>
+
+</Wix>

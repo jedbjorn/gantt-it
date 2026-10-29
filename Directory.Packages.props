@@ -21,6 +21,12 @@
     <PackageVersion Include="Nice3point.Revit.Api.RevitAPIUI" Version="2027.0.10" />
   </ItemGroup>
 
+  <!-- Installer UI — WixUI dialog set for the branded MSI setup. Tracks the
+       WixToolset.Sdk version pinned in installer/GanttIt.Installer.wixproj. -->
+  <ItemGroup>
+    <PackageVersion Include="WixToolset.UI.wixext" Version="6.0.2" />
+  </ItemGroup>
+
   <!-- Test stack. -->
   <ItemGroup>
     <PackageVersion Include="Microsoft.NET.Test.Sdk"    Version="17.14.1" />
