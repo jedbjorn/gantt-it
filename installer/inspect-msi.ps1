@@ -117,7 +117,7 @@ if ($props['ProductVersion'] -ne $numeric) {
 }
 $msiName = Split-Path -Leaf $Msi
 if ($msiName -ne "GanttIt-$Version.msi") { $problems += "MSI is named $msiName, expected GanttIt-$Version.msi" }
-# The exact file set, per Revit year (8 files each, 16 in all): PDBs ship,
+# The exact file set, per Revit year (10 files each, 20 in all): PDBs ship,
 # XML doc files do not (installer/stage.sh drops them). A file added to the
 # add-in output must be added here too, deliberately.
 $perYear = @(
@@ -128,7 +128,9 @@ $perYear = @(
   'GanttIt\GanttIt.Revit.dll',
   'GanttIt\GanttIt.Revit.pdb',
   'GanttIt\Resources\icons\gantt_16.png',
-  'GanttIt\Resources\icons\gantt_32.png'
+  'GanttIt\Resources\icons\gantt_16_dark.png',
+  'GanttIt\Resources\icons\gantt_32.png',
+  'GanttIt\Resources\icons\gantt_32_dark.png'
 )
 $expected = foreach ($year in '2026', '2027') {
   foreach ($rel in $perYear) { "AppDataFolder\Autodesk\Revit\Addins\$year\$rel" }
