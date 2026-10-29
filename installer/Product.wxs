@@ -10,7 +10,7 @@
       GanttIt.addin                         manifest (Assembly=GanttIt\GanttIt.Revit.dll)
       GanttIt\
         GanttIt.Revit.dll, GanttIt.Core.dll, *.pdb, GanttIt.Revit.deps.json
-        Resources\icons\gantt_16.png, gantt_32.png
+        Resources\icons\gantt_16.png, gantt_32.png (+ _dark variants for Revit's dark theme)
     %AppData%\Autodesk\Revit\Addins\2027\
       (same, built for net10.0-windows)
 

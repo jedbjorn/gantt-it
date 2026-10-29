@@ -9,7 +9,7 @@ namespace GanttIt.Revit.UI.Mvvm;
 public static class Behaviors
 {
     /// <summary>
-    /// Marks a field as invalid. The implicit TextBox/ComboBox/DatePicker styles
+    /// Marks a field as invalid. The implicit TextBox/ComboBox styles
     /// in Theme.xaml draw a red border when it is true.
     /// </summary>
     public static readonly DependencyProperty HasErrorProperty = DependencyProperty.RegisterAttached(
