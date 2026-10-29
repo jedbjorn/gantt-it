@@ -28,9 +28,13 @@ public static class LayoutEngine
 
     /// <summary>
     /// An unlabelled edge cell (a sliver) joins its neighbour only when it covers
-    /// at most this share of the neighbour's period; otherwise it stays a blank cell (§6.2).
+    /// at most this share of the neighbour's period, inclusive; otherwise it stays
+    /// a blank cell (§6.2). Slivers at both ends of one cell count together.
     /// </summary>
     public const double MaxSliverShare = 0.25;
+
+    /// <summary>Slack for the share comparison, so exactly a quarter (3 of 12 months) counts as a quarter.</summary>
+    private const double ShareTolerance = 1e-9;
 
     public const string NameHeader = "Section";
     public const string StartHeader = "Start";
@@ -269,20 +273,22 @@ public static class LayoutEngine
     /// is full when it holds k whole units; partial groups (a cell clipped at an
     /// axis end, or a group cut short by an axis end or by the alignment) only
     /// occur at the ends.</item>
-    /// <item>A partial group narrower than its own shortest label plus padding
-    /// is a sliver. Every other group is labelled.</item>
+    /// <item>A partial group narrower than its own narrowest candidate plus
+    /// padding is a sliver. Every other group is labelled.</item>
     /// <item>Accept the first k at which some format fits every labelled group
     /// with padding on both sides (and at least one group is labelled); the
-    /// whole tier then uses the longest such format. A partial group that is
-    /// not a sliver always fits the shortest format, so an edge can shorten
-    /// the format but never forces more thinning.</item>
+    /// whole tier then uses the first (longest) such format. With the built-in
+    /// formats a partial group that is not a sliver fits the last format, so
+    /// an edge can shorten the format but never forces more thinning.</item>
     /// <item>A sliver that covers at most <see cref="MaxSliverShare"/> of its
-    /// neighbour's period (k units) joins that neighbour: the divider between
+    /// neighbour's full period (k units, measured in days for day and week
+    /// tiers and in months above) joins that neighbour: the divider between
     /// them is dropped, so the cell overstates its period by less than one
-    /// label and at most a quarter of it. The label keeps its own left edge, so
-    /// it still starts exactly at its date. A longer sliver keeps its divider
-    /// and stays blank: no allowed label fits it, and joining would misname too
-    /// much time.</item>
+    /// label and at most a quarter of it. Slivers at both ends of one cell
+    /// count together; past the limit the larger stays out. The label keeps
+    /// its own left edge, so it still starts exactly at its date. A sliver that
+    /// can't join keeps its divider and stays blank: no allowed label fits it,
+    /// and joining would misname too much time.</item>
     /// </list>
     /// A group is named by its first cell, unless that cell is a sliver clipped
     /// at the axis start and the rest of the group can hold the next cell's
@@ -308,17 +314,31 @@ public static class LayoutEngine
                 if (groups.Where((g, i) => !slivers[i] && !Fits(g, Candidate(tier, g.Name, format))).Any())
                     continue;
 
-                // Short slivers join their neighbour; interior groups are full, so never slivers.
+                // Short slivers join their neighbour; interior groups are full, so never slivers,
+                // and at least one group is labelled, so a sliver's neighbour always is.
                 var spans = groups.Select((g, i) => new Span(g, slivers[i] ? null : Candidate(tier, g.Name, format))).ToList();
-                if (spans.Count > 1 && spans[0].Label is null && spans[1].Label is not null && MayJoin(spans[0].Group, spans[1].Group, k))
+                var lead = spans.Count > 1 && spans[0].Label is null ? Share(spans[0].Group, k) : double.PositiveInfinity;
+                var trail = spans.Count > 1 && spans[^1].Label is null ? Share(spans[^1].Group, k) : double.PositiveInfinity;
+                var joinLead = lead <= MaxSliverShare + ShareTolerance;
+                var joinTrail = trail <= MaxSliverShare + ShareTolerance;
+
+                // Both ends joining the one labelled cell: their shares add up. Past the
+                // limit the larger sliver stays blank (the trailing one on a tie).
+                if (joinLead && joinTrail && spans.Count == 3 && lead + trail > MaxSliverShare + ShareTolerance)
                 {
-                    spans[1] = spans[1] with { Left = spans[0].Left };
-                    spans.RemoveAt(0);
+                    if (trail >= lead) joinTrail = false;
+                    else joinLead = false;
                 }
-                if (spans.Count > 1 && spans[^1].Label is null && spans[^2].Label is not null && MayJoin(spans[^1].Group, spans[^2].Group, k))
+
+                if (joinTrail)
                 {
                     spans[^2] = spans[^2] with { Right = spans[^1].Right };
                     spans.RemoveAt(spans.Count - 1);
+                }
+                if (joinLead)
+                {
+                    spans[1] = spans[1] with { Left = spans[0].Left };
+                    spans.RemoveAt(0);
                 }
 
                 foreach (var s in spans)
@@ -334,16 +354,15 @@ public static class LayoutEngine
 
         bool Fits(Group g, TextRequest label) => sizes[label].Width + 2 * pad <= g.Right - g.LabelLeft;
 
-        // A sliver may join a neighbour whose period (its k-unit block) is at least 1 / MaxSliverShare times as long.
-        bool MayJoin(Group sliver, Group neighbour, int k)
-        {
-            var days = tier.Cells[sliver.Last].End.DayNumber - tier.Cells[sliver.First].Start.DayNumber + 1;
-            var (from, to) = TimescaleLabels.ThinningBlock(tier.Unit, tier.Cells[neighbour.Name].Start, k, timeline.Axis.Start);
-            return days <= MaxSliverShare * (to.DayNumber - from.DayNumber + 1);
-        }
+        // The sliver's length as a share of its neighbour's full period (k units), in tier
+        // units (TimescaleLabels.SpanLength): days for day and week tiers, months above.
+        double Share(Group sliver, int k) =>
+            TimescaleLabels.SpanLength(tier.Unit, tier.Cells[sliver.First].Start, tier.Cells[sliver.Last].End.AddDays(1))
+            / ((double)k * TimescaleLabels.UnitLength(tier.Unit));
 
-        // Width the cell's shortest format needs, padding included.
-        double Shortest(int cell) => sizes[tier.Candidates[cell][^1]].Width + 2 * pad;
+        // Width the cell's narrowest candidate needs, padding included. Not always the
+        // last: a custom date pattern such as "d/M" is narrower than "2 Nov".
+        double Shortest(int cell) => tier.Candidates[cell].Min(c => sizes[c].Width) + 2 * pad;
 
         double Left(int cell) => timeline.XOfDate(tier.Cells[cell].Start);
 

@@ -33,8 +33,11 @@ public static class TimescaleLabels
             TimeUnit.Day => [day],
             // A week is named by its first day on the axis: its Monday, unless
             // the cell is clipped at the axis start. The label sits at that edge.
-            // A bare day number would name no month here, so there is no third format.
-            TimeUnit.Week when isTier1 => [DateFormats.Format(cellStart, dateFormat), $"{day} {abbr}"],
+            // A bare day number would name no month here, so there is no third format,
+            // and a chart date pattern that names no month (e.g. "dd") is not offered.
+            TimeUnit.Week when isTier1 => NamesMonth(dateFormat)
+                ? [DateFormats.Format(cellStart, dateFormat), $"{day} {abbr}"]
+                : [$"{day} {abbr}"],
             TimeUnit.Week => [day],
             TimeUnit.Month when isTier1 => [$"{month} {year}", $"{abbr} {year}", $"{abbr} {shortYear}"],
             TimeUnit.Month => [month, abbr],
@@ -43,6 +46,13 @@ public static class TimescaleLabels
             _ => throw new ArgumentOutOfRangeException(nameof(unit), unit, null),
         };
     }
+
+    /// <summary>
+    /// True when <paramref name="pattern"/> shows the month: 1 Feb and 1 Mar 2026
+    /// share their year, day and weekday, so only a month field tells them apart.
+    /// </summary>
+    private static bool NamesMonth(string pattern) =>
+        DateFormats.Format(new DateOnly(2026, 2, 1), pattern) != DateFormats.Format(new DateOnly(2026, 3, 1), pattern);
 
     /// <summary>
     /// Group sizes k for thinning a tier's labels, smallest first: label every
@@ -87,39 +97,29 @@ public static class TimescaleLabels
     };
 
     /// <summary>
-    /// The full period (inclusive dates, not clipped to the axis) of the
-    /// k-unit thinning group that holds the cell starting on <paramref name="cellStart"/>.
-    /// A period reaching past the calendar's range (only for a huge k) is cut
-    /// at <see cref="DateOnly.MinValue"/> / <see cref="DateOnly.MaxValue"/>.
+    /// Length of <paramref name="start"/>..<paramref name="endExclusive"/> in the
+    /// measure a tier of <paramref name="unit"/> compares edge slivers in (§6.2):
+    /// days for day and week tiers, months for month, quarter and year tiers,
+    /// so every quarter is exactly a quarter of a year whatever its day count.
+    /// A month cut short counts the share of its days that it covers.
     /// </summary>
-    public static (DateOnly Start, DateOnly End) ThinningBlock(TimeUnit unit, DateOnly cellStart, int k, DateOnly axisStart)
-    {
-        long slot = ThinningSlot(unit, cellStart, axisStart) / k * k;
-        switch (unit)
-        {
-            case TimeUnit.Day:
-            case TimeUnit.Week:
-                var days = unit == TimeUnit.Day ? 1L : 7L;
-                var origin = unit == TimeUnit.Day ? axisStart : TimescaleRules.UnitStart(unit, axisStart);
-                var first = origin.DayNumber + slot * days;
-                var last = Math.Min(first + k * days - 1, DateOnly.MaxValue.DayNumber);
-                return (DateOnly.FromDayNumber((int)first), DateOnly.FromDayNumber((int)last));
-            default:
-                // Months since 1 January of year 0.
-                var months = unit switch
-                {
-                    TimeUnit.Month => 1L,
-                    TimeUnit.Quarter => 3L,
-                    TimeUnit.Year => 12L,
-                    _ => throw new ArgumentOutOfRangeException(nameof(unit), unit, null),
-                };
-                var start = slot * months;
-                var next = start + k * months;
-                return (
-                    start < 12 ? DateOnly.MinValue : MonthStart(start),
-                    next >= 10000 * 12 ? DateOnly.MaxValue : MonthStart(next).AddDays(-1));
-        }
+    public static double SpanLength(TimeUnit unit, DateOnly start, DateOnly endExclusive) =>
+        unit is TimeUnit.Day or TimeUnit.Week
+            ? endExclusive.DayNumber - start.DayNumber
+            : MonthPosition(endExclusive) - MonthPosition(start);
 
-        static DateOnly MonthStart(long monthIndex) => new((int)(monthIndex / 12), (int)(monthIndex % 12) + 1, 1);
-    }
+    /// <summary>Length of one <paramref name="unit"/> in the <see cref="SpanLength"/> measure.</summary>
+    public static int UnitLength(TimeUnit unit) => unit switch
+    {
+        TimeUnit.Day => 1,
+        TimeUnit.Week => 7,
+        TimeUnit.Month => 1,
+        TimeUnit.Quarter => 3,
+        TimeUnit.Year => 12,
+        _ => throw new ArgumentOutOfRangeException(nameof(unit), unit, null),
+    };
+
+    /// <summary>Months since year 0 up to <paramref name="date"/>; whole on the 1st, so whole months subtract exactly.</summary>
+    private static double MonthPosition(DateOnly date) =>
+        date.Year * 12 + date.Month - 1 + (date.Day - 1) / (double)DateTime.DaysInMonth(date.Year, date.Month);
 }
