@@ -2,6 +2,7 @@
 using System.Text.Json.Nodes;
 using Autodesk.Revit.DB;
 using GanttIt.Core.Model;
+using GanttIt.Revit.Resources;
 using GanttIt.Revit.Services;
 using RevitLine = Autodesk.Revit.DB.Line;
 
@@ -177,7 +178,7 @@ internal sealed partial class SelfTestRunner
         var left = GanttItFillNames().Where(PurgeProbeTypeNames.Contains).ToList();
         _r.Check("§7.3", "after the probes are removed by hand, deleting the charts purges every probe fill type and reports it",
             removed.Count == 2 && removed.All(r => r.Succeeded) && left.Count == 0
-            && removed.Any(r => (r.Message ?? "").Contains("Removed unused fill types", StringComparison.Ordinal)),
+            && removed.Any(r => (r.Message ?? "").Contains(Strings.Gen_FillsRemoved("").Split(':')[0], StringComparison.Ordinal)),
             new JsonObject
             {
                 ["deletes"] = new JsonArray(removed.Select(r => (JsonNode)r.Status.ToString()).ToArray()),
