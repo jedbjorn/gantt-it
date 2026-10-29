@@ -34,19 +34,23 @@ does a tag on a commit that is not on `main`.
    the tagged commit is reachable from `origin/main`.
 2. **Build.** Runs the same reusable pipeline as every PR (`_build.yml`)
    against the tagged commit, with `-p:GanttItVersion=<version>`:
-   - Core tests (net8.0 and net10.0) and the four configuration builds.
-   - On Windows: `Release R26` and `Release R27`, staged with
+   - Core tests (net8.0 and net10.0) and the six configuration builds.
+   - On Windows: `Release R25`, `Release R26` and `Release R27`, staged with
      `installer/stage.sh`, packed into one per-user MSI, and checked by
      `installer/inspect-msi.ps1`: UpgradeCode, per-user scope, file name and
-     ProductVersion against the tag, the exact file set for both Revit years,
-     folder cleanup on uninstall, and each year's `GanttIt.Revit.dll`
-     ProductVersion (the AppVersion it stamps) equal to the tag version.
+     ProductVersion against the tag, the exact file set for each Revit year
+     (against the staged folders too), folder cleanup on uninstall, the
+     Revit detection wiring (per-year component conditions, AppSearch,
+     launch condition), and each year's `GanttIt.Revit.dll` ProductVersion
+     (the AppVersion it stamps) equal to the tag version.
 3. **Release.** The read-only `assets` job collects and checksums the assets;
    then `publish`, the only job with write access, creates the GitHub Release
    for the tag with auto-generated notes and these assets:
-   - `GanttIt-<version>.msi` — the installer (Revit 2026 + 2027).
-   - `GanttIt-<version>-Revit2026.zip`, `GanttIt-<version>-Revit2027.zip` —
-     the contents of `Addins\<year>\` for a manual install.
+   - `GanttIt-<version>.msi` — the installer (Revit 2025, 2026 and 2027;
+     it installs for the years it finds).
+   - `GanttIt-<version>-Revit2025.zip`, `GanttIt-<version>-Revit2026.zip`,
+     `GanttIt-<version>-Revit2027.zip` — the contents of `Addins\<year>\`
+     for a manual install.
    - `SHA256SUMS.txt`.
 
 If any job fails, no release is created. Fix the problem on `main`, delete the
@@ -101,16 +105,18 @@ dev version `0.0.0-dev`.
 
 ## Verify a release
 
-1. The release page lists the MSI, both zips and `SHA256SUMS.txt`, and is
+1. The release page lists the MSI, the three zips and `SHA256SUMS.txt`, and is
    marked pre-release exactly when the tag has a suffix.
 2. The **Inspect MSI** step of the release run's MSI job passed and printed
-   `ProductVersion` equal to the tag's numeric part, both `Addins\2026\` and
-   `Addins\2027\` file lists, and each year's `GanttIt.Revit.dll`
-   ProductVersion equal to the tag version.
+   `ProductVersion` equal to the tag's numeric part, the `Addins\2025\`,
+   `Addins\2026\` and `Addins\2027\` file lists, the Revit detection, and
+   each year's `GanttIt.Revit.dll` ProductVersion equal to the tag version.
 3. On a Windows machine with Revit: install the MSI (no admin prompt), confirm
-   Settings › Apps shows **Gantt-It** with the new version, start Revit 2026 or
-   2027, choose **Always Load**, and open the Gantt-It panel. Generate or
-   reopen a chart; its stored `AppVersion` is the release version.
+   Settings › Apps shows **Gantt-It** with the new version and that only the
+   `Addins\<year>\GanttIt\` folders of the installed Revit years were
+   created, start one of them, choose **Always Load**, and open the Gantt-It
+   panel. Generate or reopen a chart; its stored `AppVersion` is the release
+   version.
 
 ## Build the MSI locally (Windows)
 
@@ -118,12 +124,12 @@ Needs the .NET 8 and .NET 10 SDKs; WiX comes from NuGet. From the repo root,
 in Git Bash:
 
 ```sh
-dotnet build src/GanttIt.Revit/GanttIt.Revit.csproj -c "Release R26" -p:GanttItVersion=1.0.0
-dotnet build src/GanttIt.Revit/GanttIt.Revit.csproj -c "Release R27" -p:GanttItVersion=1.0.0
-bash installer/stage.sh 2026
-bash installer/stage.sh 2027
+for r in R25 R26 R27; do
+  dotnet build src/GanttIt.Revit/GanttIt.Revit.csproj -c "Release $r" -p:GanttItVersion=1.0.0
+done
+for year in 2025 2026 2027; do bash installer/stage.sh $year; done
 dotnet build installer/GanttIt.Installer.wixproj -c Release -p:GanttItVersion=1.0.0
-powershell -File installer/inspect-msi.ps1 -Msi installer/bin/Release/GanttIt-1.0.0.msi
+powershell -File installer/inspect-msi.ps1 -Msi installer/bin/Release/GanttIt-1.0.0.msi -Version 1.0.0 -Stage installer/stage
 ```
 
 Omit `-p:GanttItVersion` for a dev build (`GanttIt-0.0.0-dev.msi`). The setup

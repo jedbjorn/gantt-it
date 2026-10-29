@@ -9,7 +9,7 @@
   Actions:
     prep     -Model <work .rvt> -From <fixture .rvt>    copy a fixture to a disposable work copy
                                                         (refuses to write into C:\GanttIt\fixtures)
-    launch   -Year 2026|2027 -Model <.rvt> [-Phase 1|2] [-NoSave]
+    launch   -Year 2025|2026|2027 -Model <.rvt> [-Phase 1|2] [-NoSave]
              With -Phase, arms the autorun Self-Test: writes %TEMP%\GanttIt\autorun.json; the
              Debug add-in consumes it on its first idle tick with the document open and writes
              selftest-<year>-<model stem>-<phase>.json plus a .done marker.

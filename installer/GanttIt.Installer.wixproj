@@ -4,8 +4,10 @@
     GanttIt.Installer — produces GanttIt-<version>.msi (Windows only).
 
     Build, from the repo root on Windows:
+      dotnet build GanttIt.sln -c "Release R25"
       dotnet build GanttIt.sln -c "Release R26"
       dotnet build GanttIt.sln -c "Release R27"
+      bash installer/stage.sh 2025
       bash installer/stage.sh 2026
       bash installer/stage.sh 2027
       dotnet build installer/GanttIt.Installer.wixproj -c Release
@@ -14,8 +16,9 @@
     Not part of GanttIt.sln: the Linux CI jobs build the solution, and WiX MSI
     emission is Windows-only.
 
-    SDK pinned to 6.x as in rst-c: the <Files> harvest element in Product.wxs
-    needs WiX v5+ (v4 has no <Files> schema and fails with WIX0005).
+    SDK pinned to 6.x as in rst-c. Product.wxs authors every file as its own
+    conditional component (one set per Revit year), so it no longer relies on
+    the <Files> harvest element that first required v5+.
   -->
 
   <!--
@@ -42,6 +45,11 @@
   <PropertyGroup>
     <OutputType>Package</OutputType>
     <Configurations>Debug;Release</Configurations>
+    <!-- x64 package (Template x64): Revit 2025-2027 and the add-in are
+         64-bit only, and the Revit detection in Product.wxs reads the 64-bit
+         registry and ProgramFiles64Folder, which ICE80 rejects in a 32-bit
+         package. -->
+    <InstallerPlatform>x64</InstallerPlatform>
     <!-- The MSI ICE validation suite was authored for the per-machine
          install model; some of its rules fire on every per-user
          (Scope="perUser") harvest, a gap the WiX team acknowledges
@@ -50,20 +58,22 @@
            ICE91 — "directory doesn't vary based on ALLUSERS"; that is
                    the *intent* of perUser scope.
            ICE38 — components in the user profile "should" have an HKCU
-                   KeyPath instead of a file KeyPath; auto-harvested
-                   per-file components cannot express that. (The
+                   KeyPath instead of a file KeyPath. Product.wxs keeps
+                   one component per file with the file as its KeyPath,
+                   so a repair checks and restores each file. (The
                    folder-cleanup components in Product.wxs do use an HKCU
                    KeyPath.)
            ICE64 — every directory the package lays out in the user
                    profile must be listed in the RemoveFile table
                    (RemoveFolder), or it is left behind on uninstall.
-                   Product.wxs lists the folders Gantt-It owns
-                   (GanttIt\, Resources\, icons\ per year). It deliberately
-                   does not list Autodesk\Revit\Addins\<year>\ and its
-                   parents: Revit owns them and other add-ins live there,
-                   so ICE64 still fires for exactly those five (Autodesk,
-                   Revit, Addins, 2026, 2027; verified in CI with ICE64
-                   unsuppressed) and stays suppressed.
+                   Product.wxs lists the folders Gantt-It owns (GanttIt\,
+                   Resources\, icons\ and the fr\, es\, de\ satellite
+                   folders, per year). It deliberately does not list
+                   Autodesk\Revit\Addins\<year>\ and its parents: Revit
+                   owns them and other add-ins live there, so ICE64 still
+                   fires for exactly those six (Autodesk, Revit, Addins,
+                   2025, 2026, 2027; verified with ICE64 unsuppressed on
+                   the three-year MSI) and stays suppressed.
            ICE61 — warns that MajorUpgrade/@AllowSameVersionUpgrades also
                    replaces an install of the same ProductVersion. That is
                    deliberate (Product.wxs): an rc and its final share the
@@ -82,8 +92,8 @@
   <Target Name="GanttItCheckVersion" BeforeTargets="PrepareForBuild">
     <Error Condition="'$(GanttItMsiVersion)' == ''"
            Text="GanttItVersion '$(Version)' does not start with a numeric a.b.c version." />
-    <Error Condition="!Exists('stage\2026\GanttIt.addin') Or !Exists('stage\2027\GanttIt.addin')"
-           Text="installer/stage/2026 and installer/stage/2027 must be staged first (installer/stage.sh)." />
+    <Error Condition="!Exists('stage\2025\GanttIt.addin') Or !Exists('stage\2026\GanttIt.addin') Or !Exists('stage\2027\GanttIt.addin')"
+           Text="installer/stage/2025, 2026 and 2027 must be staged first (installer/stage.sh)." />
     <Message Importance="high" Text="Gantt-It MSI: ProductVersion $(GanttItMsiVersion) (version $(Version)) -> $(OutputName).msi" />
   </Target>
 

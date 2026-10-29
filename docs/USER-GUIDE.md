@@ -259,6 +259,10 @@ The chart preview stays white, like paper, so you see the colours as they will p
 
 ## Good to know
 
+**The installer says "Gantt-It needs Revit 2025, 2026 or 2027, and none was found on this computer."** Gantt-It works in Revit 2025, 2026 and 2027, and the installer only installs it for the ones it finds. Install one of those Revit versions first, then run the Gantt-It installer again.
+
+**Gantt-It is missing from a Revit you installed after Gantt-It.** Close Revit, run the Gantt-It installer again and choose **Repair**. It adds Gantt-It to every supported Revit it now finds. Installing a newer version of Gantt-It does the same.
+
 **Revit asks to load Gantt-It after installing and after each upgrade.** Gantt-It is not digitally signed yet, so Revit asks each time a new version is installed. Choose **Always Load**.
 
 **A chart copied with Revit's Duplicate becomes a plain legend.** The copy doesn't appear in Gantt-It and Gantt-It never changes it; the original chart is unaffected. To make a variant of a chart, click **New chart** and build it in Gantt-It.

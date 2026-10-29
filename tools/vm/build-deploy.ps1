@@ -7,7 +7,7 @@
     python3 tools/vm/pack.py . .sc-state/local/vm-stage/gantt-it-src.zip
     ./sc vm push <abs>/.sc-state/local/vm-stage/gantt-it-src.zip C:\GanttIt\stage\gantt-it-src.zip
   Guest:
-    powershell -NoProfile -ExecutionPolicy Bypass -File C:\GanttIt\tools\build-deploy.ps1 -Zip C:\GanttIt\stage\gantt-it-src.zip -Years 2026,2027 -Deploy
+    powershell -NoProfile -ExecutionPolicy Bypass -File C:\GanttIt\tools\build-deploy.ps1 -Zip C:\GanttIt\stage\gantt-it-src.zip -Years 2025,2026,2027 -Deploy
 
   Layout produced:
     C:\GanttIt\src\gantt-it\                                  expanded source
@@ -16,7 +16,7 @@
     %AppData%\Autodesk\Revit\Addins\<year>\GanttIt\          DLLs and icons
     C:\GanttIt\logs\build-gantt-it-<year>.log                build log
   Arguments avoid spaces on purpose: `sc vm exec` goes through cmd.exe, so -Years maps to the
-  "Debug R26"/"Debug R27" configurations here. Revit locks loaded DLLs: stop Revit before deploying.
+  "Debug R25"/"Debug R26"/"Debug R27" configurations here. Revit locks loaded DLLs: stop Revit before deploying.
 #>
 param(
   [Parameter(Mandatory)][string]$Zip,
@@ -36,7 +36,7 @@ $env:DOTNET_NOLOGO = '1'
 $env:DOTNET_SKIP_FIRST_TIME_EXPERIENCE = '1'
 
 foreach ($year in ($Years -split ',' | ForEach-Object { [int]$_.Trim() })) {
-  $tag, $tfm = switch ($year) { 2026 { 'R26', 'net8.0-windows' } 2027 { 'R27', 'net10.0-windows' } default { throw "unsupported year $year" } }
+  $tag, $tfm = switch ($year) { 2025 { 'R25', 'net8.0-windows' } 2026 { 'R26', 'net8.0-windows' } 2027 { 'R27', 'net10.0-windows' } default { throw "unsupported year $year" } }
   $cfg = "$Flavor $tag"
   $log = Join-Path $logs "build-gantt-it-$year.log"
   $sw = [Diagnostics.Stopwatch]::StartNew()

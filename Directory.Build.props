@@ -4,26 +4,30 @@
     Gantt-It — root build properties (pattern copied from rst-c).
 
     The MSBuild Configuration picks the Revit major: "Debug R26" → RevitVersion
-    2026. Revit-bound projects select their TargetFramework and Revit API
-    package versions from $(RevitVersion). GanttIt.Core and its tests ignore
-    the Revit suffix and multi-target net8.0;net10.0.
+    2026 (R25, R26 and R27 are supported). Revit-bound projects select their
+    TargetFramework and Revit API package versions from $(RevitVersion).
+    GanttIt.Core and its tests ignore the Revit suffix and multi-target
+    net8.0;net10.0.
   -->
 
   <PropertyGroup>
-    <Configurations>Debug R26;Release R26;Debug R27;Release R27</Configurations>
+    <Configurations>Debug R25;Release R25;Debug R26;Release R26;Debug R27;Release R27</Configurations>
     <Configuration Condition="'$(Configuration)' == ''">Debug R26</Configuration>
   </PropertyGroup>
 
-  <!-- Revit version derived from the Configuration name (R26/R27). -->
+  <!-- Revit version derived from the Configuration name (R25/R26/R27). -->
   <PropertyGroup>
+    <RevitVersion Condition="$(Configuration.Contains('R25'))">2025</RevitVersion>
     <RevitVersion Condition="$(Configuration.Contains('R26'))">2026</RevitVersion>
     <RevitVersion Condition="$(Configuration.Contains('R27'))">2027</RevitVersion>
   </PropertyGroup>
 
   <!-- Target framework selected from the Revit version:
+         2025 → net8.0-windows
          2026 → net8.0-windows
          2027 → net10.0-windows (requires the .NET 10 SDK) -->
   <PropertyGroup>
+    <RevitTargetFramework Condition="'$(RevitVersion)' == '2025'">net8.0-windows</RevitTargetFramework>
     <RevitTargetFramework Condition="'$(RevitVersion)' == '2026'">net8.0-windows</RevitTargetFramework>
     <RevitTargetFramework Condition="'$(RevitVersion)' == '2027'">net10.0-windows</RevitTargetFramework>
   </PropertyGroup>

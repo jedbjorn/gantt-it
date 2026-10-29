@@ -1,7 +1,7 @@
 <#
   deploy-artifact.ps1 — guest side (W10C-Testing). Install a staged Gantt-It build as a dev add-in.
 
-  The CI build job uploads GanttIt-Debug-R26 / GanttIt-Debug-R27 laid out exactly like
+  The CI build job uploads GanttIt-Debug-R25 / -R26 / -R27 laid out exactly like
   %AppData%\Autodesk\Revit\Addins\<year>\ (GanttIt.addin + GanttIt\). On the host:
       gh run download <run-id> -n GanttIt-Debug-R26 -D .sc-state/local/vm-stage/r26
       (cd .sc-state/local/vm-stage/r26 && zip -qr ../GanttIt-Debug-R26.zip .)

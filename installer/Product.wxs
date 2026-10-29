@@ -1,28 +1,44 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-  GanttIt-<version>.msi — one per-user installer for Revit 2026 and 2027.
+  GanttIt-<version>.msi — one per-user installer for Revit 2025, 2026 and 2027.
 
-  Lays the add-in into the per-user Revit add-ins folder of both supported
-  Revit years, exactly as build.yml's "Stage add-in" step lays out the Debug
-  artifacts (installer/stage.sh produces the same tree from Release builds):
+  Lays the add-in into the per-user Revit add-ins folder of each supported
+  Revit year that is installed on the computer, exactly as build.yml's "Stage
+  add-in" step lays out the Debug artifacts (installer/stage.sh produces the
+  same tree from Release builds):
 
-    %AppData%\Autodesk\Revit\Addins\2026\
+    %AppData%\Autodesk\Revit\Addins\<year>\
       GanttIt.addin                         manifest (Assembly=GanttIt\GanttIt.Revit.dll)
       GanttIt\
         GanttIt.Revit.dll, GanttIt.Core.dll, *.pdb, GanttIt.Revit.deps.json
         Resources\icons\gantt_16.png, gantt_32.png (+ _dark variants for Revit's dark theme)
         fr\, es\, de\   GanttIt.Revit.resources.dll, GanttIt.Core.resources.dll
                         (satellite assemblies: French, Spanish and German UI)
-    %AppData%\Autodesk\Revit\Addins\2027\
-      (same, built for net10.0-windows)
 
+  2025 and 2026 are built for net8.0-windows, 2027 for net10.0-windows.
   PDBs ship (useful stack traces in bug reports); XML doc files do not
   (installer/stage.sh drops them).
 
-  Both years are always installed (no feature selection): the folder of a
-  Revit year that is not installed just sits idle until it is. User data
-  lives in the Revit models, not on disk, so there is nothing else to keep
-  across upgrades or uninstall.
+  Revit detection (no custom actions, standard AppSearch only): a year counts
+  as installed when Revit.exe is found, see "Revit detection" below. Each
+  year's components carry Condition="REVIT<year>FOUND OR REMOVE~="ALL"" and
+  are Transitive, so a repair re-evaluates them: running the same MSI again
+  and choosing Repair adds a Revit year installed since (and drops one
+  uninstalled since). The REMOVE~="ALL" half keeps an uninstall, and the
+  removal of the old version during an upgrade, removing a year whose Revit
+  is already gone. A newer MSI is a major upgrade: it removes the old version
+  completely, files of every year included, then installs fresh for the
+  years it detects. When no supported year is found, a launch condition stops
+  a first install; uninstall and repair are never blocked by it.
+
+  Charts live in the Revit models. The only file Gantt-It writes outside the
+  add-in folders is %AppData%\GanttIt\defaults.json (the user's default
+  style choices, written by the add-in, not by this MSI). The MSI does not
+  own it, so it is kept across upgrades and left in place on uninstall.
+
+  The package is x64: Revit 2025-2027 and the add-in are 64-bit only, and the
+  detection reads 64-bit registry keys and ProgramFiles64Folder, which a
+  32-bit package may not use (ICE80).
 
   UpgradeCode is the stable identity of the Gantt-It product family. NEVER
   change it once shipped: it is how Windows Installer knows a new MSI
@@ -38,24 +54,28 @@
            Scope="perUser"
            Compressed="yes">
 
-    <SummaryInformation Description="Gantt-It: Gantt charts as native Revit legend views (Revit 2026 and 2027)" />
+    <SummaryInformation Description="Gantt-It: Gantt charts as native Revit legend views (Revit 2025, 2026 and 2027)" />
 
     <!-- Replace any prior install of the product family in place.
          AllowSameVersionUpgrades: the MSI version is the tag's numeric a.b.c,
          so v1.0.0-rc.1 and v1.0.0 (and every push/PR build, 0.0.0) share a
          ProductVersion. Without it, installing the second over the first
          would leave two entries in Settings > Apps. (Raises ICE61; see the
-         .wixproj.) -->
+         .wixproj.) The default schedule (afterInstallValidate) removes the
+         old version before anything new is installed, so an upgrade from
+         v1.0.0, which installed 2026 and 2027 unconditionally, leaves no
+         files behind for a year that is not detected now. -->
     <MajorUpgrade AllowSameVersionUpgrades="yes"
                   DowngradeErrorMessage="A newer version of [ProductName] is already installed." />
 
     <MediaTemplate EmbedCab="yes" />
 
     <!-- Branded setup UI. WixUI_Minimal fits a per-user install with nothing
-         to configure: welcome + license -> progress -> finish. The banner
-         shows on every page; the dialog bitmap backs the welcome/exit pages.
-         Needs WixToolset.UI.wixext (see the .wixproj). Artwork is generated
-         by tools/make_installer_branding.py. -->
+         to configure: welcome + license -> progress -> finish; run again, it
+         offers Repair or Remove. The banner shows on every page; the dialog
+         bitmap backs the welcome/exit pages. Needs WixToolset.UI.wixext (see
+         the .wixproj). Artwork is generated by
+         tools/make_installer_branding.py. -->
     <ui:WixUI Id="WixUI_Minimal" />
     <WixVariable Id="WixUIBannerBmp"  Value="branding\banner.bmp" />
     <WixVariable Id="WixUIDialogBmp"  Value="branding\dialog.bmp" />
@@ -68,88 +88,162 @@
     <Property Id="ARPURLINFOABOUT"  Value="https://github.com/jedbjorn/gantt-it" />
     <Property Id="ARPURLUPDATEINFO" Value="https://github.com/jedbjorn/gantt-it/releases/latest" />
 
+    <!-- Revit detection. REVIT<year>FOUND is set to the path of Revit.exe
+         when either search finds it (a search that finds nothing leaves the
+         property alone, so the two act as an OR):
+           1. the folder in InstallLocation of Revit's uninstall entry,
+              {7346B4A0-<yy>00-0510-0000-705C0D862004} (Autodesk's product
+              code scheme; read on a real machine for 2026 and 2027, assumed
+              for 2025). The entry does not depend on Revit's install
+              language, unlike HKLM\SOFTWARE\Autodesk\Revit\<year>\REVIT-05:<lcid>.
+           2. the default folder, C:\Program Files\Autodesk\Revit <year>\.
+         The keys exist in the 64-bit registry only (no WOW6432Node copy),
+         hence Bitness="always64". Revit.exe sits directly in the folder
+         (Depth 0). AppSearch runs on every install, repair and uninstall,
+         so the properties always describe the computer as it is now. -->
+    <?foreach Yy in 25;26;27 ?>
+    <Property Id="REVIT20$(var.Yy)FOUND" Secure="yes">
+      <RegistrySearch Id="Revit20$(var.Yy)InstallLocation" Root="HKLM"
+                      Key="SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\{7346B4A0-$(var.Yy)00-0510-0000-705C0D862004}"
+                      Name="InstallLocation" Type="directory" Bitness="always64">
+        <DirectorySearch Id="Revit20$(var.Yy)ExeInInstallLocation" Depth="0">
+          <FileSearch Name="Revit.exe" />
+        </DirectorySearch>
+      </RegistrySearch>
+      <DirectorySearch Id="Revit20$(var.Yy)ExeInDefaultFolder"
+                       Path="[ProgramFiles64Folder]Autodesk\Revit 20$(var.Yy)" Depth="0">
+        <FileSearch Name="Revit.exe" />
+      </DirectorySearch>
+    </Property>
+    <?endforeach?>
+
+    <!-- A first install needs at least one supported Revit year. "Installed"
+         keeps repair and uninstall available on a computer that no longer
+         has any (an uninstall must always work). -->
+    <Launch Condition="Installed OR REVIT2025FOUND OR REVIT2026FOUND OR REVIT2027FOUND"
+            Message="Gantt-It needs Revit 2025, 2026 or 2027, and none was found on this computer." />
+
+    <!-- An administrative install (msiexec /a) only unpacks the files to a
+         folder; it installs nothing and does not run AppSearch, so the
+         launch condition does not apply to it. inspect-msi.ps1 uses one to
+         read the packed DLLs' version stamps on a CI runner without Revit. -->
+    <AdminUISequence>
+      <LaunchConditions Suppress="yes" />
+    </AdminUISequence>
+    <AdminExecuteSequence>
+      <LaunchConditions Suppress="yes" />
+    </AdminExecuteSequence>
+
     <!-- Per-user directory layout under %AppData% (Roaming). No admin
-         elevation is needed to install. -->
-    <!-- Every folder the MSI creates is declared here (not left to the
-         harvest), so the folder-cleanup components below can name it. -->
+         elevation is needed to install. Every folder the MSI creates is
+         declared, here and per Revit year below, so the folder-cleanup
+         components can name it. -->
     <StandardDirectory Id="AppDataFolder">
       <Directory Id="AutodeskFolder" Name="Autodesk">
         <Directory Id="RevitFolder" Name="Revit">
-          <Directory Id="RevitAddinsFolder" Name="Addins">
-            <Directory Id="Addins2026Dir" Name="2026">
-              <Directory Id="GanttIt2026Dir" Name="GanttIt">
-                <Directory Id="Resources2026Dir" Name="Resources">
-                  <Directory Id="Icons2026Dir" Name="icons" />
-                </Directory>
-                <Directory Id="Fr2026Dir" Name="fr" />
-                <Directory Id="Es2026Dir" Name="es" />
-                <Directory Id="De2026Dir" Name="de" />
-              </Directory>
-            </Directory>
-            <Directory Id="Addins2027Dir" Name="2027">
-              <Directory Id="GanttIt2027Dir" Name="GanttIt">
-                <Directory Id="Resources2027Dir" Name="Resources">
-                  <Directory Id="Icons2027Dir" Name="icons" />
-                </Directory>
-                <Directory Id="Fr2027Dir" Name="fr" />
-                <Directory Id="Es2027Dir" Name="es" />
-                <Directory Id="De2027Dir" Name="de" />
-              </Directory>
-            </Directory>
-          </Directory>
+          <Directory Id="RevitAddinsFolder" Name="Addins" />
         </Directory>
       </Directory>
     </StandardDirectory>
 
-    <!-- One feature: install everything. <Files Include> harvests each staged
-         folder into per-file components bound to this feature. The globs are
-         per folder (not one recursive **) so every file lands in a declared
-         directory; a file in a new subfolder would be left out, which
-         inspect-msi.ps1's exact file-set check catches in CI. Paths are
-         relative to this .wxs (installer/). -->
+    <!-- One feature: everything, always selected. What is installed is
+         decided per Revit year by the component conditions. -->
     <Feature Id="Main" Title="Gantt-It" Level="1">
-      <Files Include="stage\2026\*.addin"                      Directory="Addins2026Dir" />
-      <Files Include="stage\2026\GanttIt\*"                    Directory="GanttIt2026Dir" />
-      <Files Include="stage\2026\GanttIt\Resources\icons\*"    Directory="Icons2026Dir" />
-      <Files Include="stage\2026\GanttIt\fr\*"                 Directory="Fr2026Dir" />
-      <Files Include="stage\2026\GanttIt\es\*"                 Directory="Es2026Dir" />
-      <Files Include="stage\2026\GanttIt\de\*"                 Directory="De2026Dir" />
-      <Files Include="stage\2027\*.addin"                      Directory="Addins2027Dir" />
-      <Files Include="stage\2027\GanttIt\*"                    Directory="GanttIt2027Dir" />
-      <Files Include="stage\2027\GanttIt\Resources\icons\*"    Directory="Icons2027Dir" />
-      <Files Include="stage\2027\GanttIt\fr\*"                 Directory="Fr2027Dir" />
-      <Files Include="stage\2027\GanttIt\es\*"                 Directory="Es2027Dir" />
-      <Files Include="stage\2027\GanttIt\de\*"                 Directory="De2027Dir" />
+      <ComponentGroupRef Id="Revit2025" />
+      <ComponentGroupRef Id="Revit2026" />
+      <ComponentGroupRef Id="Revit2027" />
+    </Feature>
+
+    <!-- One folder tree and one component group per Revit year.
+
+         Each file is its own component (file KeyPath, as the earlier <Files>
+         harvest produced), authored explicitly because harvested components
+         cannot carry a Condition. Every component of the year carries
+         Condition="REVIT<year>FOUND OR REMOVE~="ALL"" and Transitive="yes":
+         Windows Installer re-evaluates a transitive component's condition on
+         a reinstall (repair), installing it when the condition has become
+         true and removing it when it has become false. REMOVE~="ALL" makes
+         the condition true for a full uninstall (including the old version's
+         removal during a major upgrade), so a year is removed even when its
+         Revit was uninstalled first. inspect-msi.ps1 checks the
+         file set against both this list and the staged folders, so a file
+         added to the add-in output must be added here, deliberately.
+         Paths are relative to this .wxs (installer/). -->
+    <?foreach Year in 2025;2026;2027 ?>
+    <DirectoryRef Id="RevitAddinsFolder">
+      <Directory Id="Addins$(var.Year)Dir" Name="$(var.Year)">
+        <Directory Id="GanttIt$(var.Year)Dir" Name="GanttIt">
+          <Directory Id="Resources$(var.Year)Dir" Name="Resources">
+            <Directory Id="Icons$(var.Year)Dir" Name="icons" />
+          </Directory>
+          <?foreach Lang in fr;es;de ?>
+          <Directory Id="$(var.Lang)$(var.Year)Dir" Name="$(var.Lang)" />
+          <?endforeach?>
+        </Directory>
+      </Directory>
+    </DirectoryRef>
+
+    <ComponentGroup Id="Revit$(var.Year)">
+      <Component Directory="Addins$(var.Year)Dir" Condition="REVIT$(var.Year)FOUND OR REMOVE~=&quot;ALL&quot;" Transitive="yes">
+        <File Id="Addin$(var.Year)" Source="stage\$(var.Year)\GanttIt.addin" />
+      </Component>
+      <Component Directory="GanttIt$(var.Year)Dir" Condition="REVIT$(var.Year)FOUND OR REMOVE~=&quot;ALL&quot;" Transitive="yes">
+        <File Id="RevitDll$(var.Year)" Source="stage\$(var.Year)\GanttIt\GanttIt.Revit.dll" />
+      </Component>
+      <Component Directory="GanttIt$(var.Year)Dir" Condition="REVIT$(var.Year)FOUND OR REMOVE~=&quot;ALL&quot;" Transitive="yes">
+        <File Id="RevitPdb$(var.Year)" Source="stage\$(var.Year)\GanttIt\GanttIt.Revit.pdb" />
+      </Component>
+      <Component Directory="GanttIt$(var.Year)Dir" Condition="REVIT$(var.Year)FOUND OR REMOVE~=&quot;ALL&quot;" Transitive="yes">
+        <File Id="RevitDeps$(var.Year)" Source="stage\$(var.Year)\GanttIt\GanttIt.Revit.deps.json" />
+      </Component>
+      <Component Directory="GanttIt$(var.Year)Dir" Condition="REVIT$(var.Year)FOUND OR REMOVE~=&quot;ALL&quot;" Transitive="yes">
+        <File Id="CoreDll$(var.Year)" Source="stage\$(var.Year)\GanttIt\GanttIt.Core.dll" />
+      </Component>
+      <Component Directory="GanttIt$(var.Year)Dir" Condition="REVIT$(var.Year)FOUND OR REMOVE~=&quot;ALL&quot;" Transitive="yes">
+        <File Id="CorePdb$(var.Year)" Source="stage\$(var.Year)\GanttIt\GanttIt.Core.pdb" />
+      </Component>
+      <Component Directory="Icons$(var.Year)Dir" Condition="REVIT$(var.Year)FOUND OR REMOVE~=&quot;ALL&quot;" Transitive="yes">
+        <File Id="Icon16$(var.Year)" Source="stage\$(var.Year)\GanttIt\Resources\icons\gantt_16.png" />
+      </Component>
+      <Component Directory="Icons$(var.Year)Dir" Condition="REVIT$(var.Year)FOUND OR REMOVE~=&quot;ALL&quot;" Transitive="yes">
+        <File Id="Icon16Dark$(var.Year)" Source="stage\$(var.Year)\GanttIt\Resources\icons\gantt_16_dark.png" />
+      </Component>
+      <Component Directory="Icons$(var.Year)Dir" Condition="REVIT$(var.Year)FOUND OR REMOVE~=&quot;ALL&quot;" Transitive="yes">
+        <File Id="Icon32$(var.Year)" Source="stage\$(var.Year)\GanttIt\Resources\icons\gantt_32.png" />
+      </Component>
+      <Component Directory="Icons$(var.Year)Dir" Condition="REVIT$(var.Year)FOUND OR REMOVE~=&quot;ALL&quot;" Transitive="yes">
+        <File Id="Icon32Dark$(var.Year)" Source="stage\$(var.Year)\GanttIt\Resources\icons\gantt_32_dark.png" />
+      </Component>
+      <?foreach Lang in fr;es;de ?>
+      <Component Directory="$(var.Lang)$(var.Year)Dir" Condition="REVIT$(var.Year)FOUND OR REMOVE~=&quot;ALL&quot;" Transitive="yes">
+        <File Id="RevitRes_$(var.Lang)$(var.Year)" Source="stage\$(var.Year)\GanttIt\$(var.Lang)\GanttIt.Revit.resources.dll" />
+      </Component>
+      <Component Directory="$(var.Lang)$(var.Year)Dir" Condition="REVIT$(var.Year)FOUND OR REMOVE~=&quot;ALL&quot;" Transitive="yes">
+        <File Id="CoreRes_$(var.Lang)$(var.Year)" Source="stage\$(var.Year)\GanttIt\$(var.Lang)\GanttIt.Core.resources.dll" />
+      </Component>
+      <?endforeach?>
 
       <!-- Folder cleanup on uninstall. Windows Installer only removes a
            folder it created when the RemoveFile table lists it, so each
            year gets a component that removes GanttIt\Resources\icons,
            GanttIt\Resources, the GanttIt\fr|es|de satellite folders and
-           GanttIt (each only if empty). A per-user
-           component needs an HKCU registry KeyPath, hence the marker value.
-           Addins\<year> is deliberately NOT removed: other add-ins live
-           there, and Revit owns it. -->
-      <Component Id="Folders2026" Directory="GanttIt2026Dir">
-        <RegistryValue Root="HKCU" Key="Software\Designs/OS\Gantt-It\2026"
+           GanttIt (each only if empty). A per-user component needs an HKCU
+           registry KeyPath, hence the marker value. It follows the same
+           condition as the year's files. Addins\<year> is deliberately NOT
+           removed: other add-ins live there, and Revit owns it. -->
+      <Component Id="Folders$(var.Year)" Directory="GanttIt$(var.Year)Dir"
+                 Condition="REVIT$(var.Year)FOUND OR REMOVE~=&quot;ALL&quot;" Transitive="yes">
+        <RegistryValue Root="HKCU" Key="Software\Designs/OS\Gantt-It\$(var.Year)"
                        Name="Installed" Type="integer" Value="1" KeyPath="yes" />
-        <RemoveFolder Id="RemoveIcons2026"     Directory="Icons2026Dir"     On="uninstall" />
-        <RemoveFolder Id="RemoveResources2026" Directory="Resources2026Dir" On="uninstall" />
-        <RemoveFolder Id="RemoveFr2026"        Directory="Fr2026Dir"        On="uninstall" />
-        <RemoveFolder Id="RemoveEs2026"        Directory="Es2026Dir"        On="uninstall" />
-        <RemoveFolder Id="RemoveDe2026"        Directory="De2026Dir"        On="uninstall" />
-        <RemoveFolder Id="RemoveGanttIt2026"   Directory="GanttIt2026Dir"   On="uninstall" />
+        <RemoveFolder Id="RemoveIcons$(var.Year)"     Directory="Icons$(var.Year)Dir"     On="uninstall" />
+        <RemoveFolder Id="RemoveResources$(var.Year)" Directory="Resources$(var.Year)Dir" On="uninstall" />
+        <?foreach Lang in fr;es;de ?>
+        <RemoveFolder Id="Remove_$(var.Lang)$(var.Year)" Directory="$(var.Lang)$(var.Year)Dir" On="uninstall" />
+        <?endforeach?>
+        <RemoveFolder Id="RemoveGanttIt$(var.Year)"   Directory="GanttIt$(var.Year)Dir"   On="uninstall" />
       </Component>
-      <Component Id="Folders2027" Directory="GanttIt2027Dir">
-        <RegistryValue Root="HKCU" Key="Software\Designs/OS\Gantt-It\2027"
-                       Name="Installed" Type="integer" Value="1" KeyPath="yes" />
-        <RemoveFolder Id="RemoveIcons2027"     Directory="Icons2027Dir"     On="uninstall" />
-        <RemoveFolder Id="RemoveResources2027" Directory="Resources2027Dir" On="uninstall" />
-        <RemoveFolder Id="RemoveFr2027"        Directory="Fr2027Dir"        On="uninstall" />
-        <RemoveFolder Id="RemoveEs2027"        Directory="Es2027Dir"        On="uninstall" />
-        <RemoveFolder Id="RemoveDe2027"        Directory="De2027Dir"        On="uninstall" />
-        <RemoveFolder Id="RemoveGanttIt2027"   Directory="GanttIt2027Dir"   On="uninstall" />
-      </Component>
-    </Feature>
+    </ComponentGroup>
+    <?endforeach?>
 
   </Package>
 
