@@ -66,13 +66,14 @@
            ICE64 — every directory the package lays out in the user
                    profile must be listed in the RemoveFile table
                    (RemoveFolder), or it is left behind on uninstall.
-                   Product.wxs lists the folders Gantt-It owns
-                   (GanttIt\, Resources\, icons\ per year). It deliberately
-                   does not list Autodesk\Revit\Addins\<year>\ and its
-                   parents: Revit owns them and other add-ins live there,
-                   so ICE64 still fires for exactly those (Autodesk,
-                   Revit, Addins and each Addins\<year>\; verified in CI
-                   with ICE64 unsuppressed) and stays suppressed.
+                   Product.wxs lists the folders Gantt-It owns (GanttIt\,
+                   Resources\, icons\ and the fr\, es\, de\ satellite
+                   folders, per year). It deliberately does not list
+                   Autodesk\Revit\Addins\<year>\ and its parents: Revit
+                   owns them and other add-ins live there, so ICE64 still
+                   fires for exactly those six (Autodesk, Revit, Addins,
+                   2025, 2026, 2027; verified with ICE64 unsuppressed on
+                   the three-year MSI) and stays suppressed.
            ICE61 — warns that MajorUpgrade/@AllowSameVersionUpgrades also
                    replaces an install of the same ProductVersion. That is
                    deliberate (Product.wxs): an rc and its final share the

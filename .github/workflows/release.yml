@@ -6,11 +6,11 @@ name: release
 #   1. prepare — validates the tag, resolves the version from it
 #                (v1.0.0-rc.1 -> 1.0.0-rc.1; MSI ProductVersion 1.0.0) and
 #                checks the tagged commit is reachable from origin/main.
-#   2. build   — runs the full _build.yml pipeline (tests, the four
+#   2. build   — runs the full _build.yml pipeline (tests, the six
 #                configuration builds, the MSI) against the tagged commit,
 #                stamping that version into the assemblies (and so into the
 #                AppVersion every chart records) and the MSI.
-#   3. assets  — collects GanttIt-<version>.msi, the two manual-install zips
+#   3. assets  — collects GanttIt-<version>.msi, the three manual-install zips
 #                and SHA256SUMS.txt (read-only).
 #   4. publish — the only job with contents: write: creates the GitHub
 #                Release for the tag with those assets and auto-generated

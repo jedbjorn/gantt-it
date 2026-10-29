@@ -14,7 +14,8 @@
 #                                  GanttIt.Revit.deps.json, Resources/icons/…,
 #                                  fr/ es/ de/ (UI satellite assemblies)
 #
-# Product.wxs harvests installer/stage/2025/**, 2026/** and 2027/**.
+# Product.wxs packs installer/stage/2025/, 2026/ and 2027/, naming each file
+# explicitly (inspect-msi.ps1 -Stage checks the staged set against that list).
 # Run `dotnet build GanttIt.sln -c "Release R26"` (and R25, R27) first. Works in Git
 # Bash on Windows and on Linux. Re-running replaces the year's stage folder.
 

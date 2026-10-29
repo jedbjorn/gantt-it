@@ -26,8 +26,9 @@
     - it removes GanttIt\, Resources\, icons\ and the fr\, es\, de\
       satellite folders (per year) on uninstall, and never Addins\<year>\;
     - every component installs under Addins\<year>\ of one Revit year and
-      carries Condition REVIT<year>FOUND and the Transitive attribute (so a
-      repair re-evaluates it);
+      carries Condition 'REVIT<year>FOUND OR REMOVE~="ALL"' and the
+      Transitive attribute (so a repair re-evaluates it, and an uninstall
+      removes it even when that Revit is gone);
     - REVIT<year>FOUND is set by AppSearch from exactly two Revit.exe
       searches: in the InstallLocation of the Revit <year> uninstall entry
       (64-bit HKLM) and in [ProgramFiles64Folder]Autodesk\Revit <year>;
@@ -35,6 +36,12 @@
       lets an installed product (repair, uninstall) through, and nothing
       else but MajorUpgrade's downgrade check;
     - the package is x64 (64-bit registry search; ICE80);
+    - the Upgrade table holds exactly the two MajorUpgrade rows for
+      Gantt-It's UpgradeCode: detect older versions up to and including this
+      ProductVersion (WIX_UPGRADE_DETECTED), and detect-only newer versions
+      (WIX_DOWNGRADE_DETECTED), and RemoveExistingProducts runs between
+      InstallValidate and InstallInitialize (the old version is removed
+      before anything new is installed);
     - each year's GanttIt.Revit.dll has ProductVersion (the assembly's
       InformationalVersion, which the add-in stamps as AppVersion) equal to
       -Version; with -AllowBuildMetadata a "+<commit>" suffix is accepted
@@ -212,15 +219,16 @@ foreach ($c in $components) {
     continue
   }
   $year = $m.Groups[1].Value
-  if ($c.Condition -ne "REVIT${year}FOUND") {
-    $problems += "component $($c.Id) ($($c.Path)) has condition '$($c.Condition)', expected 'REVIT${year}FOUND'"
+  $want = "REVIT${year}FOUND OR REMOVE~=`"ALL`""
+  if ($c.Condition -ne $want) {
+    $problems += "component $($c.Id) ($($c.Path)) has condition '$($c.Condition)', expected '$want'"
   }
   if (($c.Attributes -band $Transitive) -eq 0) {
     $problems += "component $($c.Id) ($($c.Path)) is not Transitive (attributes $($c.Attributes))"
   }
 }
 foreach ($year in $Years) {
-  if (-not ($components | Where-Object { $_.Condition -eq "REVIT${year}FOUND" })) {
+  if (-not ($components | Where-Object { $_.Condition -eq "REVIT${year}FOUND OR REMOVE~=`"ALL`"" })) {
     $problems += "no component is conditioned on REVIT${year}FOUND"
   }
 }
@@ -268,6 +276,54 @@ foreach ($year in $Years) {
   if ($sigs.Count -ne 2) { $problems += "$prop has $($sigs.Count) AppSearch rows, expected 2" }
   if (-not $viaRegistry) { $problems += "$prop does not search the InstallLocation of $uninstallKey (64-bit)" }
   if (-not $viaDefault) { $problems += "$prop does not search $defaultPath" }
+}
+
+# Major upgrade. MajorUpgrade AllowSameVersionUpgrades="yes" writes two
+# Upgrade rows: one that finds and removes any older (or equal) version,
+# one that only detects a newer version (the downgrade launch condition).
+# RemoveExistingProducts must run after InstallValidate and before
+# InstallInitialize, so the old version, every year of it, is gone before
+# the new one installs.
+$msidbUpgradeAttributesOnlyDetect = 2
+$msidbUpgradeAttributesVersionMinInclusive = 256
+$msidbUpgradeAttributesVersionMaxInclusive = 512
+$upgrades = Query 'SELECT `UpgradeCode`, `VersionMin`, `VersionMax`, `Attributes`, `ActionProperty` FROM `Upgrade`' 5
+Write-Host "Upgrade rows ($($upgrades.Count)):"
+$upgrades | ForEach-Object { Write-Host "  $($_[0])  min '$($_[1])'  max '$($_[2])'  attr $($_[3])  -> $($_[4])" }
+$pv = $props['ProductVersion']
+$older = @($upgrades | Where-Object { $_[4] -eq 'WIX_UPGRADE_DETECTED' })
+$newer = @($upgrades | Where-Object { $_[4] -eq 'WIX_DOWNGRADE_DETECTED' })
+if ($upgrades.Count -ne 2) { $problems += "Upgrade table has $($upgrades.Count) rows, expected 2" }
+foreach ($r in $upgrades) {
+  if ($r[0] -ne $UpgradeCode) { $problems += "Upgrade row for $($r[4]) has UpgradeCode $($r[0]), expected $UpgradeCode" }
+}
+if ($older.Count -ne 1) {
+  $problems += 'Upgrade table has no WIX_UPGRADE_DETECTED row (removal of older versions)'
+} else {
+  $a = [int]$older[0][3]
+  if ($older[0][1] -or $older[0][2] -ne $pv -or ($a -band $msidbUpgradeAttributesVersionMaxInclusive) -eq 0 -or
+      ($a -band $msidbUpgradeAttributesOnlyDetect) -ne 0) {
+    $problems += "WIX_UPGRADE_DETECTED row must remove every version up to and including $pv (min '$($older[0][1])', max '$($older[0][2])', attributes $a)"
+  }
+}
+if ($newer.Count -ne 1) {
+  $problems += 'Upgrade table has no WIX_DOWNGRADE_DETECTED row (downgrade check)'
+} else {
+  $a = [int]$newer[0][3]
+  if ($newer[0][1] -ne $pv -or $newer[0][2] -or ($a -band $msidbUpgradeAttributesOnlyDetect) -eq 0 -or
+      ($a -band $msidbUpgradeAttributesVersionMinInclusive) -ne 0) {
+    $problems += "WIX_DOWNGRADE_DETECTED row must only detect versions above $pv (min '$($newer[0][1])', max '$($newer[0][2])', attributes $a)"
+  }
+}
+$execSeq = @{}
+foreach ($r in (Query 'SELECT `Action`, `Sequence` FROM `InstallExecuteSequence`' 2)) { $execSeq[$r[0]] = [int]$r[1] }
+$rep = $execSeq['RemoveExistingProducts']
+Write-Host ("InstallExecuteSequence: InstallValidate {0}, RemoveExistingProducts {1}, InstallInitialize {2}" -f `
+  $execSeq['InstallValidate'], $rep, $execSeq['InstallInitialize'])
+if ($null -eq $rep) {
+  $problems += 'RemoveExistingProducts is not in InstallExecuteSequence'
+} elseif (-not ($execSeq['InstallValidate'] -lt $rep -and $rep -lt $execSeq['InstallInitialize'])) {
+  $problems += "RemoveExistingProducts ($rep) is not between InstallValidate and InstallInitialize"
 }
 
 # Launch condition: blocks a first install without any supported Revit,

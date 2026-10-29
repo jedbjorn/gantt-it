@@ -21,16 +21,20 @@
 
   Revit detection (no custom actions, standard AppSearch only): a year counts
   as installed when Revit.exe is found, see "Revit detection" below. Each
-  year's components carry Condition="REVIT<year>FOUND" and are Transitive, so
-  a repair re-evaluates them: running the same MSI again and choosing Repair
-  adds a Revit year installed since (and drops one uninstalled since). A newer
-  MSI is a major upgrade: it removes the old version completely, files of
-  every year included, then installs fresh for the years it detects. When no
-  supported year is found, a launch condition stops a first install;
-  uninstall and repair are never blocked by it.
+  year's components carry Condition="REVIT<year>FOUND OR REMOVE~="ALL"" and
+  are Transitive, so a repair re-evaluates them: running the same MSI again
+  and choosing Repair adds a Revit year installed since (and drops one
+  uninstalled since). The REMOVE~="ALL" half keeps an uninstall, and the
+  removal of the old version during an upgrade, removing a year whose Revit
+  is already gone. A newer MSI is a major upgrade: it removes the old version
+  completely, files of every year included, then installs fresh for the
+  years it detects. When no supported year is found, a launch condition stops
+  a first install; uninstall and repair are never blocked by it.
 
-  User data lives in the Revit models, not on disk, so there is nothing else
-  to keep across upgrades or uninstall.
+  Charts live in the Revit models. The only file Gantt-It writes outside the
+  add-in folders is %AppData%\GanttIt\defaults.json (the user's default
+  style choices, written by the add-in, not by this MSI). The MSI does not
+  own it, so it is kept across upgrades and left in place on uninstall.
 
   The package is x64: Revit 2025-2027 and the add-in are 64-bit only, and the
   detection reads 64-bit registry keys and ProgramFiles64Folder, which a
@@ -155,10 +159,13 @@
          Each file is its own component (file KeyPath, as the earlier <Files>
          harvest produced), authored explicitly because harvested components
          cannot carry a Condition. Every component of the year carries
-         Condition="REVIT<year>FOUND" and Transitive="yes": Windows Installer
-         re-evaluates a transitive component's condition on a reinstall
-         (repair), installing it when the condition has become true and
-         removing it when it has become false. inspect-msi.ps1 checks the
+         Condition="REVIT<year>FOUND OR REMOVE~="ALL"" and Transitive="yes":
+         Windows Installer re-evaluates a transitive component's condition on
+         a reinstall (repair), installing it when the condition has become
+         true and removing it when it has become false. REMOVE~="ALL" makes
+         the condition true for a full uninstall (including the old version's
+         removal during a major upgrade), so a year is removed even when its
+         Revit was uninstalled first. inspect-msi.ps1 checks the
          file set against both this list and the staged folders, so a file
          added to the add-in output must be added here, deliberately.
          Paths are relative to this .wxs (installer/). -->
@@ -177,41 +184,41 @@
     </DirectoryRef>
 
     <ComponentGroup Id="Revit$(var.Year)">
-      <Component Directory="Addins$(var.Year)Dir" Condition="REVIT$(var.Year)FOUND" Transitive="yes">
+      <Component Directory="Addins$(var.Year)Dir" Condition="REVIT$(var.Year)FOUND OR REMOVE~=&quot;ALL&quot;" Transitive="yes">
         <File Id="Addin$(var.Year)" Source="stage\$(var.Year)\GanttIt.addin" />
       </Component>
-      <Component Directory="GanttIt$(var.Year)Dir" Condition="REVIT$(var.Year)FOUND" Transitive="yes">
+      <Component Directory="GanttIt$(var.Year)Dir" Condition="REVIT$(var.Year)FOUND OR REMOVE~=&quot;ALL&quot;" Transitive="yes">
         <File Id="RevitDll$(var.Year)" Source="stage\$(var.Year)\GanttIt\GanttIt.Revit.dll" />
       </Component>
-      <Component Directory="GanttIt$(var.Year)Dir" Condition="REVIT$(var.Year)FOUND" Transitive="yes">
+      <Component Directory="GanttIt$(var.Year)Dir" Condition="REVIT$(var.Year)FOUND OR REMOVE~=&quot;ALL&quot;" Transitive="yes">
         <File Id="RevitPdb$(var.Year)" Source="stage\$(var.Year)\GanttIt\GanttIt.Revit.pdb" />
       </Component>
-      <Component Directory="GanttIt$(var.Year)Dir" Condition="REVIT$(var.Year)FOUND" Transitive="yes">
+      <Component Directory="GanttIt$(var.Year)Dir" Condition="REVIT$(var.Year)FOUND OR REMOVE~=&quot;ALL&quot;" Transitive="yes">
         <File Id="RevitDeps$(var.Year)" Source="stage\$(var.Year)\GanttIt\GanttIt.Revit.deps.json" />
       </Component>
-      <Component Directory="GanttIt$(var.Year)Dir" Condition="REVIT$(var.Year)FOUND" Transitive="yes">
+      <Component Directory="GanttIt$(var.Year)Dir" Condition="REVIT$(var.Year)FOUND OR REMOVE~=&quot;ALL&quot;" Transitive="yes">
         <File Id="CoreDll$(var.Year)" Source="stage\$(var.Year)\GanttIt\GanttIt.Core.dll" />
       </Component>
-      <Component Directory="GanttIt$(var.Year)Dir" Condition="REVIT$(var.Year)FOUND" Transitive="yes">
+      <Component Directory="GanttIt$(var.Year)Dir" Condition="REVIT$(var.Year)FOUND OR REMOVE~=&quot;ALL&quot;" Transitive="yes">
         <File Id="CorePdb$(var.Year)" Source="stage\$(var.Year)\GanttIt\GanttIt.Core.pdb" />
       </Component>
-      <Component Directory="Icons$(var.Year)Dir" Condition="REVIT$(var.Year)FOUND" Transitive="yes">
+      <Component Directory="Icons$(var.Year)Dir" Condition="REVIT$(var.Year)FOUND OR REMOVE~=&quot;ALL&quot;" Transitive="yes">
         <File Id="Icon16$(var.Year)" Source="stage\$(var.Year)\GanttIt\Resources\icons\gantt_16.png" />
       </Component>
-      <Component Directory="Icons$(var.Year)Dir" Condition="REVIT$(var.Year)FOUND" Transitive="yes">
+      <Component Directory="Icons$(var.Year)Dir" Condition="REVIT$(var.Year)FOUND OR REMOVE~=&quot;ALL&quot;" Transitive="yes">
         <File Id="Icon16Dark$(var.Year)" Source="stage\$(var.Year)\GanttIt\Resources\icons\gantt_16_dark.png" />
       </Component>
-      <Component Directory="Icons$(var.Year)Dir" Condition="REVIT$(var.Year)FOUND" Transitive="yes">
+      <Component Directory="Icons$(var.Year)Dir" Condition="REVIT$(var.Year)FOUND OR REMOVE~=&quot;ALL&quot;" Transitive="yes">
         <File Id="Icon32$(var.Year)" Source="stage\$(var.Year)\GanttIt\Resources\icons\gantt_32.png" />
       </Component>
-      <Component Directory="Icons$(var.Year)Dir" Condition="REVIT$(var.Year)FOUND" Transitive="yes">
+      <Component Directory="Icons$(var.Year)Dir" Condition="REVIT$(var.Year)FOUND OR REMOVE~=&quot;ALL&quot;" Transitive="yes">
         <File Id="Icon32Dark$(var.Year)" Source="stage\$(var.Year)\GanttIt\Resources\icons\gantt_32_dark.png" />
       </Component>
       <?foreach Lang in fr;es;de ?>
-      <Component Directory="$(var.Lang)$(var.Year)Dir" Condition="REVIT$(var.Year)FOUND" Transitive="yes">
+      <Component Directory="$(var.Lang)$(var.Year)Dir" Condition="REVIT$(var.Year)FOUND OR REMOVE~=&quot;ALL&quot;" Transitive="yes">
         <File Id="RevitRes_$(var.Lang)$(var.Year)" Source="stage\$(var.Year)\GanttIt\$(var.Lang)\GanttIt.Revit.resources.dll" />
       </Component>
-      <Component Directory="$(var.Lang)$(var.Year)Dir" Condition="REVIT$(var.Year)FOUND" Transitive="yes">
+      <Component Directory="$(var.Lang)$(var.Year)Dir" Condition="REVIT$(var.Year)FOUND OR REMOVE~=&quot;ALL&quot;" Transitive="yes">
         <File Id="CoreRes_$(var.Lang)$(var.Year)" Source="stage\$(var.Year)\GanttIt\$(var.Lang)\GanttIt.Core.resources.dll" />
       </Component>
       <?endforeach?>
@@ -225,7 +232,7 @@
            condition as the year's files. Addins\<year> is deliberately NOT
            removed: other add-ins live there, and Revit owns it. -->
       <Component Id="Folders$(var.Year)" Directory="GanttIt$(var.Year)Dir"
-                 Condition="REVIT$(var.Year)FOUND" Transitive="yes">
+                 Condition="REVIT$(var.Year)FOUND OR REMOVE~=&quot;ALL&quot;" Transitive="yes">
         <RegistryValue Root="HKCU" Key="Software\Designs/OS\Gantt-It\$(var.Year)"
                        Name="Installed" Type="integer" Value="1" KeyPath="yes" />
         <RemoveFolder Id="RemoveIcons$(var.Year)"     Directory="Icons$(var.Year)Dir"     On="uninstall" />
