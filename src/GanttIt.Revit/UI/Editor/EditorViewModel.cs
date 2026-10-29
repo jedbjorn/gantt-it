@@ -1,6 +1,7 @@
 using System.Collections.ObjectModel;
 using System.Windows.Input;
 using Autodesk.Revit.DB;
+using GanttIt.Core.Dates;
 using GanttIt.Core.Editing;
 using GanttIt.Core.Model;
 using GanttIt.Core.Scheduling;
@@ -165,6 +166,13 @@ public sealed class EditorViewModel : ObservableObject
 
     /// <summary>Maximum name-column width on paper, in project units (D11).</summary>
     public LengthField NameMaxWidth { get; }
+
+    /// <summary>
+    /// The pattern the section rows' Start/End fields show and read: the project's date
+    /// format (Settings, the same one the chart uses), or ISO when that pattern can't
+    /// identify a day (<see cref="DateFormats.EntryPattern"/>).
+    /// </summary>
+    public string DateEntryPattern => DateFormats.EntryPattern(_main.Session.Settings.Settings.DateFormat);
 
     // ---- Sections (§2.2 item 2) --------------------------------------------------------------
 
@@ -368,6 +376,7 @@ public sealed class EditorViewModel : ObservableObject
     {
         if (!_main.OpenSettings()) return false;
         // New settings: recalibrated preview (decision #14), new date format, new missing-style state.
+        foreach (var row in Rows) row.Refresh();
         Revalidate();
         Preview.RenderNow();
         return true;

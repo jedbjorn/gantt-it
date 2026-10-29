@@ -83,6 +83,9 @@ public sealed class SectionRowViewModel : ObservableObject
         }
     }
 
+    /// <summary>The pattern the Start/End fields show and read: the chart's date format from Settings.</summary>
+    public string DateFormat => _editor.DateEntryPattern;
+
     /// <summary>Duration in days (End − Start + 1). Same effect as an End edit (§5.2).</summary>
     public string DurationText
     {
@@ -169,6 +172,7 @@ public sealed class SectionRowViewModel : ObservableObject
         OnPropertyChanged(nameof(Name));
         OnPropertyChanged(nameof(StartDate));
         OnPropertyChanged(nameof(EndDate));
+        OnPropertyChanged(nameof(DateFormat));
         OnPropertyChanged(nameof(DurationText));
         OnPropertyChanged(nameof(LinkPrevious));
         OnPropertyChanged(nameof(LinkFollowing));
