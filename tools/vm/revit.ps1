@@ -15,6 +15,8 @@
              selftest-<year>-<model stem>-<phase>.json plus a .done marker.
     request  -Phase undo-check                          write selftest-request.json for the next
                                                         click on the "Gantt-It Self-Test" ribbon button
+             -Phase place-sheets|a8-check -Chart <name> A8 helpers: place the chart on 2 new sheets;
+                                                        after the UI Delete, check what is left
     wait     -Marker <path> [-TimeoutSec 100]           poll until the file exists (or Revit exits);
                                                         keep < 120 s (the exec limit)
     stop                                                kill Revit (work copies only; no save)
@@ -40,6 +42,7 @@ param(
   [string]$Phase,
   [switch]$NoSave,
   [string]$Marker,
+  [string]$Chart,
   [int]$TimeoutSec = 100   # `sc vm exec` itself times out at 120 s: poll in short calls
 )
 $ErrorActionPreference = 'Stop'
@@ -49,7 +52,8 @@ New-Item -ItemType Directory -Force $out | Out-Null
 function ArgsJson([string]$phase, [bool]$quiet) {
   $save = if ($NoSave) { 'false' } else { 'true' }
   $q = if ($quiet) { ',"quiet":true' } else { '' }
-  return '{"phase":"' + $phase + '","save":' + $save + $q + '}'
+  $c = if ($Chart) { ',"chart":' + (ConvertTo-Json $Chart) } else { '' }
+  return '{"phase":"' + $phase + '","save":' + $save + $q + $c + '}'
 }
 
 switch ($Action) {
