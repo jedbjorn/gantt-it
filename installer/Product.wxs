@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  GanttIt-<version>.msi — one per-user installer for Revit 2026 and 2027.
+
+  Lays the add-in into the per-user Revit add-ins folder of both supported
+  Revit years, exactly as build.yml's "Stage add-in" step lays out the Debug
+  artifacts (installer/stage.sh produces the same tree from Release builds):
+
+    %AppData%\Autodesk\Revit\Addins\2026\
+      GanttIt.addin                         manifest (Assembly=GanttIt\GanttIt.Revit.dll)
+      GanttIt\
+        GanttIt.Revit.dll, GanttIt.Core.dll, *.pdb, *.deps.json, *.xml
+        Resources\icons\gantt_16.png, gantt_32.png
+    %AppData%\Autodesk\Revit\Addins\2027\
+      (same, built for net10.0-windows)
+
+  Both years are always installed (no feature selection): the folder of a
+  Revit year that is not installed just sits idle until it is. User data
+  lives in the Revit models, not on disk, so there is nothing else to keep
+  across upgrades or uninstall.
+
+  UpgradeCode is the stable identity of the Gantt-It product family. NEVER
+  change it once shipped: it is how Windows Installer knows a new MSI
+  upgrades a prior install in place instead of installing side by side.
+-->
+<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs"
+     xmlns:ui="http://wixtoolset.org/schemas/v4/wxs/ui">
+
+  <Package Name="Gantt-It"
+           Manufacturer="Designs/OS"
+           Version="$(var.GanttItMsiVersion)"
+           UpgradeCode="644FCAD5-E631-4441-9A11-75F175565136"
+           Scope="perUser"
+           Compressed="yes">
+
+    <SummaryInformation Description="Gantt-It — Gantt charts as native Revit legend views (Revit 2026 and 2027)" />
+
+    <!-- Replace any prior install of the product family in place.
+         AllowSameVersionUpgrades: the MSI version is the tag's numeric a.b.c,
+         so v1.0.0-rc.1 and v1.0.0 (and every push/PR build, 0.0.0) share a
+         ProductVersion. Without it, installing the second over the first
+         would leave two entries in Settings > Apps. (Raises ICE61; see the
+         .wixproj.) -->
+    <MajorUpgrade AllowSameVersionUpgrades="yes"
+                  DowngradeErrorMessage="A newer version of [ProductName] is already installed." />
+
+    <MediaTemplate EmbedCab="yes" />
+
+    <!-- Branded setup UI. WixUI_Minimal fits a per-user install with nothing
+         to configure: welcome + license -> progress -> finish. The banner
+         shows on every page; the dialog bitmap backs the welcome/exit pages.
+         Needs WixToolset.UI.wixext (see the .wixproj). Artwork is generated
+         by tools/make_installer_branding.py. -->
+    <ui:WixUI Id="WixUI_Minimal" />
+    <WixVariable Id="WixUIBannerBmp"  Value="branding\banner.bmp" />
+    <WixVariable Id="WixUIDialogBmp"  Value="branding\dialog.bmp" />
+    <WixVariable Id="WixUILicenseRtf" Value="branding\License.rtf" />
+
+    <!-- Settings > Apps identity and links. -->
+    <Icon Id="GanttItIcon.ico" SourceFile="branding\ganttit.ico" />
+    <Property Id="ARPPRODUCTICON"   Value="GanttItIcon.ico" />
+    <Property Id="ARPHELPLINK"      Value="https://github.com/jedbjorn/gantt-it" />
+    <Property Id="ARPURLINFOABOUT"  Value="https://github.com/jedbjorn/gantt-it" />
+    <Property Id="ARPURLUPDATEINFO" Value="https://github.com/jedbjorn/gantt-it/releases/latest" />
+
+    <!-- Per-user directory layout under %AppData% (Roaming). No admin
+         elevation is needed to install. -->
+    <StandardDirectory Id="AppDataFolder">
+      <Directory Id="AutodeskFolder" Name="Autodesk">
+        <Directory Id="RevitFolder" Name="Revit">
+          <Directory Id="RevitAddinsFolder" Name="Addins">
+            <Directory Id="Addins2026Dir" Name="2026" />
+            <Directory Id="Addins2027Dir" Name="2027" />
+          </Directory>
+        </Directory>
+      </Directory>
+    </StandardDirectory>
+
+    <!-- One feature: install everything. <Files Include> harvests each staged
+         tree (subfolders included) into per-file components bound to this
+         feature. Paths are relative to this .wxs (installer/). -->
+    <Feature Id="Main" Title="Gantt-It" Level="1">
+      <Files Include="stage\2026\**" Directory="Addins2026Dir" />
+      <Files Include="stage\2027\**" Directory="Addins2027Dir" />
+    </Feature>
+
+  </Package>
+
+</Wix>

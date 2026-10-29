@@ -47,3 +47,9 @@
 *.binlog
 TestResults/
 /artifacts/
+
+## Installer: staged add-in trees (installer/stage.sh) and WiX outputs
+/installer/stage/
+
+## Python
+__pycache__/
