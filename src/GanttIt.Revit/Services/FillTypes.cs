@@ -119,7 +119,8 @@ internal sealed class FillTypes
     /// <item>Revit reports any element that would be deleted with it
     /// (<see cref="Element.GetDependentElements"/>), which also covers references the
     /// collector can't see, such as the members of a group type with no placed
-    /// instance;</item>
+    /// instance. The type's own intrinsic sub-elements don't count
+    /// (<see cref="IsRealDependent"/>);</item>
     /// <item>another user owns it, or it is out of date with central, in a workshared
     /// model (editing it would fail the whole action);</item>
     /// <item>it is the model's last filled region type;</item>
@@ -176,13 +177,24 @@ internal sealed class FillTypes
         if (remaining <= 1) return "the model's last filled region type";
         if (Worksharing.OwnedByOther(doc, type.Id, out var owner)) return $"owned by {(owner.Length > 0 ? owner : "another user")}";
         if (Worksharing.OutOfDate(doc, type.Id)) return "out of date with central";
-        var dependents = type.GetDependentElements(null).Where(id => id != type.Id).ToList();
+        var dependents = type.GetDependentElements(null).Where(id => id != type.Id && IsRealDependent(doc, id)).ToList();
         if (dependents.Count > 0)
             return $"deleting it would also delete {dependents.Count} element{(dependents.Count == 1 ? "" : "s")}: "
                    + string.Join(", ", dependents.Take(5).Select(id => Describe(doc, id)))
                    + (dependents.Count > 5 ? ", …" : "");
         return null;
     }
+
+    /// <summary>
+    /// Whether a dependent of a fill type is an element the user would lose. Every
+    /// <see cref="FilledRegionType"/> owns intrinsic sub-elements of its own (in Revit
+    /// 2026.4, a <see cref="GraphicsStyle"/> and two plain elements, none with a
+    /// category), which Revit lists as dependents and deletes with the type. Counting
+    /// them kept every type (VM pass v1.1, evidence/v1.1). A region, or a member of an
+    /// unplaced group type, has a category; so does anything else worth keeping.
+    /// </summary>
+    private static bool IsRealDependent(Document doc, ElementId id) =>
+        doc.GetElement(id) is { } e && e is not GraphicsStyle && (e is FilledRegion || e.Category is not null);
 
     /// <summary>An element's id, class and category, for a kept type's reason (VM diagnosis).</summary>
     private static string Describe(Document doc, ElementId id)
