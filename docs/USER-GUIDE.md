@@ -45,9 +45,7 @@ Settings belong to the project: everyone who opens the project gets the same one
 
 The first time you click **New chart** in a project, Settings opens by itself. Choose the styles and click **Save** to continue. You can open Settings again at any time with the **Settings** button.
 
-![The Project settings window with text styles, line styles, date format and cell padding](images/settings.png)
-
-<!-- TODO(screenshot): Settings window from a build with languages (PR #13), showing the "Chart language" row under Format. Light theme, metric project, same styles as now. Replace images/settings.png. -->
+![The Project settings window with text styles, line styles, chart language, date format and cell padding](images/settings.png)
 
 The styles are the ones already in your project. To get a different look, create or edit a text type or line style in Revit first, then choose it here.
 
@@ -65,7 +63,7 @@ The styles are the ones already in your project. To get a different look, create
 Two more options sit at the bottom:
 
 - **Use as my default for new projects** remembers the style names on your computer. In a new project, Gantt-It picks the styles with the same names.
-- **Regenerate all charts now** saves the settings and redraws every chart in the project with them.
+- **Regenerate all charts now** saves the settings and redraws every chart in the project with them. It leaves two steps in Revit's Undo list: saving the settings, then regenerating the charts.
 
 Saving settings does not redraw your existing charts on its own. Use **Regenerate all charts now**, or update each chart.
 
@@ -75,9 +73,7 @@ If a chosen style is later deleted from the project, Settings shows it in red. C
 
 Click **New chart** on the Home screen. The editor opens with one section to start from.
 
-![The chart editor with three sections, link tick boxes and colours](images/editor.png)
-
-<!-- TODO(screenshot): Full chart editor from the current build (dates in the chart's date format, e.g. 2026-10-29, and the live preview at the bottom), e.g. the "Phase Plan" chart: Survey, Schematic design, Detailed design, with row 1 "Relates to following" ticked. Light theme. Replace images/editor.png (also used by README step 3). -->
+![The chart editor with five sections, the first two linked, and the live preview](images/editor.png)
 
 ### Name, title and timescale
 
@@ -112,6 +108,8 @@ Each row is one bar on the chart.
    - change **Days** to set its length; the end date follows.
 
 Type dates in the format chosen in Settings, or click the calendar button next to the field.
+
+Some date formats can't be typed back without guessing, for example `MMM yyyy` (no day) or a two-digit year such as `dd/MM/yy`. With one of those, the date fields show and accept dates as `yyyy-MM-dd` (for example `2026-12-31`), while the chart itself still uses your format. A date that doesn't match the format the fields show is outlined in red, the problem list says which format to use, and **Generate** stays greyed out until it is fixed.
 
 To delete a section, click the bin at the end of its row.
 
@@ -152,7 +150,7 @@ Click the swatch in a section's **Color** column. The **Section color** window o
 
 Clicking a colour applies it and closes the window.
 
-<!-- TODO(screenshot): The "Section color" window open from a section's swatch, showing Palette, a filled Recent row, Hex with Apply, the Pick from screen (eyedropper) button and More…. Light theme. Save as images/color-picker.png and insert here. -->
+![The Section color window with the palette, a Recent row, the hex field with Apply, the eyedropper button and More…](images/color-picker.png)
 
 ### Pick from screen
 
@@ -168,7 +166,7 @@ Press **Esc** or right-click to cancel without changing anything. Gantt-It comes
 
 The eyedropper works on every monitor and can pick from any window, not only Revit. It picks the colour exactly as shown on screen, so halftone, transparency and Revit's dark background all change what you get.
 
-<!-- TODO(screenshot): Pick from screen in use over a Revit plan view: the crosshair, the magnifier loupe with its live hex value and the "Click to pick · Esc to cancel" hint. Save as images/pick-from-screen.png and insert here. -->
+![Pick from screen over a chart in Revit: the magnifier shows the colour code under the pointer and "Click to pick · Esc to cancel"](images/pick-from-screen.png)
 
 ## Generating and placing the chart on sheets
 
@@ -184,9 +182,7 @@ To place it on a sheet:
 
 A legend can go on as many sheets as you like, so you can put the same chart on several sheets. They all show the same chart and all update together.
 
-![A sheet with the Gantt-It chart placed on it next to the title block](images/chart-on-sheet.png)
-
-<!-- TODO(screenshot): Recapture without the test names "GI Months" (viewport title) and "GI Self-Test Sheet" (title block), e.g. a sheet named "A101 - Programme" with the chart "North wing programme". Replace images/chart-on-sheet.png (also used by README step 5). -->
+![The chart "North wing programme" placed on sheet A101 - Programme, next to the title block](images/chart-on-sheet.png)
 
 The chart is drawn at a scale of 1:1, so the sizes you set are its size on paper.
 
@@ -210,9 +206,7 @@ Click **Delete** on the chart's card, or **Delete chart** in the editor.
 
 Gantt-It asks you to confirm. If the chart is on sheets, it lists them: deleting the chart removes it from those sheets too.
 
-![The Delete chart window listing the two sheets the chart is placed on](images/delete-confirm.png)
-
-<!-- TODO(screenshot): Recapture with real-looking sheet names instead of the test names "A101 - GI A8 Sheet 1" / "A102 - GI A8 Sheet 2". Replace images/delete-confirm.png. -->
+![The Delete chart window listing the two sheets the chart is placed on, A101 - Programme and A102 - Phasing](images/delete-confirm.png)
 
 Click **Delete** to delete the chart and its legend view, or **Cancel** to keep it.
 
@@ -247,7 +241,7 @@ The chart language belongs to the project. It starts as your Revit language when
 
 To change it, pick another **Chart language** in Settings, then redraw your charts with **Regenerate all charts now**.
 
-<!-- TODO(screenshot): A generated chart (or its preview) with Chart language set to French or German, showing translated column headings and month names (e.g. "janv." / "Jan."). Save as images/chart-french.png (or chart-german.png) and insert here. -->
+![A chart generated with Chart language set to German: the headings read Abschnitt, Beginn, Ende and Dauer, and the months Dezember and Januar](images/chart-german.png)
 
 ### Dark mode
 
@@ -255,7 +249,7 @@ Gantt-It follows Revit's theme. If Revit is set to dark (or to follow Windows, a
 
 The chart preview stays white, like paper, so you see the colours as they will print.
 
-<!-- TODO(screenshot): The chart editor in Revit's dark theme, showing the dark window with the white paper preview. Save as images/editor-dark.png and insert here. -->
+![The chart editor in Revit's dark theme, with the preview still on white paper](images/editor-dark.png)
 
 ## Good to know
 
@@ -265,14 +259,14 @@ The chart preview stays white, like paper, so you see the colours as they will p
 
 **Revit asks to load Gantt-It after installing and after each upgrade.** Gantt-It is not digitally signed yet, so Revit asks each time a new version is installed. Choose **Always Load**.
 
-**A chart copied with Revit's Duplicate becomes a plain legend.** The copy doesn't appear in Gantt-It and Gantt-It never changes it; the original chart is unaffected. To make a variant of a chart, click **New chart** and build it in Gantt-It.
+**A chart copied with Revit's Duplicate becomes a plain legend.** The copy doesn't appear in Gantt-It and Gantt-It never changes it; the original chart is unaffected. The same goes for a chart legend pasted from another model, and for a chart whose drawn lines, text and bars were all deleted by hand in Revit: Gantt-It no longer lists it. To make a variant of a chart, click **New chart** and build it in Gantt-It.
 
 **A chart made with a newer version of Gantt-It is read-only.** Its card says so, and **Edit** and **Delete** are off. Install the newer Gantt-It to change it. You can still open it, or delete its legend view by hand in Revit.
 
 **In a shared (workshared) project, someone else may be editing the chart or the settings.** Gantt-It then tells you who, and changes nothing. Ask them to synchronise and give up the element, then try again.
 
-**Gantt-It tidies up its own fill types.** Each bar colour uses a fill type named like `Gantt-It Fill #4F8EF7`. When a colour is no longer used anywhere in the project, Gantt-It removes its fill type. A fill type still in use is always kept.
+**Gantt-It tidies up its own fill types.** Each bar colour uses a fill type named like `Gantt-It Fill #4F8EF7`. When a colour is no longer used anywhere in the project, Gantt-It removes its fill type at the end of the next thing you do in Gantt-It (Generate, Update, Delete, saving Settings). A fill type still in use is always kept, and so are a few unused ones on purpose: for example one that another user is editing in a workshared project, or the project's last filled region type.
 
-**Every action can be undone.** Generate, Update, Delete, saving Settings and Regenerate all charts are each one step in Revit's Undo list, named after the action (for example "Gantt-It: Update Project Schedule"). Close Gantt-It, then use Revit's **Undo**.
+**Every action can be undone.** Generate, Update, Delete and saving Settings are each one step in Revit's Undo list, named after the action (for example "Gantt-It: Update Project Schedule"). **Regenerate all charts now** is two steps: "Gantt-It: Save settings", then "Gantt-It: Regenerate all charts". Close Gantt-It, then use Revit's **Undo**.
 
 **If something fails, nothing is half-done.** Gantt-It shows what went wrong and leaves the project as it was.

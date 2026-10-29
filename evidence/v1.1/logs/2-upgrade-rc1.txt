@@ -1,0 +1,51 @@
+# 2-upgrade-rc1.log (msiexec /l*v, trimmed to the relevant lines)
+Action start 15:25:57: AppSearch.
+AppSearch: Property: REVIT2025FOUND, Signature: Revit2025ExeInInstallLocation
+AppSearch: Property: REVIT2025FOUND, Signature: Revit2025ExeInDefaultFolder
+AppSearch: Property: REVIT2026FOUND, Signature: Revit2026ExeInInstallLocation
+MSI (c) (0C:8C) [15:25:57:036]: PROPERTY CHANGE: Adding REVIT2026FOUND property. Its value is 'C:\Program Files\Autodesk\Revit 2026\Revit.exe'.
+AppSearch: Property: REVIT2026FOUND, Signature: Revit2026ExeInDefaultFolder
+AppSearch: Property: REVIT2027FOUND, Signature: Revit2027ExeInInstallLocation
+MSI (c) (0C:8C) [15:25:57:036]: PROPERTY CHANGE: Adding REVIT2027FOUND property. Its value is 'C:\Program Files\Autodesk\Revit 2027\Revit.exe'.
+AppSearch: Property: REVIT2027FOUND, Signature: Revit2027ExeInDefaultFolder
+Action start 15:25:57: LaunchConditions.
+MSI (s) (60:48) [15:26:15:861]: MSI_LUA: Package is marked as LUA installation capable with no elevation required
+Action start 15:26:15: AppSearch.
+Action start 15:26:15: LaunchConditions.
+MSI (s) (60:48) [15:26:15:910]: Component: Folders2025; Installed: Absent;   Request: Local;   Action: Null
+MSI (s) (60:48) [15:26:15:910]: Component: Folders2026; Installed: Absent;   Request: Local;   Action: Local
+MSI (s) (60:48) [15:26:15:910]: Component: Folders2027; Installed: Absent;   Request: Local;   Action: Local
+Action start 15:26:15: RemoveExistingProducts.
+MSI (s) (60:C4) [15:26:15:960]: MSI_LUA: Nested installation UAC elevation tracks that of parent (is not elevated)
+MSI (s) (60:C4) [15:26:16:010]: Component: Folders2026; Installed: Local;   Request: Absent;   Action: Absent
+MSI (s) (60:C4) [15:26:16:010]: Component: Folders2027; Installed: Local;   Request: Absent;   Action: Absent
+Action start 15:26:16: RemoveExistingProducts.
+MSI (s) (60:C4) [15:26:16:161]: Executing op: RegOpenKey(Root=-2147483647,Key=Software\Designs/OS\Gantt-It\2026,,BinaryType=0,,)
+MSI (s) (60:C4) [15:26:16:161]: Executing op: RegRemoveValue(Name=Installed,Value=#1,)
+MSI (s) (60:C4) [15:26:16:161]: Executing op: RegOpenKey(Root=-2147483647,Key=Software\Designs/OS\Gantt-It\2027,,BinaryType=0,,)
+MSI (s) (60:C4) [15:26:16:187]: Executing op: SetTargetFolder(Folder=C:\Users\Public.DESKTOP-6CDPU6H\AppData\Roaming\Autodesk\Revit\Addins\2026\)
+MSI (s) (60:C4) [15:26:16:187]: Executing op: FileRemove(,FileName=GanttIt.addin,,ComponentId={B10445FF-7786-5E5C-ACAA-9A3BAFF4DEE4})
+MSI (s) (60:C4) [15:26:16:410]: Executing op: SetTargetFolder(Folder=C:\Users\Public.DESKTOP-6CDPU6H\AppData\Roaming\Autodesk\Revit\Addins\2027\)
+MSI (s) (60:C4) [15:26:16:410]: Executing op: FileRemove(,FileName=GanttIt.addin,,ComponentId={88591DB6-EECA-5B5D-8C77-90A5565980F6})
+MSI (s) (60:C4) [15:26:16:479]: Executing op: FolderRemove(Folder=C:\Users\Public.DESKTOP-6CDPU6H\AppData\Roaming\Autodesk\Revit\Addins\2026\GanttIt\Resources\icons\,Foreign=1)
+MSI (s) (60:C4) [15:26:16:480]: Executing op: FolderRemove(Folder=C:\Users\Public.DESKTOP-6CDPU6H\AppData\Roaming\Autodesk\Revit\Addins\2026\GanttIt\Resources\,Foreign=1)
+MSI (s) (60:C4) [15:26:16:480]: Executing op: FolderRemove(Folder=C:\Users\Public.DESKTOP-6CDPU6H\AppData\Roaming\Autodesk\Revit\Addins\2026\GanttIt\fr\,Foreign=1)
+MSI (s) (60:C4) [15:26:16:481]: Executing op: FolderRemove(Folder=C:\Users\Public.DESKTOP-6CDPU6H\AppData\Roaming\Autodesk\Revit\Addins\2026\GanttIt\es\,Foreign=1)
+MSI (s) (60:C4) [15:26:16:481]: Executing op: FolderRemove(Folder=C:\Users\Public.DESKTOP-6CDPU6H\AppData\Roaming\Autodesk\Revit\Addins\2026\GanttIt\de\,Foreign=1)
+MSI (s) (60:C4) [15:26:16:482]: Executing op: FolderRemove(Folder=C:\Users\Public.DESKTOP-6CDPU6H\AppData\Roaming\Autodesk\Revit\Addins\2026\GanttIt\,Foreign=1)
+MSI (s) (60:C4) [15:26:16:482]: Executing op: FolderRemove(Folder=C:\Users\Public.DESKTOP-6CDPU6H\AppData\Roaming\Autodesk\Revit\Addins\2027\GanttIt\Resources\icons\,Foreign=1)
+MSI (s) (60:C4) [15:26:16:483]: Executing op: FolderRemove(Folder=C:\Users\Public.DESKTOP-6CDPU6H\AppData\Roaming\Autodesk\Revit\Addins\2027\GanttIt\Resources\,Foreign=1)
+MSI (s) (60:C4) [15:26:16:484]: Executing op: FolderRemove(Folder=C:\Users\Public.DESKTOP-6CDPU6H\AppData\Roaming\Autodesk\Revit\Addins\2027\GanttIt\fr\,Foreign=1)
+MSI (s) (60:C4) [15:26:16:484]: Executing op: FolderRemove(Folder=C:\Users\Public.DESKTOP-6CDPU6H\AppData\Roaming\Autodesk\Revit\Addins\2027\GanttIt\es\,Foreign=1)
+MSI (s) (60:C4) [15:26:16:485]: Executing op: FolderRemove(Folder=C:\Users\Public.DESKTOP-6CDPU6H\AppData\Roaming\Autodesk\Revit\Addins\2027\GanttIt\de\,Foreign=1)
+MSI (s) (60:C4) [15:26:16:485]: Executing op: FolderRemove(Folder=C:\Users\Public.DESKTOP-6CDPU6H\AppData\Roaming\Autodesk\Revit\Addins\2027\GanttIt\,Foreign=1)
+MSI (s) (60:48) [15:26:16:878]: Executing op: RegOpenKey(Root=-2147483647,Key=Software\Designs/OS\Gantt-It\2026,,BinaryType=1,,)
+MSI (s) (60:48) [15:26:16:878]: Executing op: RegAddValue(Name=Installed,Value=#1,)
+MSI (s) (60:48) [15:26:16:878]: Executing op: RegOpenKey(Root=-2147483647,Key=Software\Designs/OS\Gantt-It\2027,,BinaryType=1,,)
+Property(S): ProductCode = {A20D2DF2-4FAF-4593-9F03-A377DA7AFD18}
+Property(S): ProductVersion = 1.1.0
+Property(S): REVIT2026FOUND = C:\Program Files\Autodesk\Revit 2026\Revit.exe
+Property(S): REVIT2027FOUND = C:\Program Files\Autodesk\Revit 2027\Revit.exe
+Property(S): LogonUser = Public
+MSI (c) (0C:8C) [15:26:27:803]: Product: Gantt-It -- Installation completed successfully.
+MSI (c) (0C:8C) [15:26:27:803]: Windows Installer installed the product. Product Name: Gantt-It. Product Version: 1.1.0. Product Language: 1033. Manufacturer: Designs/OS. Installation success or error status: 0.
