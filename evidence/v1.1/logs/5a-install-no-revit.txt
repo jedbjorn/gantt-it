@@ -1,0 +1,15 @@
+# 5a-install-no-revit.log (msiexec /l*v, trimmed to the relevant lines)
+Action start 15:30:34: AppSearch.
+AppSearch: Property: REVIT2025FOUND, Signature: Revit2025ExeInInstallLocation
+AppSearch: Property: REVIT2025FOUND, Signature: Revit2025ExeInDefaultFolder
+AppSearch: Property: REVIT2026FOUND, Signature: Revit2026ExeInInstallLocation
+AppSearch: Property: REVIT2026FOUND, Signature: Revit2026ExeInDefaultFolder
+AppSearch: Property: REVIT2027FOUND, Signature: Revit2027ExeInInstallLocation
+AppSearch: Property: REVIT2027FOUND, Signature: Revit2027ExeInDefaultFolder
+Action start 15:30:34: LaunchConditions.
+Gantt-It needs Revit 2025, 2026 or 2027, and none was found on this computer.
+MSI (c) (50:D8) [15:31:09:626]: Product: Gantt-It -- Gantt-It needs Revit 2025, 2026 or 2027, and none was found on this computer.
+Action ended 15:31:09: LaunchConditions. Return value 3.
+Action ended 15:31:13: INSTALL. Return value 3.
+MSI (c) (50:D8) [15:31:13:626]: Product: Gantt-It -- Installation failed.
+MSI (c) (50:D8) [15:31:13:626]: Windows Installer installed the product. Product Name: Gantt-It. Product Version: 1.1.0. Product Language: 1033. Manufacturer: Designs/OS. Installation success or error status: 1603.

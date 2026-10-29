@@ -1,0 +1,16 @@
+# 1-install-v1.0.0.log (msiexec /l*v, trimmed to the relevant lines)
+MSI (s) (60:40) [15:25:27:010]: MSI_LUA: Package is marked as LUA installation capable with no elevation required
+Action start 15:25:27: LaunchConditions.
+MSI (s) (60:40) [15:25:27:102]: Component: Folders2026; Installed: Absent;   Request: Local;   Action: Local
+MSI (s) (60:40) [15:25:27:102]: Component: Folders2027; Installed: Absent;   Request: Local;   Action: Local
+Action start 15:25:27: RemoveExistingProducts.
+MSI (s) (60:40) [15:25:27:426]: Executing op: SetTargetFolder(Folder=C:\Users\Public.DESKTOP-6CDPU6H\AppData\Roaming\Autodesk\Revit\Addins\2026\)
+MSI (s) (60:40) [15:25:27:602]: Executing op: SetTargetFolder(Folder=C:\Users\Public.DESKTOP-6CDPU6H\AppData\Roaming\Autodesk\Revit\Addins\2027\)
+MSI (s) (60:40) [15:25:27:686]: Executing op: RegOpenKey(Root=-2147483647,Key=Software\Designs/OS\Gantt-It\2026,,BinaryType=0,,)
+MSI (s) (60:40) [15:25:27:686]: Executing op: RegAddValue(Name=Installed,Value=#1,)
+MSI (s) (60:40) [15:25:27:686]: Executing op: RegOpenKey(Root=-2147483647,Key=Software\Designs/OS\Gantt-It\2027,,BinaryType=0,,)
+Property(S): ProductCode = {51947B27-2B8D-4271-BEBA-02F9429F70FB}
+Property(S): ProductVersion = 1.0.0
+Property(S): LogonUser = Public
+MSI (s) (60:40) [15:25:27:786]: Product: Gantt-It -- Installation completed successfully.
+MSI (s) (60:40) [15:25:27:786]: Windows Installer installed the product. Product Name: Gantt-It. Product Version: 1.0.0. Product Language: 1033. Manufacturer: Designs/OS. Installation success or error status: 0.

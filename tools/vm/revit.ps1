@@ -9,7 +9,9 @@
   Actions:
     prep     -Model <work .rvt> -From <fixture .rvt>    copy a fixture to a disposable work copy
                                                         (refuses to write into C:\GanttIt\fixtures)
-    launch   -Year 2025|2026|2027 -Model <.rvt> [-Phase 1|2] [-NoSave]
+    launch   -Year 2025|2026|2027 -Model <.rvt> [-Phase 1|2] [-NoSave] [-RevitArgs '/language FRA']
+             -RevitArgs is passed to Revit.exe before the model path, e.g. '/language DEU' to start
+             Revit in another UI language (FRA, DEU, ESP, ITA, ...; A24).
              With -Phase, arms the autorun Self-Test: writes %TEMP%\GanttIt\autorun.json; the
              Debug add-in consumes it on its first idle tick with the document open and writes
              selftest-<year>-<model stem>-<phase>.json plus a .done marker.
@@ -43,6 +45,7 @@ param(
   [switch]$NoSave,
   [string]$Marker,
   [string]$Chart,
+  [string]$RevitArgs,   # extra Revit.exe arguments, e.g. '/language FRA'
   [int]$TimeoutSec = 100   # `sc vm exec` itself times out at 120 s: poll in short calls
 )
 $ErrorActionPreference = 'Stop'
@@ -76,14 +79,17 @@ switch ($Action) {
     $exe = "C:\Program Files\Autodesk\Revit $Year\Revit.exe"
     if (-not (Test-Path $exe)) { throw "not found: $exe" }
     $task = 'GanttIt-Revit'
-    $a = if ($Model) { New-ScheduledTaskAction -Execute $exe -Argument ('"' + $Model + '"') } else { New-ScheduledTaskAction -Execute $exe }
+    $argList = @()
+    if ($RevitArgs) { $argList += $RevitArgs }
+    if ($Model) { $argList += ('"' + $Model + '"') }
+    $a = if ($argList) { New-ScheduledTaskAction -Execute $exe -Argument ($argList -join ' ') } else { New-ScheduledTaskAction -Execute $exe }
     $p = New-ScheduledTaskPrincipal -UserId ([Security.Principal.WindowsIdentity]::GetCurrent().Name) -LogonType Interactive -RunLevel Limited
     $s = New-ScheduledTaskSettingsSet -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries -ExecutionTimeLimit ([TimeSpan]::Zero)
     Register-ScheduledTask -TaskName $task -Action $a -Principal $p -Settings $s -Force | Out-Null
     Start-ScheduledTask -TaskName $task
     Start-Sleep -Seconds 3
     $proc = Get-Process Revit -ErrorAction SilentlyContinue
-    Write-Output ("launched Revit {0} model={1} pid={2} at {3:u}" -f $Year, $Model, ($proc.Id -join ','), (Get-Date))
+    Write-Output ("launched Revit {0} args='{1}' model={2} pid={3} at {4:u}" -f $Year, $RevitArgs, $Model, ($proc.Id -join ','), (Get-Date))
   }
   'request' {
     $json = '{"args":' + (ArgsJson $Phase $true) + '}'

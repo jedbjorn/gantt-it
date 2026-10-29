@@ -1,0 +1,36 @@
+# 3a-repair-add-2025.log (msiexec /l*v, trimmed to the relevant lines)
+Action start 15:27:10: AppSearch.
+AppSearch: Property: REVIT2025FOUND, Signature: Revit2025ExeInInstallLocation
+AppSearch: Property: REVIT2025FOUND, Signature: Revit2025ExeInDefaultFolder
+MSI (c) (98:74) [15:27:10:686]: PROPERTY CHANGE: Adding REVIT2025FOUND property. Its value is 'C:\Program Files\Autodesk\Revit 2025\Revit.exe'.
+AppSearch: Property: REVIT2026FOUND, Signature: Revit2026ExeInInstallLocation
+MSI (c) (98:74) [15:27:10:686]: PROPERTY CHANGE: Adding REVIT2026FOUND property. Its value is 'C:\Program Files\Autodesk\Revit 2026\Revit.exe'.
+AppSearch: Property: REVIT2026FOUND, Signature: Revit2026ExeInDefaultFolder
+AppSearch: Property: REVIT2027FOUND, Signature: Revit2027ExeInInstallLocation
+MSI (c) (98:74) [15:27:10:686]: PROPERTY CHANGE: Adding REVIT2027FOUND property. Its value is 'C:\Program Files\Autodesk\Revit 2027\Revit.exe'.
+AppSearch: Property: REVIT2027FOUND, Signature: Revit2027ExeInDefaultFolder
+Action start 15:27:10: LaunchConditions.
+MSI (s) (60:C4) [15:28:02:026]: MSI_LUA: Package is marked as LUA installation capable with no elevation required
+Action start 15:28:02: AppSearch.
+Action start 15:28:02: LaunchConditions.
+MSI (s) (60:C4) [15:28:02:086]: Component: Folders2025; Installed: Local;   Request: Local;   Action: Local
+MSI (s) (60:C4) [15:28:02:086]: Component: Folders2026; Installed: Local;   Request: Local;   Action: Local
+MSI (s) (60:C4) [15:28:02:086]: Component: Folders2027; Installed: Local;   Request: Local;   Action: Local
+Action start 15:28:02: RemoveExistingProducts.
+MSI (s) (60:C4) [15:28:02:336]: Executing op: SetTargetFolder(Folder=C:\Users\Public.DESKTOP-6CDPU6H\AppData\Roaming\Autodesk\Revit\Addins\2025\)
+MSI (s) (60:C4) [15:28:02:376]: Executing op: SetTargetFolder(Folder=C:\Users\Public.DESKTOP-6CDPU6H\AppData\Roaming\Autodesk\Revit\Addins\2026\)
+MSI (s) (60:C4) [15:28:02:486]: Executing op: SetTargetFolder(Folder=C:\Users\Public.DESKTOP-6CDPU6H\AppData\Roaming\Autodesk\Revit\Addins\2027\)
+MSI (s) (60:C4) [15:28:02:574]: Executing op: RegOpenKey(Root=-2147483647,Key=Software\Designs/OS\Gantt-It\2025,,BinaryType=1,,)
+MSI (s) (60:C4) [15:28:02:574]: Executing op: RegAddValue(Name=Installed,Value=#1,)
+MSI (s) (60:C4) [15:28:02:574]: Executing op: RegOpenKey(Root=-2147483647,Key=Software\Designs/OS\Gantt-It\2026,,BinaryType=1,,)
+MSI (s) (60:C4) [15:28:02:584]: Executing op: RegOpenKey(Root=-2147483647,Key=Software\Designs/OS\Gantt-It\2027,,BinaryType=1,,)
+Property(S): ProductCode = {A20D2DF2-4FAF-4593-9F03-A377DA7AFD18}
+Property(S): ProductVersion = 1.1.0
+Property(S): REVIT2025FOUND = C:\Program Files\Autodesk\Revit 2025\Revit.exe
+Property(S): REVIT2026FOUND = C:\Program Files\Autodesk\Revit 2026\Revit.exe
+Property(S): REVIT2027FOUND = C:\Program Files\Autodesk\Revit 2027\Revit.exe
+Property(S): REINSTALLMODE = ecmus
+Property(S): REINSTALL = Main
+Property(S): LogonUser = Public
+MSI (c) (98:74) [15:28:04:826]: Product: Gantt-It -- Configuration completed successfully.
+MSI (c) (98:74) [15:28:04:826]: Windows Installer reconfigured the product. Product Name: Gantt-It. Product Version: 1.1.0. Product Language: 1033. Manufacturer: Designs/OS. Reconfiguration success or error status: 0.
