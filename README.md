@@ -39,6 +39,8 @@ Gantt-It now appears on the **Add-Ins** tab.
 
 Charts you already made stay in your projects as ordinary legend views. Reinstall Gantt-It to edit them again.
 
+Uninstalling leaves one small file behind: `%AppData%\GanttIt\defaults.json`, which holds your default style choices for new projects. Reinstalling picks them up again. To remove it as well, delete the `%AppData%\GanttIt` folder.
+
 ## Quick start
 
 1. Open a project and click **Add-Ins › Gantt-It**.

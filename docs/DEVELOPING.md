@@ -89,22 +89,27 @@ Installer searches (`installer/Product.wxs`, no custom actions): first in the
 `InstallLocation` of the Revit uninstall entry
 `HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\{7346B4A0-<yy>00-0510-0000-705C0D862004}`
 (64-bit registry), then in `C:\Program Files\Autodesk\Revit <year>\`. Each
-year's components carry the condition `REVIT<year>FOUND` and are transitive:
+year's components carry the condition `REVIT<year>FOUND OR REMOVE~="ALL"` and
+are transitive:
 
 - **First install:** only the found years are installed. With none found, a
   launch condition stops the install ("Gantt-It needs Revit 2025, 2026 or
   2027, and none was found on this computer."). It never blocks a repair or
-  an uninstall.
+  an uninstall, and an uninstall removes every year Gantt-It installed, even
+  one whose Revit was uninstalled first (the `REMOVE~="ALL"` half).
 - **Revit installed later:** run the same MSI again and choose **Repair**
   (or `msiexec /fa GanttIt-<version>.msi`). A repair re-evaluates the
   transitive conditions, so it adds the new year, and removes a year whose
   Revit is gone.
-- **Upgrade:** a newer MSI removes the old version completely, then installs
-  for the years it finds now. This also cleans up v1.0.0, which installed
+- **Upgrade:** a newer MSI removes the old version completely (before it
+  installs anything), then installs for the years it finds now. With no
+  supported Revit left, the launch condition blocks the upgrade too, and the
+  installed version stays. This also cleans up v1.0.0, which installed
   2026 and 2027 unconditionally.
 
 `installer/inspect-msi.ps1` checks this wiring in CI (component conditions and
-the transitive bit, the AppSearch tables, the launch condition); the
+the transitive bit, the AppSearch tables, the launch condition, the Upgrade
+table and where RemoveExistingProducts runs); the
 installs themselves are tested on a Windows machine with Revit.
 
 Each release also carries `GanttIt-<version>-Revit2025.zip`,
