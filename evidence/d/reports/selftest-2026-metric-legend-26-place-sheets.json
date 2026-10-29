@@ -1,0 +1,87 @@
+{
+  "meta": {
+    "phase": "place-sheets",
+    "at": "2026-10-29T01:32:45.1712122\u002B01:00",
+    "revit": "2026 26.4.10.51",
+    "revitYear": "2026",
+    "runtime": ".NET 8.0.26",
+    "addinVersion": "0.1.0-alpha\u002Bd44123a36aac087e16fddfb751f52490eb6496c0",
+    "document": "C:\\GanttIt\\work\\metric-legend-26.rvt",
+    "documentTitle": "metric-legend-26",
+    "lengthUnit": "autodesk.unit.unit:millimeters-1.0.1",
+    "formatLength1_5mm": "1.5",
+    "formatLength180mm": "180",
+    "shortCurveToleranceMm": 0.7804,
+    "workshared": false
+  },
+  "overall": "PASS",
+  "summary": {
+    "passed": 1,
+    "failed": 0,
+    "byCriterion": {
+      "A8": {
+        "result": "PASS",
+        "checks": 1,
+        "failed": 0
+      }
+    }
+  },
+  "checks": [
+    {
+      "criterion": "A8",
+      "name": "place-sheets: \u0027Project Schedule\u0027 placed on 2 sheets",
+      "result": "PASS",
+      "numbers": {
+        "chart": "Project Schedule",
+        "viewId": 354987,
+        "viewUniqueId": "fe9a8e69-51cc-43af-94bd-3c88f524f019-00056aab",
+        "viewportIds": [
+          355308,
+          355315
+        ],
+        "sheets": [
+          "A101 - GI A8 Sheet 1",
+          "A102 - GI A8 Sheet 2"
+        ],
+        "chartFillTypes": [
+          "Gantt-It Fill #4F8EF7",
+          "Gantt-It Fill #59A14F",
+          "Gantt-It Fill #7A3E9D",
+          "Gantt-It Fill #F28E2B"
+        ],
+        "fillInventory": [
+          {
+            "name": "Gantt-It Fill #4F8EF7",
+            "regions": 1
+          },
+          {
+            "name": "Gantt-It Fill #59A14F",
+            "regions": 1
+          },
+          {
+            "name": "Gantt-It Fill #7A3E9D",
+            "regions": 1
+          },
+          {
+            "name": "Gantt-It Fill #F28E2B",
+            "regions": 1
+          }
+        ]
+      }
+    }
+  ],
+  "sections": {
+    "geometry": {}
+  },
+  "timingsMs": {
+    "place on sheets": 59
+  },
+  "trigger": "ribbon",
+  "request": {
+    "phase": "place-sheets",
+    "save": true,
+    "quiet": true,
+    "chart": "Project Schedule"
+  },
+  "dialogs": []
+}
