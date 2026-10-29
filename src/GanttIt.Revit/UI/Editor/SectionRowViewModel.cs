@@ -27,6 +27,8 @@ public sealed class SectionRowViewModel : ObservableObject
     private readonly EditorViewModel _editor;
     private string? _error;
     private DropMarker _dropMarker;
+    private string? _startTextError;
+    private string? _endTextError;
 
     public SectionRowViewModel(EditorViewModel editor, Section section)
     {
@@ -80,6 +82,34 @@ public sealed class SectionRowViewModel : ObservableObject
         {
             if (value is { } v) _editor.SetEnd(this, DateOnly.FromDateTime(v));
             else OnPropertyChanged();
+        }
+    }
+
+    /// <summary>
+    /// Text typed in the Start field that isn't a date in the chart's format (from the
+    /// field). While set, the editor lists it and Generate/Update stay disabled; the
+    /// section keeps its last valid date.
+    /// </summary>
+    public string? StartTextError
+    {
+        get => _startTextError;
+        set
+        {
+            if (_startTextError == value) return;
+            _startTextError = value;
+            _editor.OnTypingErrorsChanged();
+        }
+    }
+
+    /// <summary>As <see cref="StartTextError"/>, for the End field.</summary>
+    public string? EndTextError
+    {
+        get => _endTextError;
+        set
+        {
+            if (_endTextError == value) return;
+            _endTextError = value;
+            _editor.OnTypingErrorsChanged();
         }
     }
 
@@ -165,6 +195,11 @@ public sealed class SectionRowViewModel : ObservableObject
     /// <summary>Re-reads everything from the section and the chart's links (after any scheduling change).</summary>
     public void Refresh()
     {
+        // A schedule change re-shows every date, so text still being typed is dropped.
+        _startTextError = null;
+        _endTextError = null;
+        OnPropertyChanged(nameof(StartTextError));
+        OnPropertyChanged(nameof(EndTextError));
         OnPropertyChanged(nameof(Index));
         OnPropertyChanged(nameof(Number));
         OnPropertyChanged(nameof(IsFirst));

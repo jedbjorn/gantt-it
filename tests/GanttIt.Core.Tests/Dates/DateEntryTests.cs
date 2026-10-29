@@ -16,7 +16,6 @@ public class DateEntryTests
     [InlineData("d MMM yyyy", "3 Apr 2026")]
     [InlineData("MMMM d, yyyy", "April 3, 2026")]
     [InlineData("yyyy/MM/dd", "2026/04/03")]
-    [InlineData("dd-MM-yy", "03-04-26")]
     public void EveryPreset_AndCustomPatterns_RoundTrip(string pattern, string text)
     {
         Assert.Equal(pattern, DateFormats.EntryPattern(pattern));
@@ -88,6 +87,8 @@ public class DateEntryTests
     [InlineData("")]
     [InlineData(null)]
     [InlineData("'Q'q")]
+    [InlineData("dd/MM/yy")]   // two-digit year: 1926 or 2026? (supported range is 1900–2199)
+    [InlineData("MM-dd-yy")]
     public void PatternsThatCannotIdentifyADay_FallBackToIso(string? pattern)
     {
         Assert.Equal(DateFormats.Iso, DateFormats.EntryPattern(pattern));

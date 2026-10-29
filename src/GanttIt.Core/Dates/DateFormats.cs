@@ -62,7 +62,9 @@ public static class DateFormats
     /// <paramref name="pattern"/>: the pattern itself when a date formatted with it
     /// can be read back unambiguously, otherwise <see cref="Iso"/>. A pattern without
     /// a day, month or year field (e.g. <c>MMM yyyy</c>) can't identify a date, so the
-    /// fields fall back to ISO instead of guessing the missing part.
+    /// fields fall back to ISO instead of guessing the missing part. The same goes for a
+    /// two-digit year (<c>dd/MM/yy</c>): it can't tell 1926 from 2026 within the supported
+    /// range, which the probes cover end to end.
     /// </summary>
     public static string EntryPattern(string? pattern)
     {
@@ -146,7 +148,9 @@ public static class DateFormats
         return result.Length == 1 ? "%" + result : result;
     }
 
-    private static readonly DateOnly[] RoundTripProbes = [new(2026, 12, 31), new(2027, 1, 2), new(2031, 7, 9)];
+    /// <summary>Dates a usable entry pattern must read back exactly, including both ends of <see cref="Model.SupportedDates"/>.</summary>
+    private static readonly DateOnly[] RoundTripProbes =
+        [Model.SupportedDates.Min, new(2026, 12, 31), new(2027, 1, 2), new(2031, 7, 9), Model.SupportedDates.Max];
 
     private static bool TryParseExact(string text, string pattern, out DateOnly date)
     {

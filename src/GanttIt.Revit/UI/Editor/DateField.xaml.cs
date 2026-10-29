@@ -46,6 +46,16 @@ public partial class DateField : UserControl
     public static readonly DependencyProperty FieldNameProperty = DependencyProperty.Register(
         nameof(FieldName), typeof(string), typeof(DateField), new PropertyMetadata(null, (d, _) => ((DateField)d).ApplyAutomation()));
 
+    /// <summary>
+    /// The pending typing error (null when the text shows <see cref="SelectedDate"/>), two-way:
+    /// the row reports it to the editor, which lists it and blocks Generate/Update, like a
+    /// length that doesn't parse. When the row clears it (a refresh), the field drops the
+    /// typed text and shows the date again.
+    /// </summary>
+    public static readonly DependencyProperty TypingErrorProperty = DependencyProperty.Register(
+        nameof(TypingError), typeof(string), typeof(DateField),
+        new FrameworkPropertyMetadata(null, FrameworkPropertyMetadataOptions.BindsTwoWayByDefault, OnTypingErrorChanged));
+
     private static readonly DateOnly Sample = new(2026, 12, 31);
 
     private string? _typingError;
@@ -110,6 +120,12 @@ public partial class DateField : UserControl
         set => SetValue(FieldNameProperty, value);
     }
 
+    public string? TypingError
+    {
+        get => (string?)GetValue(TypingErrorProperty);
+        set => SetValue(TypingErrorProperty, value);
+    }
+
     /// <summary>The pattern the field shows and reads.</summary>
     public string Pattern => DateFormats.EntryPattern(DateFormat);
 
@@ -121,7 +137,7 @@ public partial class DateField : UserControl
     /// <summary>Shows the current date in the pattern; drops any pending typing error.</summary>
     private void ShowDate()
     {
-        _typingError = null;
+        SetTypingError(null);
         Box.Text = Formatted();
         ShowState();
     }
@@ -142,22 +158,31 @@ public partial class DateField : UserControl
         }
         if (!DateFormats.TryParse(text, Pattern, out var date))
         {
-            _typingError = $"\"{text.Trim()}\" is not a date in this chart's format. " +
-                           $"Type it as {Pattern}, for example {DateFormats.Format(Sample, Pattern)}.";
-            ShowState();
+            SetTypingError($"\"{text.Trim()}\" is not a date in this chart's format. " +
+                           $"Type it as {Pattern}, for example {DateFormats.Format(Sample, Pattern)}.");
             return;
         }
 
         var value = date.ToDateTime(TimeOnly.MinValue);
-        if (SelectedDate != value) SelectedDate = value; // the view-model may refuse it and push its own value back
+        if (SelectedDate != value) SetCurrentValue(SelectedDateProperty, value); // the view-model may refuse it and push its own value back
         ShowDate();
     }
 
-    private void ClearTypingError()
+    private void ClearTypingError() => SetTypingError(null);
+
+    private void SetTypingError(string? error)
     {
-        if (_typingError is null) return;
-        _typingError = null;
+        if (_typingError == error) return;
+        _typingError = error; // before SetCurrentValue, so OnTypingErrorChanged sees it as ours
+        SetCurrentValue(TypingErrorProperty, error);
         ShowState();
+    }
+
+    /// <summary>The row cleared the error (row refresh): drop the typed text and show the date.</summary>
+    private static void OnTypingErrorChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+    {
+        var field = (DateField)d;
+        if (e.NewValue is null && field._typingError is not null) field.ShowDate();
     }
 
     private void ShowState()
@@ -225,7 +250,7 @@ public partial class DateField : UserControl
         if (!CalendarPopup.IsOpen) return;
         CalendarPopup.IsOpen = false;
         if (apply && !_settingCalendar && Picker.SelectedDate is { } picked && picked.Date != SelectedDate)
-            SelectedDate = picked.Date;
+            SetCurrentValue(SelectedDateProperty, picked.Date);
         ShowDate();
         Box.Focus();
     }

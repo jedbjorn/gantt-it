@@ -278,6 +278,9 @@ public sealed class EditorViewModel : ObservableObject
         OnEdited();
     }
 
+    /// <summary>A date field's typed text became invalid or valid again: only the issue list changes.</summary>
+    public void OnTypingErrorsChanged() => Revalidate();
+
     /// <summary>Any edit: re-validate and redraw the preview.</summary>
     public void OnEdited()
     {
@@ -393,6 +396,12 @@ public sealed class EditorViewModel : ObservableObject
 
         if (TimelineWidth.Error is { } tw) lines.Add($"Timeline width: {tw}");
         if (NameMaxWidth.Error is { } nw) lines.Add($"Name column width: {nw}");
+        foreach (var row in Rows)
+        {
+            // Text in a date field that isn't a date: the section keeps its old date, so block (as for lengths).
+            if (row.StartTextError is { } se) lines.Add($"Section {row.Number} Start: {se}");
+            if (row.EndTextError is { } ee) lines.Add($"Section {row.Number} End: {ee}");
+        }
         lines.AddRange(issues.Select(i => i.Message));
 
         // With stored settings, every style must exist (§2.3). Without, Generate opens Settings first (§2.1).
