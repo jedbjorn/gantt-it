@@ -102,16 +102,18 @@ internal sealed class ChartViewExit
     /// <summary>
     /// After a delete that didn't succeed: back to the chart if the user was on it (or a
     /// window of it was closed), then the originally active view. Never throws.
+    /// Returns a sentence for the result message when Revit wouldn't switch back.
     /// </summary>
-    public void Restore()
+    public string? Restore()
     {
-        if (_uidoc is null || (!_switched && !_closedWindows)) return;
+        if (_uidoc is null || (!_switched && !_closedWindows)) return null;
         var doc = _uidoc.Document;
-        if (doc.GetElement(_chartId) is View chart) TryActivate(chart);
+        var ok = doc.GetElement(_chartId) is View chart && TryActivate(chart);
         if (_originalActiveId is not null && _originalActiveId != _chartId && doc.GetElement(_originalActiveId) is View original)
-            TryActivate(original);
+            ok = TryActivate(original) && ok;
         _switched = false;
         _closedWindows = false;
+        return ok ? null : "Revit did not switch back to the view you were on; open it again from the Project Browser.";
     }
 
     private bool TryActivate(View? view)

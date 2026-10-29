@@ -180,7 +180,10 @@ public sealed class RevitBackend : IGanttItBackend
             result = Generator.Delete(viewId, exit.Leave);
 
             // Revit closes a deleted view's windows itself; only if a delete fails while the
-            // chart is still open in a window are those windows closed for one retry.
+            // chart is still open in a window are those windows closed for one retry. Known
+            // trade-off: a genuine failure (not caused by the open windows) then also closes
+            // them, and Restore reopens the chart in a single window, so a tiled or
+            // replicated layout of the chart is not rebuilt.
             if (result.Status == ActionStatus.Failed && exit.ChartOpenInWindow)
             {
                 result = exit.CloseChartWindows()
@@ -193,7 +196,8 @@ public sealed class RevitBackend : IGanttItBackend
             result = new ActionResult(ActionStatus.Failed, $"Delete failed: {ex.Message}");
         }
 
-        if (!result.Succeeded) exit.Restore();
+        if (!result.Succeeded && exit.Restore() is { } notBack)
+            result = result with { Message = string.IsNullOrWhiteSpace(result.Message) ? notBack : $"{result.Message} {notBack}" };
         return result;
     }
 
