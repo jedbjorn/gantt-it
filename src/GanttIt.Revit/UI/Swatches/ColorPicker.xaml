@@ -1,0 +1,90 @@
+<UserControl x:Class="GanttIt.Revit.UI.Swatches.ColorPicker"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mvvm="clr-namespace:GanttIt.Revit.UI.Mvvm"
+             AutomationProperties.AutomationId="ColorPicker">
+    <!-- The custom color picker (§2.4). DataContext: ColorPickerViewModel. -->
+    <UserControl.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="/GanttIt.Revit;component/UI/Theme.xaml" />
+            </ResourceDictionary.MergedDictionaries>
+
+            <Style x:Key="SwatchButton" TargetType="Button">
+                <Setter Property="Width" Value="26" />
+                <Setter Property="Height" Value="26" />
+                <Setter Property="Margin" Value="0,0,6,6" />
+                <Setter Property="Cursor" Value="Hand" />
+                <Setter Property="FocusVisualStyle" Value="{StaticResource FocusRing}" />
+                <Setter Property="Template">
+                    <Setter.Value>
+                        <ControlTemplate TargetType="Button">
+                            <Border x:Name="Chip" CornerRadius="3" Background="{TemplateBinding Background}"
+                                    BorderBrush="#33000000" BorderThickness="1" />
+                            <ControlTemplate.Triggers>
+                                <Trigger Property="IsMouseOver" Value="True">
+                                    <Setter TargetName="Chip" Property="BorderBrush" Value="#B0000000" />
+                                    <Setter TargetName="Chip" Property="BorderThickness" Value="2" />
+                                </Trigger>
+                            </ControlTemplate.Triggers>
+                        </ControlTemplate>
+                    </Setter.Value>
+                </Setter>
+            </Style>
+
+            <DataTemplate x:Key="SwatchTemplate">
+                <Button Style="{StaticResource SwatchButton}" Background="{Binding Brush}"
+                        Command="{Binding DataContext.PickCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                        CommandParameter="{Binding}" ToolTip="{Binding Hex}"
+                        AutomationProperties.AutomationId="{Binding AutomationId}"
+                        AutomationProperties.Name="{Binding Hex}" />
+            </DataTemplate>
+
+            <ItemsPanelTemplate x:Key="SwatchPanel">
+                <WrapPanel Width="192" />
+            </ItemsPanelTemplate>
+        </ResourceDictionary>
+    </UserControl.Resources>
+
+    <StackPanel>
+        <TextBlock Text="Palette" Style="{StaticResource LabelText}" Margin="0,0,0,4" />
+        <ItemsControl ItemsSource="{Binding Palette}" ItemTemplate="{StaticResource SwatchTemplate}"
+                      ItemsPanel="{StaticResource SwatchPanel}" Focusable="False"
+                      AutomationProperties.AutomationId="ColorPicker.Palette" />
+
+        <StackPanel Visibility="{Binding HasRecent, Converter={StaticResource BoolToVisible}}">
+            <TextBlock Text="Recent" Style="{StaticResource LabelText}" Margin="0,4,0,4" />
+            <ItemsControl ItemsSource="{Binding Recent}" ItemTemplate="{StaticResource SwatchTemplate}"
+                          ItemsPanel="{StaticResource SwatchPanel}" Focusable="False"
+                          AutomationProperties.AutomationId="ColorPicker.RecentColors" />
+        </StackPanel>
+
+        <TextBlock Text="Hex" Style="{StaticResource LabelText}" Margin="0,4,0,4" />
+        <Grid>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+            <Border Width="26" Height="26" CornerRadius="3" BorderBrush="#33000000" BorderThickness="1"
+                    Background="{Binding CurrentBrush}" Margin="0,0,6,0" ToolTip="Current color" />
+            <TextBox Grid.Column="1" Text="{Binding HexText, UpdateSourceTrigger=PropertyChanged}"
+                     mvvm:Behaviors.HasError="{Binding HasHexError}"
+                     FontFamily="Consolas" MaxLength="7"
+                     AutomationProperties.AutomationId="ColorPicker.Hex" AutomationProperties.Name="Hex color">
+                <TextBox.InputBindings>
+                    <KeyBinding Key="Enter" Command="{Binding ApplyHexCommand}" />
+                </TextBox.InputBindings>
+            </TextBox>
+            <Button Grid.Column="2" Content="Apply" Margin="6,0,0,0" Command="{Binding ApplyHexCommand}"
+                    AutomationProperties.AutomationId="ColorPicker.ApplyHex" />
+        </Grid>
+        <TextBlock Text="{Binding HexError}" Style="{StaticResource ErrorText}" Margin="0,4,0,0" MaxWidth="192"
+                   HorizontalAlignment="Left"
+                   Visibility="{Binding HexError, Converter={StaticResource NullToCollapsed}}"
+                   AutomationProperties.AutomationId="ColorPicker.HexError" />
+
+        <Button Content="More…" HorizontalAlignment="Left" Margin="0,10,0,0" Command="{Binding MoreCommand}"
+                AutomationProperties.AutomationId="ColorPicker.More" AutomationProperties.Name="More colors" />
+    </StackPanel>
+</UserControl>

@@ -1,0 +1,162 @@
+<Window x:Class="GanttIt.Revit.UI.Settings.SettingsWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:mvvm="clr-namespace:GanttIt.Revit.UI.Mvvm"
+        xmlns:settings="clr-namespace:GanttIt.Revit.UI.Settings"
+        Title="Gantt-It Settings"
+        Width="560" SizeToContent="Height" ResizeMode="NoResize" ShowInTaskbar="False"
+        WindowStartupLocation="CenterOwner"
+        FontFamily="Segoe UI" FontSize="12" UseLayoutRounding="True"
+        TextOptions.TextFormattingMode="Display"
+        Background="{DynamicResource WindowBrush}"
+        AutomationProperties.AutomationId="SettingsWindow">
+    <Window.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="/GanttIt.Revit;component/UI/Theme.xaml" />
+            </ResourceDictionary.MergedDictionaries>
+
+            <!-- One style row: label, picker, red hint while unset or missing. -->
+            <DataTemplate x:Key="StylePickerRow" DataType="{x:Type settings:StylePickerViewModel}">
+                <Grid Margin="0,0,0,8">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="150" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+                    <TextBlock Text="{Binding Label}" Style="{StaticResource LabelText}" />
+                    <ComboBox Grid.Column="1" ItemsSource="{Binding Options}" SelectedItem="{Binding Selected}"
+                              DisplayMemberPath="Name"
+                              mvvm:Behaviors.HasError="{Binding IsMissing}"
+                              AutomationProperties.AutomationId="{Binding AutomationId}"
+                              AutomationProperties.Name="{Binding Label}" />
+                    <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding Hint}" Margin="0,3,0,0" FontSize="11"
+                               TextWrapping="Wrap"
+                               Visibility="{Binding Hint, Converter={StaticResource NullToCollapsed}}">
+                        <TextBlock.Style>
+                            <Style TargetType="TextBlock" BasedOn="{StaticResource MutedText}">
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding IsMissing}" Value="True">
+                                        <Setter Property="Foreground" Value="{StaticResource ErrorBrush}" />
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </TextBlock.Style>
+                    </TextBlock>
+                </Grid>
+            </DataTemplate>
+        </ResourceDictionary>
+    </Window.Resources>
+
+    <StackPanel Margin="16">
+        <TextBlock Text="Project settings" Style="{StaticResource HeadingText}" />
+        <TextBlock Text="Stored in this model and used by every chart in it. Changing them does not redraw existing charts on its own."
+                   Style="{StaticResource MutedText}" TextWrapping="Wrap" Margin="0,2,0,12" />
+
+        <Border Style="{StaticResource InfoBanner}" Margin="0,0,0,10"
+                Visibility="{Binding IsFirstRun, Converter={StaticResource BoolToVisible}}"
+                AutomationProperties.AutomationId="Settings.FirstRunNotice">
+            <TextBlock TextWrapping="Wrap"
+                       Text="This model has no Gantt-It settings yet. Choose the styles charts should use, then save to continue." />
+        </Border>
+        <Border Style="{StaticResource ErrorBanner}" Margin="0,0,0,10"
+                Visibility="{Binding LoadError, Converter={StaticResource NullToCollapsed}}">
+            <TextBlock Text="{Binding LoadError}" Style="{StaticResource ErrorText}"
+                       AutomationProperties.AutomationId="Settings.LoadError" />
+        </Border>
+        <Border Style="{StaticResource ErrorBanner}" Margin="0,0,0,10"
+                Visibility="{Binding MissingSummary, Converter={StaticResource NullToCollapsed}}">
+            <TextBlock Text="{Binding MissingSummary}" Style="{StaticResource ErrorText}"
+                       AutomationProperties.AutomationId="Settings.MissingStyles" />
+        </Border>
+
+        <Border Style="{StaticResource Panel}" IsEnabled="{Binding IsEditable}">
+            <StackPanel>
+                <TextBlock Text="Text styles" Style="{StaticResource SectionText}" />
+                <ContentControl Content="{Binding TitleText}" ContentTemplate="{StaticResource StylePickerRow}" Focusable="False" />
+                <ContentControl Content="{Binding HeaderText}" ContentTemplate="{StaticResource StylePickerRow}" Focusable="False" />
+                <ContentControl Content="{Binding BodyText}" ContentTemplate="{StaticResource StylePickerRow}" Focusable="False" />
+
+                <TextBlock Text="Line styles" Style="{StaticResource SectionText}" Margin="0,6,0,6" />
+                <ContentControl Content="{Binding ChartLine}" ContentTemplate="{StaticResource StylePickerRow}" Focusable="False" />
+                <ContentControl Content="{Binding HeaderLine}" ContentTemplate="{StaticResource StylePickerRow}" Focusable="False" />
+
+                <TextBlock Text="Format" Style="{StaticResource SectionText}" Margin="0,6,0,6" />
+                <Grid Margin="0,0,0,8">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="150" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+                    <TextBlock Text="Date format" Style="{StaticResource LabelText}" />
+                    <ComboBox Grid.Column="1" ItemsSource="{Binding DateFormatOptions}"
+                              SelectedItem="{Binding DateFormatOption}" DisplayMemberPath="Label"
+                              AutomationProperties.AutomationId="Settings.DateFormat"
+                              AutomationProperties.Name="Date format" />
+                    <TextBox Grid.Row="1" Grid.Column="1" Margin="0,6,0,0"
+                             Text="{Binding CustomPattern, UpdateSourceTrigger=PropertyChanged}"
+                             Visibility="{Binding IsCustomDateFormat, Converter={StaticResource BoolToVisible}}"
+                             mvvm:Behaviors.HasError="{Binding HasDateFormatError}"
+                             FontFamily="Consolas"
+                             AutomationProperties.AutomationId="Settings.CustomDateFormat"
+                             AutomationProperties.Name="Custom date pattern"
+                             ToolTip="A .NET date pattern, e.g. d MMM yyyy" />
+                    <Grid Grid.Row="2" Grid.Column="1" Margin="0,3,0,0">
+                        <TextBlock Text="{Binding DateFormatSample}" Style="{StaticResource MutedText}" FontSize="11"
+                                   AutomationProperties.AutomationId="Settings.DateFormatSample" />
+                        <TextBlock Text="{Binding DateFormatError}" Style="{StaticResource ErrorText}" FontSize="11"
+                                   Visibility="{Binding DateFormatError, Converter={StaticResource NullToCollapsed}}"
+                                   AutomationProperties.AutomationId="Settings.DateFormatError" />
+                    </Grid>
+                </Grid>
+
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="150" />
+                        <ColumnDefinition Width="140" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+                    <TextBlock Text="Cell padding" Style="{StaticResource LabelText}" />
+                    <TextBox Grid.Column="1" Text="{Binding CellPadding.Text, UpdateSourceTrigger=LostFocus}"
+                             mvvm:Behaviors.CommitOnEnter="True"
+                             mvvm:Behaviors.HasError="{Binding HasCellPaddingError}"
+                             AutomationProperties.AutomationId="Settings.CellPadding"
+                             AutomationProperties.Name="Cell padding" />
+                    <TextBlock Grid.Column="2" Text="Space between text and cell lines, in project units"
+                               Style="{StaticResource MutedText}" FontSize="11" Margin="8,0,0,0" VerticalAlignment="Center"
+                               TextWrapping="Wrap" />
+                    <TextBlock Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="2" Text="{Binding CellPaddingError}"
+                               Style="{StaticResource ErrorText}" FontSize="11" Margin="0,3,0,0"
+                               Visibility="{Binding CellPaddingError, Converter={StaticResource NullToCollapsed}}"
+                               AutomationProperties.AutomationId="Settings.CellPaddingError" />
+                </Grid>
+            </StackPanel>
+        </Border>
+
+        <CheckBox Content="Use as my default for new projects" IsChecked="{Binding UseAsDefault}" Margin="0,12,0,0"
+                  IsEnabled="{Binding IsEditable}"
+                  AutomationProperties.AutomationId="Settings.UseAsDefault"
+                  ToolTip="Saves the style names to your Gantt-It defaults; new models match styles by these names first." />
+
+        <DockPanel Margin="0,16,0,0" LastChildFill="False">
+            <Button DockPanel.Dock="Left" Content="Regenerate all charts now" Command="{Binding RegenerateAllCommand}"
+                    AutomationProperties.AutomationId="Settings.RegenerateAll"
+                    ToolTip="Saves these settings and redraws every chart in this model" />
+            <Button DockPanel.Dock="Right" Content="Cancel" IsCancel="True"
+                    Margin="8,0,0,0" MinWidth="88" AutomationProperties.AutomationId="Settings.Cancel" />
+            <Button DockPanel.Dock="Right" Content="Save" Command="{Binding SaveCommand}" IsDefault="True"
+                    Style="{StaticResource PrimaryButton}" AutomationProperties.AutomationId="Settings.Save" />
+        </DockPanel>
+    </StackPanel>
+</Window>

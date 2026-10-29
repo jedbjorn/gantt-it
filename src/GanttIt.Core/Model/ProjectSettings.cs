@@ -38,4 +38,18 @@ public sealed class ProjectSettings
     public List<Rgb> Palette { get; set; } = [.. Model.Palette.Default];
 
     public int SchemaVersion { get; set; } = SchemaVersions.Settings;
+
+    /// <summary>A copy that Settings can edit without touching the original until saved.</summary>
+    public ProjectSettings Clone() => new()
+    {
+        TitleTextStyle = TitleTextStyle,
+        HeaderTextStyle = HeaderTextStyle,
+        BodyTextStyle = BodyTextStyle,
+        ChartLineStyle = ChartLineStyle,
+        HeaderLineStyle = HeaderLineStyle,
+        DateFormat = DateFormat,
+        CellPadding = CellPadding,
+        Palette = [.. Palette],
+        SchemaVersion = SchemaVersion,
+    };
 }

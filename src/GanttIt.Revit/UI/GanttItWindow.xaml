@@ -1,0 +1,30 @@
+<Window x:Class="GanttIt.Revit.UI.GanttItWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:home="clr-namespace:GanttIt.Revit.UI.Home"
+        xmlns:editor="clr-namespace:GanttIt.Revit.UI.Editor"
+        Title="{Binding WindowTitle}"
+        MinWidth="900" MinHeight="620"
+        ResizeMode="CanResize" ShowInTaskbar="False" WindowStartupLocation="CenterOwner"
+        FontFamily="Segoe UI" FontSize="12" UseLayoutRounding="True"
+        TextOptions.TextFormattingMode="Display"
+        Background="{DynamicResource WindowBrush}"
+        AutomationProperties.AutomationId="GanttItWindow">
+    <!-- The modal Gantt-It window (D7), owned by Revit's main window. DataContext: MainViewModel. -->
+    <Window.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="/GanttIt.Revit;component/UI/Theme.xaml" />
+            </ResourceDictionary.MergedDictionaries>
+
+            <DataTemplate DataType="{x:Type home:HomeViewModel}">
+                <home:HomeView />
+            </DataTemplate>
+            <DataTemplate DataType="{x:Type editor:EditorViewModel}">
+                <editor:EditorView />
+            </DataTemplate>
+        </ResourceDictionary>
+    </Window.Resources>
+
+    <ContentControl Content="{Binding Page}" Focusable="False" />
+</Window>
