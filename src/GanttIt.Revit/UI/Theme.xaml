@@ -202,6 +202,15 @@
         </Style.Triggers>
     </Style>
 
+    <!--
+        The DatePicker template stretches its text box to the full row height with
+        VerticalContentAlignment="Stretch", so the date sat at the top of the field.
+        Centring the text box itself lines the date up with the other row fields.
+    -->
+    <Style TargetType="DatePickerTextBox">
+        <Setter Property="VerticalAlignment" Value="Center" />
+    </Style>
+
     <Style TargetType="CheckBox">
         <Setter Property="VerticalContentAlignment" Value="Center" />
         <Setter Property="Foreground" Value="{StaticResource TextBrush}" />
