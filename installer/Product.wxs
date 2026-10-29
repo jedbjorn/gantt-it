@@ -33,7 +33,7 @@
            Scope="perUser"
            Compressed="yes">
 
-    <SummaryInformation Description="Gantt-It — Gantt charts as native Revit legend views (Revit 2026 and 2027)" />
+    <SummaryInformation Description="Gantt-It: Gantt charts as native Revit legend views (Revit 2026 and 2027)" />
 
     <!-- Replace any prior install of the product family in place.
          AllowSameVersionUpgrades: the MSI version is the tag's numeric a.b.c,
