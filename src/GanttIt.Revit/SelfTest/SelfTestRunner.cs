@@ -18,7 +18,8 @@ namespace GanttIt.Revit.SelfTest;
 /// <item><c>1</c>: settings, the fixture charts, read-back geometry (A5), chart
 /// correctness (A6), preview calibration (A15), lengths in project units (D11),
 /// Update on a sheet with a hand note (A7), detached copies and hand-deleted
-/// charts (A9, decision #17), fault injection and the warning path (A11), PNG
+/// charts (A9, decision #17), the fill-type purge (§7.3, <c>SelfTestRunner.Purge.cs</c>),
+/// fault injection and the warning path (A11), PNG
 /// exports, a snapshot for phase 2, save, and a final "GI Undo" chart for the GUI
 /// Undo check.</item>
 /// <item><c>2</c>: after save, close and reopen, the chart and settings read back
@@ -136,6 +137,7 @@ internal sealed partial class SelfTestRunner
         _r.Step("D11", "lengths in project units", CheckLengths);
         _r.Step("A7", "update on a sheet", CheckUpdateOnSheet);
         _r.Step("A9", "duplicated legends are detached", CheckCopiesDetached);
+        _r.Step("§7.3", "fill-type purge", CheckFillPurge);
         _r.Step("A9", "hand-deleted charts", CheckHandDeleted);
         _r.Step("A11", "fault injection", CheckFaults);
         _r.Step("A11", "warning preprocessing", CheckWarningPath);
@@ -168,7 +170,16 @@ internal sealed partial class SelfTestRunner
         var sheets = new FilteredElementCollector(_doc).OfClass(typeof(ViewSheet)).Cast<ViewSheet>()
             .Where(s => s.Name == SheetName).Select(s => s.Id).ToList();
         if (sheets.Count > 0) SelfTestTx("remove sheets", () => _doc.Delete(sheets));
-        _r.Section("cleanup", new JsonObject { ["charts"] = removed, ["detachedLegends"] = leftovers.Count, ["sheets"] = sheets.Count });
+        // The fill-type purge probes (a drafting view and its group types) of an aborted run.
+        var probes = 0;
+        SelfTestTx("remove fill-type purge probes", () => probes = RemovePurgeProbes());
+        _r.Section("cleanup", new JsonObject
+        {
+            ["charts"] = removed,
+            ["detachedLegends"] = leftovers.Count,
+            ["sheets"] = sheets.Count,
+            ["purgeProbes"] = probes,
+        });
     }
 
     /// <summary>

@@ -48,8 +48,15 @@ internal static class GanttItTransaction
     /// <summary>
     /// Runs <paramref name="body"/> in one transaction. The body returns the view the
     /// action produced or changed (or null) plus an optional note for the user.
+    /// <para>
+    /// Every Gantt-It action ends here with <see cref="FillTypes.DeleteUnused"/>, in
+    /// the same transaction (§7.3, §7.4): no action leaves unused Gantt-It fill types
+    /// behind, whoever orphaned them (a chart legend deleted by hand, an earlier
+    /// session), and the purge is undone or rolled back with the action. With
+    /// <paramref name="reportPurge"/> the note names the types removed.
+    /// </para>
     /// </summary>
-    public static ActionResult Run(Document doc, string name, Func<(ElementId? View, string? Note)> body)
+    public static ActionResult Run(Document doc, string name, Func<(ElementId? View, string? Note)> body, bool reportPurge = false)
     {
         var failures = new GanttItFailures();
         using var t = new Transaction(doc, name);
@@ -64,6 +71,12 @@ internal static class GanttItTransaction
                 return new ActionResult(ActionStatus.Failed, $"{name}: Revit did not start the transaction.");
 
             var (view, note) = body();
+            var purge = FillTypes.DeleteUnused(doc);
+            if (reportPurge && purge.Deleted.Count > 0)
+            {
+                var removed = $"Removed unused fill types: {string.Join(", ", purge.Deleted)}.";
+                note = string.IsNullOrEmpty(note) ? removed : $"{note} {removed}";
+            }
             var status = t.Commit();
             if (status != TransactionStatus.Committed)
             {

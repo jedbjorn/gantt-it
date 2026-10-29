@@ -29,7 +29,9 @@ internal sealed record DrawResult(
 /// is missing, or another user owns what would change (§7.5). Otherwise it runs in
 /// one transaction named <c>Gantt-It: &lt;action&gt; &lt;name&gt;</c> (one Undo step)
 /// that is rolled back completely on any failure. Update and Delete only ever
-/// delete this view's own generated elements (§7.2 OwnerViewId rule).
+/// delete this view's own generated elements (§7.2 OwnerViewId rule). Unused
+/// Gantt-It fill types are purged by <see cref="GanttItTransaction.Run"/> at the
+/// end of every action, not here.
 /// </summary>
 internal sealed class ChartGenerator
 {
@@ -81,7 +83,6 @@ internal sealed class ChartGenerator
         return GanttItTransaction.Run(_doc, GanttItTransaction.Name("Update", chart.Name), () =>
         {
             var drawn = Redraw(view!, stored, chart, settings, styles!, new FillTypes(_doc));
-            FillTypes.DeleteUnused(_doc);
             return (view!.Id, Note(drawn));
         });
     }
@@ -105,9 +106,8 @@ internal sealed class ChartGenerator
         {
             // Deleting the legend removes its own elements and its viewports (V8).
             _doc.Delete(viewId);
-            var freed = FillTypes.DeleteUnused(_doc);
-            return (null, freed.Count > 0 ? $"Removed unused fill types: {string.Join(", ", freed)}." : null);
-        });
+            return (null, null);
+        }, reportPurge: true);
     }
 
     public ActionResult RegenerateAll(ProjectSettings settings)
@@ -151,7 +151,6 @@ internal sealed class ChartGenerator
         {
             var fills = new FillTypes(_doc);
             foreach (var w in ready) Redraw(w.View, w.Stored, w.Chart, settings, styles, fills);
-            FillTypes.DeleteUnused(_doc);
             var note = $"Regenerated {ready.Count} chart{(ready.Count == 1 ? "" : "s")}.";
             if (skipped.Count > 0) note += " Skipped: " + string.Join("; ", skipped) + ".";
             return (null, note);

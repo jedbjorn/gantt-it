@@ -20,6 +20,17 @@ internal static class Worksharing
         return status == CheckoutStatus.OwnedByOtherUser;
     }
 
+    /// <summary>
+    /// True when <paramref name="id"/> was changed or deleted in central since this
+    /// local copy last synchronized: editing it would fail until Reload Latest.
+    /// </summary>
+    public static bool OutOfDate(Document doc, ElementId id)
+    {
+        if (!doc.IsWorkshared || id == ElementId.InvalidElementId) return false;
+        var status = WorksharingUtils.GetModelUpdatesStatus(doc, id);
+        return status is ModelUpdatesStatus.UpdatedInCentral or ModelUpdatesStatus.DeletedInCentral;
+    }
+
     /// <summary>Null when every element is editable; otherwise a message naming each owner.</summary>
     public static string? CheckEditable(Document doc, IEnumerable<ElementId> ids)
     {
