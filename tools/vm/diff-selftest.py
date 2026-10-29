@@ -3,7 +3,7 @@
 
     python3 tools/vm/diff-selftest.py <a.json> <b.json> [--tolerance-mm 0.0001] [--tolerance-ft 1e-6]
 
-Checks are matched by name. For each, the result and every number are compared. The report's
+Checks are matched by name (renamed checks are mapped to their current name, see RENAMED). For each, the result and every number are compared. The report's
 `sections` are compared too (per-string calibration rows, the per-element geometry in feet, the
 settings). Anything that is an id, a path, a time, a version or an image file name is ignored,
 since those differ between runs by design. Whole-model element counts are ignored as well:
@@ -12,6 +12,7 @@ Exits 0 when the reports agree apart from ignored fields, 1 otherwise.
 """
 import argparse
 import json
+import re
 import sys
 
 IGNORED_KEYS = {
@@ -50,8 +51,24 @@ def compare(prefix, na, nb, tolerance, diffs):
             diffs.append(f"{prefix} :: {key}: {va!r} vs {vb!r}")
 
 
+# Check names that were reworded, old -> current, so reports from before the rename still
+# line up with new ones. PR #9: the A8 viewport check named "both" whatever the sheet
+# count (the default place-sheets count, 2, is assumed for old reports), and
+# "placed on 1 sheets" lost its plural.
+RENAMED = [
+    (re.compile(r"^a8-check: both viewports are gone$"), "a8-check: all 2 recorded viewports are gone"),
+    (re.compile(r"^(place-sheets: '.*' placed on 1) sheets$"), r"\1 sheet"),
+]
+
+
+def current_name(name: str) -> str:
+    for pattern, replacement in RENAMED:
+        name = pattern.sub(replacement, name)
+    return name
+
+
 def checks(report):
-    return {c["name"]: c for c in report.get("checks", [])}
+    return {current_name(c["name"]): c for c in report.get("checks", [])}
 
 
 def main() -> int:

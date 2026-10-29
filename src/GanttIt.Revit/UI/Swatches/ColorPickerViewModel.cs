@@ -27,26 +27,33 @@ public sealed class SwatchViewModel(Rgb color, string automationId)
 
 /// <summary>
 /// The color picker (§2.4): the 12-swatch palette, a recent-colors row, a
-/// <c>#RRGGBB</c> field and "More…" for the Windows color dialog.
+/// <c>#RRGGBB</c> field, "Pick from screen" (eyedropper) and "More…" for the
+/// Windows color dialog. Every way of choosing ends in <see cref="Pick"/>, so a
+/// color picked from the screen joins the recent colors like any other.
 /// </summary>
 public sealed class ColorPickerViewModel : ObservableObject
 {
     private readonly RecentColors _recent;
     private readonly Func<Rgb, Rgb?> _moreColors;
+    private readonly Func<Rgb?>? _pickFromScreen;
     private string _hexText;
     private string? _hexError;
 
-    public ColorPickerViewModel(Rgb current, IReadOnlyList<Rgb> palette, RecentColors recent, Func<Rgb, Rgb?> moreColors)
+    /// <param name="pickFromScreen">Runs the eyedropper; null when cancelled. Null hides the button.</param>
+    public ColorPickerViewModel(
+        Rgb current, IReadOnlyList<Rgb> palette, RecentColors recent, Func<Rgb, Rgb?> moreColors, Func<Rgb?>? pickFromScreen = null)
     {
         Current = current;
         _recent = recent;
         _moreColors = moreColors;
+        _pickFromScreen = pickFromScreen;
         _hexText = current.ToHex();
         Palette = palette.Select((c, i) => new SwatchViewModel(c, $"ColorPicker.Swatch{i + 1}")).ToList();
         Recent = recent.Items.Select((c, i) => new SwatchViewModel(c, $"ColorPicker.Recent{i + 1}")).ToList();
         PickCommand = new RelayCommand<SwatchViewModel>(s => Pick(s.Color));
         ApplyHexCommand = new RelayCommand(ApplyHex);
         MoreCommand = new RelayCommand(More);
+        PickFromScreenCommand = new RelayCommand(PickFromScreen, () => CanPickFromScreen);
     }
 
     /// <summary>Raised once with the chosen color.</summary>
@@ -88,6 +95,10 @@ public sealed class ColorPickerViewModel : ObservableObject
 
     public ICommand MoreCommand { get; }
 
+    public ICommand PickFromScreenCommand { get; }
+
+    public bool CanPickFromScreen => _pickFromScreen is not null;
+
     private void ApplyHex()
     {
         if (Rgb.TryParse(HexText, out var color)) Pick(color);
@@ -97,6 +108,23 @@ public sealed class ColorPickerViewModel : ObservableObject
     private void More()
     {
         if (_moreColors(Current) is { } color) Pick(color);
+    }
+
+    private void PickFromScreen()
+    {
+        if (_pickFromScreen is null) return;
+        HexError = null;
+        Rgb? color;
+        try
+        {
+            color = _pickFromScreen();
+        }
+        catch (Exception ex)
+        {
+            HexError = $"Couldn't pick from the screen: {ex.Message}";
+            return;
+        }
+        if (color is { } c) Pick(c);
     }
 
     private void Pick(Rgb color)

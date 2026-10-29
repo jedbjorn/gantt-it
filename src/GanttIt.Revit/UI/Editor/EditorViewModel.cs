@@ -1,6 +1,7 @@
 using System.Collections.ObjectModel;
 using System.Windows.Input;
 using Autodesk.Revit.DB;
+using GanttIt.Core.Dates;
 using GanttIt.Core.Editing;
 using GanttIt.Core.Model;
 using GanttIt.Core.Scheduling;
@@ -166,6 +167,13 @@ public sealed class EditorViewModel : ObservableObject
     /// <summary>Maximum name-column width on paper, in project units (D11).</summary>
     public LengthField NameMaxWidth { get; }
 
+    /// <summary>
+    /// The pattern the section rows' Start/End fields show and read: the project's date
+    /// format (Settings, the same one the chart uses), or ISO when that pattern can't
+    /// identify a day (<see cref="DateFormats.EntryPattern"/>).
+    /// </summary>
+    public string DateEntryPattern => DateFormats.EntryPattern(_main.Session.Settings.Settings.DateFormat);
+
     // ---- Sections (§2.2 item 2) --------------------------------------------------------------
 
     public ObservableCollection<SectionRowViewModel> Rows { get; } = [];
@@ -270,6 +278,20 @@ public sealed class EditorViewModel : ObservableObject
         OnEdited();
     }
 
+    /// <summary>
+    /// A schedule or settings change re-shows every date, so text still being typed in a
+    /// date field is dropped, with a notice naming it (never a silent change, §5.1).
+    /// </summary>
+    private void DiscardPendingText()
+    {
+        foreach (var row in Rows)
+            if (row.DiscardPendingText() is { Count: > 0 } dropped)
+                AddNotice($"Section {row.Number}: discarded {string.Join(" and ", dropped)}, which was not a date. The dates shown are the section's dates.");
+    }
+
+    /// <summary>A date field's typed text became invalid or valid again: only the issue list changes.</summary>
+    public void OnTypingErrorsChanged() => Revalidate();
+
     /// <summary>Any edit: re-validate and redraw the preview.</summary>
     public void OnEdited()
     {
@@ -368,6 +390,8 @@ public sealed class EditorViewModel : ObservableObject
     {
         if (!_main.OpenSettings()) return false;
         // New settings: recalibrated preview (decision #14), new date format, new missing-style state.
+        DiscardPendingText();
+        foreach (var row in Rows) row.Refresh();
         Revalidate();
         Preview.RenderNow();
         return true;
@@ -384,6 +408,12 @@ public sealed class EditorViewModel : ObservableObject
 
         if (TimelineWidth.Error is { } tw) lines.Add($"Timeline width: {tw}");
         if (NameMaxWidth.Error is { } nw) lines.Add($"Name column width: {nw}");
+        foreach (var row in Rows)
+        {
+            // Text in a date field that isn't a date: the section keeps its old date, so block (as for lengths).
+            if (row.StartTextError is { } se) lines.Add($"Section {row.Number} Start: {se}");
+            if (row.EndTextError is { } ee) lines.Add($"Section {row.Number} End: {ee}");
+        }
         lines.AddRange(issues.Select(i => i.Message));
 
         // With stored settings, every style must exist (§2.3). Without, Generate opens Settings first (§2.1).
@@ -446,6 +476,7 @@ public sealed class EditorViewModel : ObservableObject
 
     private void OnScheduleChanged()
     {
+        DiscardPendingText();
         foreach (var row in Rows) row.Refresh();
         OnEdited();
     }
