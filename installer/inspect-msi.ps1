@@ -3,11 +3,13 @@
 
     powershell -File installer/inspect-msi.ps1 -Msi <path.msi> -Version 1.0.0-rc.1
     powershell -File installer/inspect-msi.ps1 -Msi <path.msi> -Version 0.0.0-dev -AllowBuildMetadata
+    powershell -File installer/inspect-msi.ps1 -Msi <path.msi> -Version 1.0.0 -Stage installer/stage
 
   Reads the MSI database through the Windows Installer COM API and prints
   the package identity (ProductVersion, UpgradeCode, ProductCode, install
   scope), every file with its install path and the folders removed on
-  uninstall. Then extracts the package with an administrative install
+  uninstall, and the Revit detection wiring (AppSearch, component
+  conditions, launch condition). Then extracts the package with an administrative install
   (msiexec /a: unpacks files only, installs nothing) and reads the version
   resource of GanttIt.Revit.dll for each Revit year.
 
@@ -17,9 +19,21 @@
     - the package is per-user and needs no elevation;
     - the MSI is named GanttIt-<Version>.msi and its ProductVersion is the
       numeric a.b.c of -Version;
-    - it holds exactly the expected add-in files for both Revit years;
+    - it holds exactly the expected add-in files for each Revit year
+      (2025, 2026, 2027); with -Stage, the staged folders
+      (installer/stage/<year>/) hold exactly those files too, so a new file
+      in the add-in output cannot be left out of the MSI unnoticed;
     - it removes GanttIt\, Resources\, icons\ and the fr\, es\, de\
       satellite folders (per year) on uninstall, and never Addins\<year>\;
+    - every component installs under Addins\<year>\ of one Revit year and
+      carries Condition REVIT<year>FOUND and the Transitive attribute (so a
+      repair re-evaluates it);
+    - REVIT<year>FOUND is set by AppSearch from exactly two Revit.exe
+      searches: in the InstallLocation of the Revit <year> uninstall entry
+      (64-bit HKLM) and in [ProgramFiles64Folder]Autodesk\Revit <year>;
+    - the LaunchCondition table holds exactly the "none was found" check,
+      which lets an installed product (repair, uninstall) through;
+    - the package is x64 (64-bit registry search; ICE80);
     - each year's GanttIt.Revit.dll has ProductVersion (the assembly's
       InformationalVersion, which the add-in stamps as AppVersion) equal to
       -Version; with -AllowBuildMetadata a "+<commit>" suffix is accepted
@@ -29,11 +43,19 @@
 param(
   [Parameter(Mandatory = $true)] [string] $Msi,
   [Parameter(Mandatory = $true)] [string] $Version,
-  [switch] $AllowBuildMetadata
+  [switch] $AllowBuildMetadata,
+  [string] $Stage
 )
 
 $ErrorActionPreference = 'Stop'
 $UpgradeCode = '{644FCAD5-E631-4441-9A11-75F175565136}'
+# Supported Revit years. Each has its own folder tree, components and
+# detection property in Product.wxs.
+$Years = '2025', '2026', '2027'
+$LaunchCondition = 'Installed OR REVIT2025FOUND OR REVIT2026FOUND OR REVIT2027FOUND'
+$LaunchMessage = 'Gantt-It needs Revit 2025, 2026 or 2027, and none was found on this computer.'
+$Transitive = 64   # msidbComponentAttributesTransitive
+$LocatorTypeDirectory64 = 16   # msidbLocatorTypeDirectory (0) + msidbLocatorType64bit (16)
 
 function Invoke-Com($obj, [string] $name, [System.Reflection.BindingFlags] $kind, [object[]] $argList = @()) {
   return $obj.GetType().InvokeMember($name, $kind, $null, $obj, $argList)
@@ -84,7 +106,11 @@ function DirPath([string] $id) {
   return "$parent\$($d.Name)"
 }
 $compDir = @{}
-foreach ($r in (Query 'SELECT `Component`, `Directory_` FROM `Component`' 2)) { $compDir[$r[0]] = $r[1] }
+$components = @()
+foreach ($r in (Query 'SELECT `Component`, `Directory_`, `Attributes`, `Condition` FROM `Component`' 4)) {
+  $compDir[$r[0]] = $r[1]
+  $components += [pscustomobject]@{ Id = $r[0]; Path = (DirPath $r[1]); Attributes = [int]$r[2]; Condition = $r[3] }
+}
 $files = @()
 foreach ($r in (Query 'SELECT `FileName`, `Component_`, `FileSize` FROM `File`' 3)) {
   $name = ($r[0] -split '\|')[-1]
@@ -110,6 +136,7 @@ if ($props['ProductName'] -ne 'Gantt-It') { $problems += "ProductName is '$($pro
 if ($props['Manufacturer'] -ne 'Designs/OS') { $problems += "Manufacturer is '$($props['Manufacturer'])'" }
 if ($props['ALLUSERS'] -and $props['ALLUSERS'] -ne '2') { $problems += "ALLUSERS is '$($props['ALLUSERS'])' (per-machine)" }
 if (($wordCount -band 8) -eq 0) { $problems += "summary Word Count ${wordCount}: package requests elevation" }
+if (($template -split ';')[0] -ne 'x64') { $problems += "Template is '$template', expected an x64 package" }
 $numeric = [regex]::Match($Version, '^\d+\.\d+\.\d+').Value
 if (-not $numeric) { $problems += "-Version '$Version' does not start with a numeric a.b.c" }
 if ($props['ProductVersion'] -ne $numeric) {
@@ -117,7 +144,7 @@ if ($props['ProductVersion'] -ne $numeric) {
 }
 $msiName = Split-Path -Leaf $Msi
 if ($msiName -ne "GanttIt-$Version.msi") { $problems += "MSI is named $msiName, expected GanttIt-$Version.msi" }
-# The exact file set, per Revit year (16 files each, 32 in all): PDBs ship,
+# The exact file set, per Revit year (16 files each, 48 in all): PDBs ship,
 # XML doc files do not (installer/stage.sh drops them); the fr, es and de
 # satellite assemblies carry the translated UI strings of both assemblies.
 # A file added to the add-in output must be added here too, deliberately.
@@ -138,7 +165,7 @@ foreach ($lang in $Satellites) {
   $perYear += "GanttIt\$lang\GanttIt.Core.resources.dll"
   $perYear += "GanttIt\$lang\GanttIt.Revit.resources.dll"
 }
-$expected = foreach ($year in '2026', '2027') {
+$expected = foreach ($year in $Years) {
   foreach ($rel in $perYear) { "AppDataFolder\Autodesk\Revit\Addins\$year\$rel" }
 }
 $actual = @($files | ForEach-Object { $_.Path })
@@ -152,6 +179,105 @@ if ($actual.Count -ne $expected.Count) {
   $problems += "MSI has $($actual.Count) files, expected $($expected.Count)"
 }
 
+# The staged add-in output must match the same list: Product.wxs names each
+# file explicitly, so a file new in the build output would otherwise be
+# missing from the MSI without anything failing.
+if ($Stage) {
+  foreach ($year in $Years) {
+    $root = Join-Path $Stage $year
+    if (-not (Test-Path $root)) { $problems += "no staged folder $root"; continue }
+    $rootFull = (Resolve-Path $root).Path.TrimEnd('\') + '\'
+    $staged = @(Get-ChildItem -Path $root -Recurse -File | ForEach-Object { $_.FullName.Substring($rootFull.Length) })
+    foreach ($rel in $staged) {
+      if ($perYear -notcontains $rel) { $problems += "staged $year\$rel is not in the MSI file list (Product.wxs, inspect-msi.ps1)" }
+    }
+    foreach ($rel in $perYear) {
+      if ($staged -notcontains $rel) { $problems += "staged $year is missing $rel" }
+    }
+  }
+}
+
+# Per-year component conditions. Every component must belong to one Revit
+# year's Addins\<year>\ tree and install only when that year was detected,
+# re-evaluated on repair (Transitive).
+Write-Host "Components ($($components.Count)):"
+$components | Sort-Object Path, Id | ForEach-Object {
+  Write-Host ("  {0,-28} attr {1,4}  [{2}]  {3}" -f $_.Id, $_.Attributes, $_.Condition, $_.Path)
+}
+foreach ($c in $components) {
+  $m = [regex]::Match($c.Path, '^AppDataFolder\\Autodesk\\Revit\\Addins\\(\d{4})(\\|$)')
+  if (-not $m.Success -or $Years -notcontains $m.Groups[1].Value) {
+    $problems += "component $($c.Id) installs to $($c.Path), outside the Addins\<year>\ folders"
+    continue
+  }
+  $year = $m.Groups[1].Value
+  if ($c.Condition -ne "REVIT${year}FOUND") {
+    $problems += "component $($c.Id) ($($c.Path)) has condition '$($c.Condition)', expected 'REVIT${year}FOUND'"
+  }
+  if (($c.Attributes -band $Transitive) -eq 0) {
+    $problems += "component $($c.Id) ($($c.Path)) is not Transitive (attributes $($c.Attributes))"
+  }
+}
+foreach ($year in $Years) {
+  if (-not ($components | Where-Object { $_.Condition -eq "REVIT${year}FOUND" })) {
+    $problems += "no component is conditioned on REVIT${year}FOUND"
+  }
+}
+
+# Revit detection: REVIT<year>FOUND comes from two Revit.exe file searches,
+# the uninstall entry's InstallLocation (64-bit registry, a directory) and
+# the default install folder.
+$appSearch = Query 'SELECT `Property`, `Signature_` FROM `AppSearch`' 2
+$sigFile = @{}
+foreach ($r in (Query 'SELECT `Signature`, `FileName` FROM `Signature`' 2)) { $sigFile[$r[0]] = ($r[1] -split '\|')[-1] }
+$drLoc = @{}
+foreach ($r in (Query 'SELECT `Signature_`, `Parent`, `Path`, `Depth` FROM `DrLocator`' 4)) {
+  $drLoc[$r[0]] = @{ Parent = $r[1]; Path = $r[2]; Depth = $r[3] }
+}
+$regLoc = @{}
+foreach ($r in (Query 'SELECT `Signature_`, `Root`, `Key`, `Name`, `Type` FROM `RegLocator`' 5)) {
+  $regLoc[$r[0]] = @{ Root = [int]$r[1]; Key = $r[2]; Name = $r[3]; Type = [int]$r[4] }
+}
+Write-Host 'Revit detection (AppSearch):'
+foreach ($year in $Years) {
+  $prop = "REVIT${year}FOUND"
+  $sigs = @($appSearch | Where-Object { $_[0] -eq $prop } | ForEach-Object { $_[1] })
+  $uninstallKey = 'SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\{7346B4A0-' + $year.Substring(2) + '00-0510-0000-705C0D862004}'
+  $defaultPath = "[ProgramFiles64Folder]Autodesk\Revit $year"
+  $viaRegistry = $false
+  $viaDefault = $false
+  foreach ($sig in $sigs) {
+    $dr = $drLoc[$sig]
+    if ($sigFile[$sig] -ne 'Revit.exe' -or $null -eq $dr -or "$($dr.Depth)" -notin @('', '0')) {
+      $problems += "$prop search $sig is not a Revit.exe file search at depth 0"
+      continue
+    }
+    $reg = if ($dr.Parent) { $regLoc[$dr.Parent] } else { $null }
+    if ($reg -and -not $dr.Path -and $reg.Root -eq 2 -and $reg.Key -eq $uninstallKey -and
+        $reg.Name -eq 'InstallLocation' -and $reg.Type -eq $LocatorTypeDirectory64) {
+      $viaRegistry = $true
+      Write-Host "  $prop <- Revit.exe in HKLM\$($reg.Key) InstallLocation (64-bit)"
+    } elseif (-not $dr.Parent -and $dr.Path -eq $defaultPath) {
+      $viaDefault = $true
+      Write-Host "  $prop <- Revit.exe in $($dr.Path)"
+    } else {
+      $problems += "$prop search $sig looks in an unexpected place (parent '$($dr.Parent)', path '$($dr.Path)')"
+    }
+  }
+  if ($sigs.Count -ne 2) { $problems += "$prop has $($sigs.Count) AppSearch rows, expected 2" }
+  if (-not $viaRegistry) { $problems += "$prop does not search the InstallLocation of $uninstallKey (64-bit)" }
+  if (-not $viaDefault) { $problems += "$prop does not search $defaultPath" }
+}
+
+# Launch condition: blocks a first install without any supported Revit,
+# never a repair or uninstall.
+$launch = Query 'SELECT `Condition`, `Description` FROM `LaunchCondition`' 2
+Write-Host "Launch conditions ($($launch.Count)):"
+$launch | ForEach-Object { Write-Host "  [$($_[0])] $($_[1])" }
+if ($launch.Count -ne 1 -or $launch[0][0] -ne $LaunchCondition -or $launch[0][1] -ne $LaunchMessage) {
+  $problems += "LaunchCondition table is not exactly [$LaunchCondition] '$LaunchMessage'"
+}
+
 # Folder cleanup on uninstall (RemoveFile rows with no file name = RemoveFolder).
 $removed = @(
   foreach ($r in (Query 'SELECT `DirProperty`, `FileName`, `InstallMode` FROM `RemoveFile`' 3)) {
@@ -160,7 +286,7 @@ $removed = @(
 ) | Sort-Object
 Write-Host "Folders removed on uninstall ($($removed.Count)):"
 $removed | ForEach-Object { Write-Host "  $_" }
-foreach ($year in '2026', '2027') {
+foreach ($year in $Years) {
   $base = "AppDataFolder\Autodesk\Revit\Addins\$year"
   foreach ($sub in @('GanttIt', 'GanttIt\Resources', 'GanttIt\Resources\icons') + ($Satellites | ForEach-Object { "GanttIt\$_" })) {
     if ($removed -notcontains "$base\$sub") { $problems += "uninstall does not remove $base\$sub" }
@@ -178,7 +304,7 @@ $p = Start-Process -FilePath 'msiexec.exe' -Wait -PassThru -ArgumentList @(
 if ($p.ExitCode -ne 0) {
   $problems += "administrative extract (msiexec /a) failed with exit code $($p.ExitCode); log: $log"
 } else {
-  foreach ($year in '2026', '2027') {
+  foreach ($year in $Years) {
     $dll = Get-ChildItem -Path $extract -Recurse -Filter 'GanttIt.Revit.dll' |
       Where-Object { $_.FullName -match "\\Addins\\$year\\GanttIt\\GanttIt\.Revit\.dll$" } |
       Select-Object -First 1
@@ -196,4 +322,4 @@ if ($problems.Count) {
   $problems | ForEach-Object { Write-Host "::error::$_" }
   exit 1
 }
-Write-Host 'MSI identity, layout, folder cleanup and version stamps OK.'
+Write-Host 'MSI identity, layout, folder cleanup, Revit detection and version stamps OK.'
