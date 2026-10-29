@@ -11,6 +11,8 @@
       GanttIt\
         GanttIt.Revit.dll, GanttIt.Core.dll, *.pdb, GanttIt.Revit.deps.json
         Resources\icons\gantt_16.png, gantt_32.png (+ _dark variants for Revit's dark theme)
+        fr\, es\, de\   GanttIt.Revit.resources.dll, GanttIt.Core.resources.dll
+                        (satellite assemblies: French, Spanish and German UI)
     %AppData%\Autodesk\Revit\Addins\2027\
       (same, built for net10.0-windows)
 
@@ -79,6 +81,9 @@
                 <Directory Id="Resources2026Dir" Name="Resources">
                   <Directory Id="Icons2026Dir" Name="icons" />
                 </Directory>
+                <Directory Id="Fr2026Dir" Name="fr" />
+                <Directory Id="Es2026Dir" Name="es" />
+                <Directory Id="De2026Dir" Name="de" />
               </Directory>
             </Directory>
             <Directory Id="Addins2027Dir" Name="2027">
@@ -86,6 +91,9 @@
                 <Directory Id="Resources2027Dir" Name="Resources">
                   <Directory Id="Icons2027Dir" Name="icons" />
                 </Directory>
+                <Directory Id="Fr2027Dir" Name="fr" />
+                <Directory Id="Es2027Dir" Name="es" />
+                <Directory Id="De2027Dir" Name="de" />
               </Directory>
             </Directory>
           </Directory>
@@ -103,14 +111,21 @@
       <Files Include="stage\2026\*.addin"                      Directory="Addins2026Dir" />
       <Files Include="stage\2026\GanttIt\*"                    Directory="GanttIt2026Dir" />
       <Files Include="stage\2026\GanttIt\Resources\icons\*"    Directory="Icons2026Dir" />
+      <Files Include="stage\2026\GanttIt\fr\*"                 Directory="Fr2026Dir" />
+      <Files Include="stage\2026\GanttIt\es\*"                 Directory="Es2026Dir" />
+      <Files Include="stage\2026\GanttIt\de\*"                 Directory="De2026Dir" />
       <Files Include="stage\2027\*.addin"                      Directory="Addins2027Dir" />
       <Files Include="stage\2027\GanttIt\*"                    Directory="GanttIt2027Dir" />
       <Files Include="stage\2027\GanttIt\Resources\icons\*"    Directory="Icons2027Dir" />
+      <Files Include="stage\2027\GanttIt\fr\*"                 Directory="Fr2027Dir" />
+      <Files Include="stage\2027\GanttIt\es\*"                 Directory="Es2027Dir" />
+      <Files Include="stage\2027\GanttIt\de\*"                 Directory="De2027Dir" />
 
       <!-- Folder cleanup on uninstall. Windows Installer only removes a
            folder it created when the RemoveFile table lists it, so each
            year gets a component that removes GanttIt\Resources\icons,
-           GanttIt\Resources and GanttIt (each only if empty). A per-user
+           GanttIt\Resources, the GanttIt\fr|es|de satellite folders and
+           GanttIt (each only if empty). A per-user
            component needs an HKCU registry KeyPath, hence the marker value.
            Addins\<year> is deliberately NOT removed: other add-ins live
            there, and Revit owns it. -->
@@ -119,6 +134,9 @@
                        Name="Installed" Type="integer" Value="1" KeyPath="yes" />
         <RemoveFolder Id="RemoveIcons2026"     Directory="Icons2026Dir"     On="uninstall" />
         <RemoveFolder Id="RemoveResources2026" Directory="Resources2026Dir" On="uninstall" />
+        <RemoveFolder Id="RemoveFr2026"        Directory="Fr2026Dir"        On="uninstall" />
+        <RemoveFolder Id="RemoveEs2026"        Directory="Es2026Dir"        On="uninstall" />
+        <RemoveFolder Id="RemoveDe2026"        Directory="De2026Dir"        On="uninstall" />
         <RemoveFolder Id="RemoveGanttIt2026"   Directory="GanttIt2026Dir"   On="uninstall" />
       </Component>
       <Component Id="Folders2027" Directory="GanttIt2027Dir">
@@ -126,6 +144,9 @@
                        Name="Installed" Type="integer" Value="1" KeyPath="yes" />
         <RemoveFolder Id="RemoveIcons2027"     Directory="Icons2027Dir"     On="uninstall" />
         <RemoveFolder Id="RemoveResources2027" Directory="Resources2027Dir" On="uninstall" />
+        <RemoveFolder Id="RemoveFr2027"        Directory="Fr2027Dir"        On="uninstall" />
+        <RemoveFolder Id="RemoveEs2027"        Directory="Es2027Dir"        On="uninstall" />
+        <RemoveFolder Id="RemoveDe2027"        Directory="De2027Dir"        On="uninstall" />
         <RemoveFolder Id="RemoveGanttIt2027"   Directory="GanttIt2027Dir"   On="uninstall" />
       </Component>
     </Feature>

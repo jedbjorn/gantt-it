@@ -10,7 +10,8 @@
 #
 #   installer/stage/<year>/GanttIt.addin
 #   installer/stage/<year>/GanttIt/GanttIt.Revit.dll, GanttIt.Core.dll, *.pdb,
-#                                  GanttIt.Revit.deps.json, Resources/icons/…
+#                                  GanttIt.Revit.deps.json, Resources/icons/…,
+#                                  fr/ es/ de/ (UI satellite assemblies)
 #
 # Product.wxs harvests installer/stage/2026/** and installer/stage/2027/**.
 # Run `dotnet build GanttIt.sln -c "Release R26"` (and R27) first. Works in Git
