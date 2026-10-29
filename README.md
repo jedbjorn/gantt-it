@@ -1,121 +1,69 @@
-# gantt-it
+# Gantt-It
 
-**Gantt-It** is a Revit add-in by Designs/OS that creates and edits Gantt
-charts inside a Revit model. Each chart is a native Legend view drawn with the
-project's own text styles, line styles and filled regions, so it can be placed
-on any number of sheets. The chart definition is stored in the model and can be
-reopened, edited, regenerated or deleted from the add-in. Supports Revit 2026
-and 2027.
+[![Latest release](https://img.shields.io/github/v/release/jedbjorn/gantt-it?include_prereleases)](https://github.com/jedbjorn/gantt-it/releases/latest)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+
+**Gantt-It** is a Revit add-in by Designs/OS that draws Gantt charts inside your Revit project, ready to place on your sheets.
+
+![A finished Gantt-It chart: a title, a table of eight sections with start and end dates and days, and coloured bars on a monthly timeline](docs/images/chart-months.png)
+
+## What it does
+
+- Draws each chart with your project's own text styles and line styles, and solid colour fills.
+- Each chart is a legend view, so you can place it on as many sheets as you like.
+- Edit a chart and update it at any time. The sheets it is on update with it.
+- Link sections together: change one date and the linked sections move with it.
+- Pick bar colours from a palette, by colour code, or straight from the screen.
+- Follows Revit's light or dark theme.
+- Speaks English, French, Spanish and German.
+- Works in Revit 2026 and Revit 2027.
 
 ## Install
 
-1. Download `GanttIt-<version>.msi` from the
-   [latest release](https://github.com/jedbjorn/gantt-it/releases/latest).
-2. Close every running Revit, then run the MSI. It installs for the current
-   Windows user only and needs no administrator rights. One installer covers
-   Revit 2026 and Revit 2027.
-3. Start Revit. Gantt-It is not code-signed in v1, so Revit asks whether to
-   load it: choose **Always Load**. The **Gantt-It** panel appears on the
-   **Add-Ins** tab.
+1. Download `GanttIt-<version>.msi` from the [latest release](https://github.com/jedbjorn/gantt-it/releases/latest).
+2. Close Revit, then run the file. One installer covers Revit 2026 and 2027. It installs for you only and needs no administrator rights.
+3. If Windows says "Windows protected your PC", choose **More info**, then **Run anyway**.
+4. Start Revit. Revit asks whether to load Gantt-It: choose **Always Load**.
 
-Because the MSI is unsigned too, Windows SmartScreen may warn when you run it
-("Windows protected your PC"): choose **More info**, then **Run anyway**.
+Gantt-It now appears on the **Add-Ins** tab.
 
-**Upgrade:** close every running Revit (it locks the add-in's files), then run
-the newer MSI; it replaces the installed version in place, keeping one entry
-in the apps list. Revit treats the upgraded add-in as new and shows its
-unsigned add-in prompt again on the next start: choose **Always Load** again.
+Windows and Revit ask these questions because Gantt-It is not digitally signed yet. That is expected.
 
-**Uninstall:** close Revit, then
+**Upgrade:** close Revit, then run the newer installer. It replaces the old version. Revit asks again whether to load Gantt-It on the next start: choose **Always Load** again.
 
-- Windows 11: **Settings › Apps › Installed apps**, find **Gantt-It**, open
-  its **⋯** menu and choose **Uninstall**;
-- Windows 10: **Settings › Apps › Apps & features**, select **Gantt-It** and
-  choose **Uninstall**.
+**Uninstall:** close Revit, then:
 
-Charts already generated stay in your models as ordinary legend views.
+- Windows 11: **Settings › Apps › Installed apps**, find **Gantt-It**, open its **⋯** menu and choose **Uninstall**.
+- Windows 10: **Settings › Apps › Apps & features**, select **Gantt-It** and choose **Uninstall**.
 
-The installer puts the add-in in the per-user Revit add-ins folders:
+Charts you already made stay in your projects as ordinary legend views.
 
-```text
-%AppData%\Autodesk\Revit\Addins\2026\GanttIt.addin
-%AppData%\Autodesk\Revit\Addins\2026\GanttIt\         add-in DLLs, PDBs, icons, fr\ es\ de\ UI resources
-%AppData%\Autodesk\Revit\Addins\2027\GanttIt.addin
-%AppData%\Autodesk\Revit\Addins\2027\GanttIt\
-```
+## Quick start
 
-Each release also carries `GanttIt-<version>-Revit2026.zip` and
-`GanttIt-<version>-Revit2027.zip` for a manual install: unzip into
-`%AppData%\Autodesk\Revit\Addins\<year>\`.
+1. Open a project and click **Add-Ins › Gantt-It**.
+2. Click **New chart**. The first time in a project, Gantt-It asks you to choose its text and line styles. Pick them and click **Save**.
 
-## Layout
+   ![The Gantt-It home screen with the New chart card and one chart card showing a small preview, its dates, Not placed, and Edit, Open view and Delete buttons](docs/images/home.png)
 
-```text
-src/
-  GanttIt.Core/          net8.0;net10.0 — model, scheduling rules, timescale,
-                         layout engine, geometry checks, JSON. No Revit, no WPF.
-  GanttIt.Revit/         the add-in (net8.0-windows for 2026, net10.0-windows for 2027)
-    App.cs               "Gantt-It" panel on the Add-Ins tab
-    Commands/            IExternalCommand entry points
-    Resources/icons/     gantt_32.png, gantt_16.png (generated by tools/make_icons.py)
-    Resources/Strings*.resx
-                         UI strings in English, French, Spanish, German (docs/TRANSLATIONS.md)
-    GanttIt.addin        manifest (VendorId DSOS)
-tests/
-  GanttIt.Core.Tests/    xUnit; runs on any OS
-installer/               per-user MSI (WiX 6): Product.wxs, GanttIt.Installer.wixproj,
-                         stage.sh, inspect-msi.ps1, branding/
-tools/
-  make_icons.py          regenerates the ribbon icons (Python + Pillow)
-  gen_strings.py         regenerates the typed *.g.cs string accessors from the .resx files
-  make_installer_branding.py
-                         regenerates installer/branding/ from the same glyph
-```
+3. Name the chart, then add your sections with **Add section**. Type each name, start and end date, or the number of days. Tick **Relates to previous** to keep a section tied to the one above.
 
-## Building
+   ![The chart editor: name, title and timescale at the top, then three sections with dates, days, link tick boxes and colour swatches](docs/images/editor.png)
 
-Configurations pick the Revit year, following rst-c's pattern:
+4. Click **Generate**. Gantt-It creates a legend view holding your chart.
+5. Open a sheet and drag the chart from **Legends** in the Project Browser onto it, as you would any legend.
 
-| Configuration | Revit | Target framework |
-|---|---|---|
-| `Debug R26`, `Release R26` | 2026 | `net8.0-windows` |
-| `Debug R27`, `Release R27` | 2027 | `net10.0-windows` |
+   ![A sheet with the Gantt-It chart placed on it next to the title block](docs/images/chart-on-sheet.png)
 
-```sh
-dotnet test tests/GanttIt.Core.Tests -c "Release R26"
-dotnet build GanttIt.sln -c "Debug R26"
-```
+To change the chart later, open Gantt-It again, click **Edit** on its card, make your changes and click **Update**.
 
-Both .NET 8 and .NET 10 SDKs are needed (Core and its tests target both). The
-Revit API comes from the reference-only `Nice3point.Revit.Api.*` packages, so
-everything builds without Revit installed, including on Linux.
+## Learn more
 
-## CI and releases
-
-`.github/workflows/build.yml` runs on every pull request and push to `main`,
-through the reusable `_build.yml`: the Core tests on net8.0 and net10.0, a
-build of all four configurations, and a Windows job that builds the MSI from
-`Release R26` + `Release R27` and uploads it as the `GanttIt-msi` artifact
-(the manual-install zips as `GanttIt-zips`). Every job is required. The `Debug R26` and `Debug R27` jobs upload the add-in
-as the `GanttIt-Debug-R26` / `GanttIt-Debug-R27` artifacts, laid out like an
-`Addins\<year>\` folder:
-
-```text
-GanttIt.addin
-GanttIt\GanttIt.Revit.dll, GanttIt.Core.dll, Resources\icons\…, fr\ es\ de\…
-```
-
-Releases are cut by pushing a `v*` tag: `.github/workflows/release.yml` builds
-the tagged commit and publishes the GitHub Release with the MSI attached. The
-version comes from the tag alone; see [docs/RELEASING.md](docs/RELEASING.md).
-
-## Dev deployment
-
-Copy the artifact's contents into `%AppData%\Autodesk\Revit\Addins\<year>\`.
-Revit locks loaded DLLs, so close Revit before redeploying. The add-in is
-unsigned for now, so Revit asks whether to load it on first launch.
+The [User guide](docs/USER-GUIDE.md) covers every screen and option, colours, languages, and what to do when something doesn't work.
 
 ## License
 
-Gantt-It is released under the [MIT License](LICENSE). Copyright (c) 2026
-Designs/OS.
+Gantt-It is released under the [MIT License](LICENSE). Copyright (c) 2026 Designs/OS.
+
+---
+
+For developers: building, testing, releases and translations are in [docs/DEVELOPING.md](docs/DEVELOPING.md).
