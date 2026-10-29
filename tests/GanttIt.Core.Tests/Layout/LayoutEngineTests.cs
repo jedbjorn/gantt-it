@@ -33,14 +33,16 @@ public class LayoutEngineTests
         return chart;
     }
 
-    private static List<string> TierLabels(ChartLayout layout, int tier)
+    private static List<PlacedText> TierTexts(ChartLayout layout, int tier)
     {
         var t = layout.Grid.Tiers[tier];
         return layout.Grid.Texts
             .Where(p => p.Cell.Top == t.Top && p.Cell.Bottom == t.Bottom && p.Cell.Left >= layout.Grid.TimelineLeft)
-            .Select(p => p.Request.Text)
             .ToList();
     }
+
+    private static List<string> TierLabels(ChartLayout layout, int tier) =>
+        TierTexts(layout, tier).Select(p => p.Request.Text).ToList();
 
     // ---- Columns ------------------------------------------------------------------
 
@@ -216,34 +218,177 @@ public class LayoutEngineTests
         Assert.Equal(["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"], labels);
     }
 
-    [Fact]
-    public void TimescaleLabels_ShortenJanToJ()
+    [Theory]
+    [InlineData(80, 2, new[] { "Jan", "Mar", "May", "Jul", "Sep", "Nov" })]
+    [InlineData(40, 3, new[] { "Jan", "Apr", "Jul", "Oct" })]
+    [InlineData(20, 6, new[] { "Jan", "Jul" })]
+    [InlineData(10, 12, new[] { "Jan" })]
+    public void MonthLabels_WhenJanDoesNotFit_ThinToEvery2nd3rd6th12th_NeverBelowThreeLetters(
+        double timelineMm, int step, string[] expected)
     {
-        var labels = TierLabels(Run(OneYear(80)), 1);
-        Assert.Equal(["J", "F", "M", "A", "M", "J", "J", "A", "S", "O", "N", "D"], labels);
-    }
-
-    [Fact]
-    public void TimescaleLabels_WhenEvenTheShortestDoesNotFit_LabelEverySecondTick()
-    {
-        var layout = Run(OneYear(40));
+        var layout = Run(OneYear(timelineMm));
         var tier = layout.Grid.Tiers[1];
 
-        Assert.Equal(2, tier.GroupSize);
-        Assert.Equal(["J", "M", "M", "J", "S", "N"], TierLabels(layout, 1));
-        Assert.Equal(5, tier.Dividers.Count);
-    }
-
-    [Fact]
-    public void TimescaleLabels_ThenEveryFourthTick()
-    {
-        var layout = Run(OneYear(20));
-        var tier = layout.Grid.Tiers[1];
-
-        Assert.Equal(4, tier.GroupSize);
-        Assert.Equal(["J", "M", "S"], TierLabels(layout, 1));
-        Assert.Equal(2, tier.Dividers.Count);
+        Assert.Equal(step, tier.GroupSize);
+        Assert.Equal(expected, TierLabels(layout, 1));
+        Assert.Equal(expected.Length - 1, tier.Dividers.Count);
+        Assert.All(layout.Grid.Texts, t => Assert.True(t.Request.Text.Length >= 3, t.Request.Text));
         Assert.True(GeometryChecker.Check(layout.Primitives, layout.Grid).IsClean);
+    }
+
+    [Fact]
+    public void MonthThinning_StaysOnQuarters_WhenTheAxisStartsMidQuarter()
+    {
+        // Feb 2026..Jan 2027 at 40 mm: every 3rd month, on Jan/Apr/Jul/Oct. The
+        // Feb–Mar and Jan edge groups can't hold "Feb"/"Jan" and join their neighbour.
+        var chart = Chart.Create("Year", Id(1));
+        chart.TimelineWidth = Mm(40);
+        chart.Sections.Add(Section(1, D(2026, 2, 1), D(2027, 1, 31)));
+
+        var layout = Run(chart);
+        var grid = layout.Grid;
+
+        Assert.Equal(3, grid.Tiers[1].GroupSize);
+        Assert.Equal(["Apr", "Jul", "Oct"], TierLabels(layout, 1));
+        Assert.Equal([grid.XOfDate(D(2026, 7, 1)), grid.XOfDate(D(2026, 10, 1))], grid.Tiers[1].Dividers);
+        Assert.Equal(grid.XOfDate(D(2026, 4, 1)), TierTexts(layout, 1)[0].Cell.Left);
+        Assert.True(GeometryChecker.Check(layout.Primitives, grid).IsClean);
+    }
+
+    // ---- Timescale labels: one format per tier, no blank edges ------------------------
+
+    [Fact]
+    public void Tier1Weeks_UseOneFormat_EdgeCellsThatCannotFitItJoinTheirNeighbour()
+    {
+        // Regression: Sat 31 Oct..Tue 24 Nov at 180 mm read
+        // "31 Oct | 2026-11-02 | 2026-11-09 | 2026-11-16 | 23 Nov": the 2-day edge
+        // weeks fell back to the short format. Now the whole tier is full dates.
+        var chart = Chart.Create("Weeks", Id(1));
+        chart.Sections.Add(Section(1, D(2026, 10, 31), D(2026, 11, 24)));
+
+        var layout = Run(chart);
+        var grid = layout.Grid;
+
+        Assert.Equal(new TierPair(TimeUnit.Week, TimeUnit.Day), grid.Axis!.Tiers);
+        Assert.Equal(["2026-11-02", "2026-11-09", "2026-11-16"], TierLabels(layout, 0));
+        Assert.Equal([grid.XOfDate(D(2026, 11, 9)), grid.XOfDate(D(2026, 11, 16))], grid.Tiers[0].Dividers);
+
+        // The first label still starts at its Monday; the last cell runs to the right border.
+        var texts = TierTexts(layout, 0);
+        Assert.Equal(grid.XOfDate(D(2026, 11, 2)), texts[0].Cell.Left);
+        Assert.Equal(grid.Width, texts[^1].Cell.Right);
+        Assert.True(GeometryChecker.Check(layout.Primitives, grid).IsClean);
+    }
+
+    [Fact]
+    public void Tier1Months_TheSliverBeforeTheFirstMonthJoinsIt_TheLabelStillStartsOnThe1st()
+    {
+        // The GI-Months chart: weekly ticks start Mon 28 Sep, so tier 1 began with
+        // a blank 3-day September cell. Jun (1–20) can't fit "Jun 2026" either.
+        var chart = Chart.Create("Months", Id(1));
+        chart.Timescale = Timescale.Weeks;
+        chart.Sections.Add(Section(1, D(2026, 10, 1), D(2027, 6, 19)));
+
+        var layout = Run(chart);
+        var grid = layout.Grid;
+
+        Assert.Equal(D(2026, 9, 28), grid.Axis!.Start);
+        Assert.Equal(
+            ["Oct 2026", "Nov 2026", "Dec 2026", "Jan 2027", "Feb 2027", "Mar 2027", "Apr 2027", "May 2027"],
+            TierLabels(layout, 0));
+        Assert.DoesNotContain(grid.XOfDate(D(2026, 10, 1)), grid.Tiers[0].Dividers);
+        Assert.DoesNotContain(grid.XOfDate(D(2027, 6, 1)), grid.Tiers[0].Dividers);
+        Assert.Equal(grid.XOfDate(D(2026, 11, 1)), grid.Tiers[0].Dividers[0]);
+        Assert.Equal(grid.XOfDate(D(2026, 10, 1)), TierTexts(layout, 0)[0].Cell.Left);
+        Assert.True(GeometryChecker.Check(layout.Primitives, grid).IsClean);
+    }
+
+    [Fact]
+    public void Tier2_TheShortRemainderGroupJoinsThePreviousGroup()
+    {
+        // The GI-Days chart (2..24 Nov, 23 days) thinned to every 2nd day: the
+        // lone 24th used to be a blank cell at the right edge.
+        var chart = Chart.Create("Days", Id(1));
+        chart.TimelineWidth = Mm(100);
+        chart.Sections.Add(Section(1, D(2026, 11, 2), D(2026, 11, 24)));
+
+        var layout = Run(chart);
+        var grid = layout.Grid;
+
+        Assert.Equal(2, grid.Tiers[1].GroupSize);
+        var labels = TierLabels(layout, 1);
+        Assert.Equal(11, labels.Count);
+        Assert.Equal("22", labels[^1]);
+        Assert.Equal(grid.Width, TierTexts(layout, 1)[^1].Cell.Right);
+        Assert.Equal(10, grid.Tiers[1].Dividers.Count);
+        Assert.True(GeometryChecker.Check(layout.Primitives, grid).IsClean);
+    }
+
+    public static TheoryData<Timescale, DateOnly, DateOnly> EdgeCases() => new()
+    {
+        // Days (tier 1 weeks, clipped at both ends)
+        { Timescale.Days, D(2026, 10, 29), D(2026, 11, 26) },   // the editor preview
+        { Timescale.Days, D(2026, 11, 2), D(2026, 11, 24) },    // GI-Days
+        { Timescale.Days, D(2026, 11, 1), D(2026, 11, 30) },    // Sunday start, Monday end: 1-day edge weeks
+        { Timescale.Days, D(2026, 3, 4), D(2026, 3, 10) },
+        // Weeks (tier 1 months, clipped by whole-week padding)
+        { Timescale.Weeks, D(2026, 10, 1), D(2027, 6, 19) },    // GI-Months
+        { Timescale.Weeks, D(2026, 1, 30), D(2026, 8, 3) },
+        { Timescale.Weeks, D(2026, 3, 31), D(2026, 5, 1) },
+        // Months (tier 1 years)
+        { Timescale.Months, D(2026, 3, 2), D(2029, 7, 27) },    // GI-Multi-year
+        { Timescale.Months, D(2026, 12, 1), D(2027, 1, 31) },   // 1-month edge years
+        { Timescale.Months, D(2026, 11, 15), D(2028, 2, 10) },
+        // Quarters (tier 1 years)
+        { Timescale.Quarters, D(2020, 10, 1), D(2029, 3, 31) },
+        { Timescale.Quarters, D(2026, 12, 1), D(2031, 1, 15) },
+        { Timescale.Quarters, D(2001, 1, 1), D(2045, 12, 31) },
+        // Multi-year under Auto: Years/Months, then Years/Quarters
+        { Timescale.Auto, D(2026, 3, 2), D(2029, 7, 27) },
+        { Timescale.Auto, D(2024, 11, 1), D(2034, 2, 1) },
+    };
+
+    [Theory]
+    [MemberData(nameof(EdgeCases))]
+    public void EveryTierCell_IncludingBothEdges_IsLabelled_InOneFormatPerTier(Timescale timescale, DateOnly first, DateOnly last)
+    {
+        foreach (var timelineMm in new[] { 60.0, 120, 180, 300 })
+        {
+            var chart = Chart.Create("Edges", Id(1));
+            chart.Timescale = timescale;
+            chart.TimelineWidth = Mm(timelineMm);
+            chart.Sections.Add(Section(1, first, last));
+            var layout = Run(chart);
+            var grid = layout.Grid;
+            var cells = LayoutEngine.BuildCells(chart, Settings());
+            var at = $"{timescale} {first}..{last} at {timelineMm} mm";
+
+            for (var t = 0; t < 2; t++)
+            {
+                // One label per tier cell: the cells run between the dividers, edge to edge.
+                var edges = grid.Tiers[t].Dividers.Prepend(grid.TimelineLeft).Append(grid.Width).ToList();
+                var texts = TierTexts(layout, t);
+                Assert.True(texts.Count == edges.Count - 1, $"{at}: tier {t + 1} has {edges.Count - 1} cells, {texts.Count} labels");
+                for (var i = 0; i < texts.Count; i++)
+                {
+                    Assert.True(texts[i].Cell.Left >= edges[i] && texts[i].Cell.Right == edges[i + 1], $"{at}: tier {t + 1} cell {i}");
+                    Assert.True(texts[i].Size.Width + 2 * Pad <= texts[i].Cell.Width + Eps, $"{at}: '{texts[i].Request.Text}' overflows");
+                }
+
+                // One format: some candidate index names every placed label.
+                var tier = cells.Tiers[t];
+                var formats = Enumerable.Range(0, tier.Candidates.Max(c => c.Count)).ToHashSet();
+                foreach (var text in texts)
+                {
+                    var cell = Enumerable.Range(0, tier.Cells.Count).Single(i => grid.XOfDate(tier.Cells[i].Start) == text.Cell.Left);
+                    formats.RemoveWhere(f => tier.Candidates[cell][Math.Min(f, tier.Candidates[cell].Count - 1)] != text.Request);
+                }
+                Assert.True(formats.Count > 0, $"{at}: tier {t + 1} mixes formats: {string.Join(" | ", texts.Select(x => x.Request.Text))}");
+            }
+
+            var report = GeometryChecker.Check(layout.Primitives, grid);
+            Assert.True(report.IsClean, $"{at}: {report}");
+        }
     }
 
     [Fact]

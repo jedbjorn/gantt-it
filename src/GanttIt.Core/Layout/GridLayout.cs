@@ -7,8 +7,9 @@ public sealed record PlacedText(TextRequest Request, TextSize Size, Box Cell, Te
 
 /// <summary>
 /// One solved timescale tier. Neighbouring tick cells may be merged into
-/// groups of <see cref="GroupSize"/> when their labels don't fit (§6.2);
-/// <see cref="Dividers"/> are the x values between groups, where a line is drawn.
+/// groups of <see cref="GroupSize"/> when their labels don't fit (§6.2); a
+/// group at either end may be shorter, or longer where an unlabelled edge
+/// joined it. <see cref="Dividers"/> are the x values between groups, where a line is drawn.
 /// </summary>
 public sealed record TierLayout(
     TimeUnit Unit,
