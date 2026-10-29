@@ -108,12 +108,22 @@ internal sealed class ChartViewExit
     {
         if (_uidoc is null || (!_switched && !_closedWindows)) return null;
         var doc = _uidoc.Document;
-        var ok = doc.GetElement(_chartId) is View chart && TryActivate(chart);
-        if (_originalActiveId is not null && _originalActiveId != _chartId && doc.GetElement(_originalActiveId) is View original)
-            ok = TryActivate(original) && ok;
+        var chartBack = doc.GetElement(_chartId) is View chart && TryActivate(chart);
+        var wasOnChart = _originalActiveId is null || _originalActiveId == _chartId;
+        var originalBack = wasOnChart
+                           || (doc.GetElement(_originalActiveId!) is View original && TryActivate(original));
         _switched = false;
         _closedWindows = false;
-        return ok ? null : "Revit did not switch back to the view you were on; open it again from the Project Browser.";
+
+        if (wasOnChart)
+            return chartBack ? null : "Revit did not switch back to the chart's view you were on; open it again from the Project Browser.";
+        return (chartBack, originalBack) switch
+        {
+            (true, true) => null,
+            (false, true) => "You are back on your view, but the chart's view, closed for the retry, could not be reopened; open it from the Project Browser.",
+            (true, false) => "The chart's view was reopened, but Revit did not switch back to the view you were on.",
+            _ => "Revit did not switch back to the view you were on, and the chart's view, closed for the retry, could not be reopened.",
+        };
     }
 
     private bool TryActivate(View? view)

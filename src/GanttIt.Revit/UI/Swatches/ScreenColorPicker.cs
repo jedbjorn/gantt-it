@@ -352,7 +352,7 @@ internal sealed class ScreenColorPicker
             {
                 if (input is MouseButtonEventArgs || input is KeyEventArgs { IsDown: true }) e.Cancel();
             }
-            else if (heldKey is { } k && input is KeyEventArgs { IsDown: true } key && key.Key == k)
+            else if (heldKey is { } k && input is KeyEventArgs { IsDown: true } key && (key.Key == Key.System ? key.SystemKey : key.Key) == k)
             {
                 e.Cancel();
             }
