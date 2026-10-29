@@ -170,15 +170,22 @@ internal sealed partial class SelfTestRunner
         var sheets = new FilteredElementCollector(_doc).OfClass(typeof(ViewSheet)).Cast<ViewSheet>()
             .Where(s => s.Name == SheetName).Select(s => s.Id).ToList();
         if (sheets.Count > 0) SelfTestTx("remove sheets", () => _doc.Delete(sheets));
-        // The fill-type purge probes (a drafting view and its group types) of an aborted run.
+        // What an aborted fill-type purge check left: its drafting view, group types, and
+        // a Filled Region default still pointing at a probe type.
         var probes = 0;
-        SelfTestTx("remove fill-type purge probes", () => probes = RemovePurgeProbes());
+        var defaultRestored = false;
+        SelfTestTx("remove fill-type purge probes", () =>
+        {
+            defaultRestored = RestoreDefaultFillType(null);
+            probes = RemovePurgeProbes();
+        });
         _r.Section("cleanup", new JsonObject
         {
             ["charts"] = removed,
             ["detachedLegends"] = leftovers.Count,
             ["sheets"] = sheets.Count,
             ["purgeProbes"] = probes,
+            ["purgeDefaultRestored"] = defaultRestored,
         });
     }
 

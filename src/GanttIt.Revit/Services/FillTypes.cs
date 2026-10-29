@@ -114,11 +114,14 @@ internal sealed class FillTypes
     /// (<see cref="Element.GetDependentElements"/>), which also covers references the
     /// collector can't see, such as the members of a group type with no placed
     /// instance;</item>
-    /// <item>it is the default type of Revit's Filled Region tool (the user chose it);</item>
     /// <item>another user owns it, or it is out of date with central, in a workshared
     /// model (editing it would fail the whole action);</item>
-    /// <item>it is the model's last filled region type.</item>
+    /// <item>it is the model's last filled region type;</item>
+    /// <item>checking or deleting it throws: each type is tried in its own
+    /// sub-transaction, so one refusal keeps that type and never fails the action.</item>
     /// </list>
+    /// Being the Filled Region tool's default type is not a use: Revit allows deleting
+    /// the default type (the Self-Test records what the default becomes).
     /// </summary>
     public static FillPurge DeleteUnused(Document doc)
     {
@@ -127,7 +130,6 @@ internal sealed class FillTypes
             .Select(e => e.GetTypeId())
             .ToHashSet();
         var all = new FilteredElementCollector(doc).OfClass(typeof(FilledRegionType)).Cast<FilledRegionType>().ToList();
-        var defaultId = doc.GetDefaultElementTypeId(ElementTypeGroup.FilledRegionType);
         var remaining = all.Count;
         var purge = new FillPurge();
         foreach (var type in all)
@@ -135,15 +137,26 @@ internal sealed class FillTypes
             var name = type.Name;
             if (!IsGanttItName(name) || used.Contains(type.Id)) continue;
 
-            var reason = KeepReason(doc, type, defaultId, remaining);
-            if (reason is not null)
+            using var sub = new SubTransaction(doc);
+            try
             {
-                purge.Kept.Add((name, reason));
-                continue;
+                var reason = KeepReason(doc, type, remaining);
+                if (reason is not null)
+                {
+                    purge.Kept.Add((name, reason));
+                    continue;
+                }
+                sub.Start();
+                doc.Delete(type.Id);
+                sub.Commit();
+                remaining--;
+                purge.Deleted.Add(name);
             }
-            doc.Delete(type.Id);
-            remaining--;
-            purge.Deleted.Add(name);
+            catch (Exception ex)
+            {
+                if (sub.HasStarted() && !sub.HasEnded()) sub.RollBack();
+                purge.Kept.Add((name, $"Revit refused: {ex.Message}"));
+            }
         }
 #if DEBUG
         LastPurge = purge;
@@ -152,17 +165,24 @@ internal sealed class FillTypes
     }
 
     /// <summary>Why an unused Gantt-It type must stay, or null when it can be deleted.</summary>
-    private static string? KeepReason(Document doc, FilledRegionType type, ElementId defaultId, int remaining)
+    private static string? KeepReason(Document doc, FilledRegionType type, int remaining)
     {
         if (remaining <= 1) return "the model's last filled region type";
-        if (type.Id == defaultId) return "the default type of the Filled Region tool";
         if (Worksharing.OwnedByOther(doc, type.Id, out var owner)) return $"owned by {(owner.Length > 0 ? owner : "another user")}";
         if (Worksharing.OutOfDate(doc, type.Id)) return "out of date with central";
         var dependents = type.GetDependentElements(null).Where(id => id != type.Id).ToList();
         if (dependents.Count > 0)
-            return $"deleting it would also delete {dependents.Count} element{(dependents.Count == 1 ? "" : "s")} "
-                   + $"({string.Join(", ", dependents.Take(5).Select(id => id.Value))})";
+            return $"deleting it would also delete {dependents.Count} element{(dependents.Count == 1 ? "" : "s")}: "
+                   + string.Join(", ", dependents.Take(5).Select(id => Describe(doc, id)))
+                   + (dependents.Count > 5 ? ", …" : "");
         return null;
+    }
+
+    /// <summary>An element's id, class and category, for a kept type's reason (VM diagnosis).</summary>
+    private static string Describe(Document doc, ElementId id)
+    {
+        var e = doc.GetElement(id);
+        return e is null ? $"{id.Value} (not found)" : $"{id.Value} {e.GetType().Name}/{e.Category?.Name ?? "no category"}";
     }
 
 #if DEBUG

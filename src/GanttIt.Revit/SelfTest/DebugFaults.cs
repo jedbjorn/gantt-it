@@ -11,9 +11,17 @@ internal static class DebugFaults
     /// <summary>In <c>ChartGenerator.Draw</c>, after the bars and lines are drawn and before the text is placed.</summary>
     public const string MidGenerate = "mid-generate";
 
+    /// <summary>
+    /// In <c>GanttItTransaction</c>, after the fill-type purge deleted at least one type
+    /// and before the commit: stands in for a commit the purge made fail.
+    /// </summary>
+    public const string AfterPurge = "after-purge";
+
     private static string? _armed;
 
     public static void Arm(string point) => _armed = point;
+
+    public static bool IsArmed(string point) => string.Equals(_armed, point, StringComparison.Ordinal);
 
     public static void Disarm() => _armed = null;
 
