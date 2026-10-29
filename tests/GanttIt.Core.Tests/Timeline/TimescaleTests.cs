@@ -1,3 +1,4 @@
+using GanttIt.Core.Dates;
 using GanttIt.Core.Model;
 using GanttIt.Core.Timeline;
 using static GanttIt.Core.Tests.Support.TestCharts;
@@ -166,16 +167,34 @@ public class TimescaleTests
     }
 
     [Fact]
-    public void ThinningBlocks_AreTheFullKUnitPeriod_ClampedToTheCalendar()
+    public void Tier1WeekLabels_WithAPatternThatNamesNoMonth_FallBackToDayAndMonth()
     {
-        var axisStart = D(2026, 10, 29); // a Thursday
-        Assert.Equal((D(2026, 11, 1), D(2026, 12, 31)), TimescaleLabels.ThinningBlock(TimeUnit.Month, D(2026, 12, 1), 2, axisStart));
-        Assert.Equal((D(2026, 7, 1), D(2026, 12, 31)), TimescaleLabels.ThinningBlock(TimeUnit.Quarter, D(2026, 10, 1), 2, axisStart));
-        Assert.Equal((D(2024, 1, 1), D(2027, 12, 31)), TimescaleLabels.ThinningBlock(TimeUnit.Year, D(2026, 1, 1), 4, axisStart));
-        Assert.Equal((D(2026, 10, 31), D(2026, 11, 1)), TimescaleLabels.ThinningBlock(TimeUnit.Day, D(2026, 11, 1), 2, axisStart));
-        Assert.Equal((D(2026, 10, 26), D(2026, 11, 1)), TimescaleLabels.ThinningBlock(TimeUnit.Week, axisStart, 1, axisStart));
-        Assert.Equal((DateOnly.MinValue, D(4095, 12, 31)), TimescaleLabels.ThinningBlock(TimeUnit.Year, D(2040, 1, 1), 4096, axisStart));
-        Assert.Equal(DateOnly.MaxValue, TimescaleLabels.ThinningBlock(TimeUnit.Year, D(9000, 1, 1), 8192, axisStart).End);
+        Assert.Equal(["2 Nov"], TimescaleLabels.Candidates(TimeUnit.Week, true, D(2026, 11, 2), "dd"));
+        Assert.Equal(["2 Nov"], TimescaleLabels.Candidates(TimeUnit.Week, true, D(2026, 11, 2), "ddd d"));
+        Assert.Equal(["2 Nov"], TimescaleLabels.Candidates(TimeUnit.Week, true, D(2026, 11, 2), "yyyy"));
+        Assert.Equal(["2/11", "2 Nov"], TimescaleLabels.Candidates(TimeUnit.Week, true, D(2026, 11, 2), "d/M"));
+        Assert.Equal(["02 November", "2 Nov"], TimescaleLabels.Candidates(TimeUnit.Week, true, D(2026, 11, 2), "dd MMMM"));
+        foreach (var pattern in DateFormats.Presets)
+            Assert.Equal(2, TimescaleLabels.Candidates(TimeUnit.Week, true, D(2026, 11, 2), pattern).Count);
+    }
+
+    [Fact]
+    public void SpanLength_CountsDaysForDaysAndWeeks_MonthsAbove()
+    {
+        // Every quarter is 3 months whatever its day count (Q1 90 days, Q4 92).
+        Assert.Equal(3, TimescaleLabels.SpanLength(TimeUnit.Year, D(2026, 1, 1), D(2026, 4, 1)));
+        Assert.Equal(3, TimescaleLabels.SpanLength(TimeUnit.Year, D(2026, 10, 1), D(2027, 1, 1)));
+        Assert.Equal(3, TimescaleLabels.SpanLength(TimeUnit.Quarter, D(2026, 10, 1), D(2027, 1, 1)));
+        Assert.Equal(12, TimescaleLabels.UnitLength(TimeUnit.Year));
+        Assert.Equal(3, TimescaleLabels.UnitLength(TimeUnit.Quarter));
+
+        // A month cut short counts the share of its days: 28–30 Sep is 3/30 of a month.
+        Assert.Equal(0.1, TimescaleLabels.SpanLength(TimeUnit.Month, D(2026, 9, 28), D(2026, 10, 1)), 9);
+        Assert.Equal(20.0 / 30, TimescaleLabels.SpanLength(TimeUnit.Month, D(2027, 6, 1), D(2027, 6, 21)), 9);
+
+        Assert.Equal(2, TimescaleLabels.SpanLength(TimeUnit.Week, D(2026, 10, 31), D(2026, 11, 2)));
+        Assert.Equal(7, TimescaleLabels.UnitLength(TimeUnit.Week));
+        Assert.Equal(1, TimescaleLabels.SpanLength(TimeUnit.Day, D(2026, 11, 24), D(2026, 11, 25)));
     }
 
     [Fact]
