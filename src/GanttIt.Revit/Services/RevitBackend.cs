@@ -166,7 +166,42 @@ public sealed class RevitBackend : IGanttItBackend
 
     public ActionResult Update(ElementId viewId, Chart chart, ProjectSettings settings) => Generator.Update(viewId, chart, settings);
 
-    public ActionResult Delete(ElementId viewId) => Generator.Delete(viewId);
+    public ActionResult Delete(ElementId viewId) => Generator.Delete(viewId, () => LeaveView(viewId));
+
+    /// <summary>
+    /// Revit can't delete the active view ("ElementId cannot be deleted"), which is
+    /// exactly what a chart is after "Open view". Activate another open view (or, if
+    /// none, any other viewable view) and close the chart's own tab first. Returns a
+    /// message when no other view can be activated.
+    /// </summary>
+    private string? LeaveView(ElementId viewId)
+    {
+        var uidoc = _uiapp.ActiveUIDocument;
+        if (uidoc is null) return null;
+        try
+        {
+            if (uidoc.ActiveView?.Id == viewId)
+            {
+                var doc = uidoc.Document;
+                var target = uidoc.GetOpenUIViews().Where(v => v.ViewId != viewId)
+                                 .Select(v => doc.GetElement(v.ViewId) as View)
+                                 .FirstOrDefault(v => v is not null)
+                             ?? new FilteredElementCollector(doc).OfClass(typeof(View)).Cast<View>()
+                                 .Where(v => v.Id != viewId && !v.IsTemplate && v.CanBePrinted)
+                                 .OrderBy(v => v.ViewType == ViewType.Legend ? 1 : 0)
+                                 .ThenBy(v => v.Id.Value)
+                                 .FirstOrDefault();
+                if (target is null) return "The chart is the active view and there is no other view to switch to. Open another view, then delete the chart.";
+                uidoc.ActiveView = target;
+            }
+            uidoc.GetOpenUIViews().FirstOrDefault(v => v.ViewId == viewId)?.Close();
+            return null;
+        }
+        catch (Exception ex)
+        {
+            return $"The chart's view is open and Gantt-It couldn't switch away from it ({ex.Message}). Open another view, then delete the chart.";
+        }
+    }
 
     public ActionResult RegenerateAll(ProjectSettings settings) => Generator.RegenerateAll(settings);
 }
