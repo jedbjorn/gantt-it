@@ -48,9 +48,33 @@
     <Company>Designs/OS</Company>
     <Authors>jedbjorn</Authors>
     <Copyright>© 2026 Designs/OS</Copyright>
-    <Version>0.1.0-alpha</Version>
     <RepositoryUrl>https://github.com/jedbjorn/gantt-it</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
+  </PropertyGroup>
+
+  <!--
+    Version — the single source is the release tag (docs/RELEASING.md).
+
+    The release pipeline passes -p:GanttItVersion=<tag without the v>, e.g.
+    1.0.0 or 1.0.0-rc.1; push/PR builds pass it EMPTY and local builds omit
+    it. A command-line property is a global MSBuild property and cannot be
+    reassigned here, so an empty GanttItVersion is never "fixed up" in place:
+    Version (not global) is derived from it instead, falling back to the dev
+    version below. Nothing is bumped by hand.
+
+    Version feeds AssemblyVersion/FileVersion (numeric part) and
+    InformationalVersion, which the add-in stamps as AppVersion into every
+    chart's Extensible Storage entity (RevitUtil.AppVersion). Release builds
+    stamp exactly the tag version; dev builds keep the SDK's "+<commit>"
+    suffix so a dev chart can be traced to its source.
+
+    The MSI's numeric ProductVersion comes from the same property
+    (installer/GanttIt.Installer.wixproj).
+  -->
+  <PropertyGroup>
+    <Version>0.0.0-dev</Version>
+    <Version Condition="'$(GanttItVersion)' != ''">$(GanttItVersion)</Version>
+    <IncludeSourceRevisionInInformationalVersion Condition="'$(GanttItVersion)' != ''">false</IncludeSourceRevisionInInformationalVersion>
   </PropertyGroup>
 
   <PropertyGroup>
@@ -59,8 +83,10 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <NoWarn>$(NoWarn);1591</NoWarn>
-    <DebugType>portable</DebugType>
-    <DebugSymbols>true</DebugSymbols>
+    <!-- WiX (.wixproj) only accepts 'full' or 'none' for -pdbType, so the
+         portable PDB settings apply to managed projects only (as in rst-c). -->
+    <DebugType Condition="'$(MSBuildProjectExtension)' != '.wixproj'">portable</DebugType>
+    <DebugSymbols Condition="'$(MSBuildProjectExtension)' != '.wixproj'">true</DebugSymbols>
     <Deterministic>true</Deterministic>
   </PropertyGroup>
 
