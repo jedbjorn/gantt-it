@@ -65,6 +65,7 @@
                 <ColumnDefinition Width="Auto" />
                 <ColumnDefinition Width="*" />
                 <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
             </Grid.ColumnDefinitions>
             <Border Width="26" Height="26" CornerRadius="3" BorderBrush="#33000000" BorderThickness="1"
                     Background="{Binding CurrentBrush}" Margin="0,0,6,0" ToolTip="Current color" />
@@ -78,6 +79,13 @@
             </TextBox>
             <Button Grid.Column="2" Content="Apply" Margin="6,0,0,0" Command="{Binding ApplyHexCommand}"
                     AutomationProperties.AutomationId="ColorPicker.ApplyHex" />
+            <!-- Eyedropper: any color visible on screen, e.g. one already used on the plans -->
+            <Button Grid.Column="3" Margin="6,0,0,0" Padding="6,2" Command="{Binding PickFromScreenCommand}"
+                    Visibility="{Binding CanPickFromScreen, Converter={StaticResource BoolToVisible}}"
+                    ToolTip="Pick from screen: click any pixel on any monitor (Esc cancels). Picks the color as displayed."
+                    AutomationProperties.AutomationId="ColorPicker.PickFromScreen" AutomationProperties.Name="Pick from screen">
+                <TextBlock Text="&#xEF3C;" FontFamily="{StaticResource IconFont}" FontSize="14" />
+            </Button>
         </Grid>
         <TextBlock Text="{Binding HexError}" Style="{StaticResource ErrorText}" Margin="0,4,0,0" MaxWidth="192"
                    HorizontalAlignment="Left"

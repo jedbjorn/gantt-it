@@ -13,7 +13,7 @@ public partial class ColorPickerDialog : Window
     public ColorPickerDialog(Rgb current, IReadOnlyList<Rgb> palette, Point? anchor, Rect workArea)
     {
         InitializeComponent();
-        var model = new ColorPickerViewModel(current, palette, GanttItSession.RecentColors, MoreColors);
+        var model = new ColorPickerViewModel(current, palette, GanttItSession.RecentColors, MoreColors, PickFromScreen);
         model.Picked += color =>
         {
             Result = color;
@@ -37,4 +37,7 @@ public partial class ColorPickerDialog : Window
     public Rgb? Result { get; private set; }
 
     private Rgb? MoreColors(Rgb current) => NativeColorDialog.Show(new WindowInteropHelper(this).Handle, current);
+
+    /// <summary>The eyedropper: hides this picker and the Gantt-It window while the user picks a pixel.</summary>
+    private Rgb? PickFromScreen() => ScreenColorPicker.Pick(this);
 }
