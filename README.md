@@ -7,6 +7,38 @@ on any number of sheets. The chart definition is stored in the model and can be
 reopened, edited, regenerated or deleted from the add-in. Supports Revit 2026
 and 2027.
 
+## Install
+
+1. Download `GanttIt-<version>.msi` from the
+   [latest release](https://github.com/jedbjorn/gantt-it/releases/latest).
+2. Close Revit, then run the MSI. It installs for the current Windows user
+   only and needs no administrator rights. One installer covers Revit 2026 and
+   Revit 2027.
+3. Start Revit. Gantt-It is not code-signed in v1, so Revit asks whether to
+   load it: choose **Always Load**. The **Gantt-It** panel appears on the
+   **Add-Ins** tab.
+
+Because the MSI is unsigned too, Windows SmartScreen may warn when you run it
+("Windows protected your PC"): choose **More info**, then **Run anyway**.
+
+To upgrade, close Revit and run a newer MSI; it replaces the installed version
+in place. To uninstall, use **Settings › Apps › Installed apps › Gantt-It ›
+Uninstall**. Charts already generated stay in your models as ordinary legend
+views.
+
+The installer puts the add-in in the per-user Revit add-ins folders:
+
+```text
+%AppData%\Autodesk\Revit\Addins\2026\GanttIt.addin
+%AppData%\Autodesk\Revit\Addins\2026\GanttIt\         add-in DLLs and icons
+%AppData%\Autodesk\Revit\Addins\2027\GanttIt.addin
+%AppData%\Autodesk\Revit\Addins\2027\GanttIt\
+```
+
+Each release also carries `GanttIt-<version>-Revit2026.zip` and
+`GanttIt-<version>-Revit2027.zip` for a manual install: unzip into
+`%AppData%\Autodesk\Revit\Addins\<year>\`.
+
 ## Layout
 
 ```text
@@ -20,8 +52,12 @@ src/
     GanttIt.addin        manifest (VendorId DSOS)
 tests/
   GanttIt.Core.Tests/    xUnit; runs on any OS
+installer/               per-user MSI (WiX 6): Product.wxs, GanttIt.Installer.wixproj,
+                         stage.sh, inspect-msi.ps1, branding/
 tools/
   make_icons.py          regenerates the ribbon icons (Python + Pillow)
+  make_installer_branding.py
+                         regenerates installer/branding/ from the same glyph
 ```
 
 ## Building
@@ -42,11 +78,13 @@ Both .NET 8 and .NET 10 SDKs are needed (Core and its tests target both). The
 Revit API comes from the reference-only `Nice3point.Revit.Api.*` packages, so
 everything builds without Revit installed, including on Linux.
 
-## CI
+## CI and releases
 
-`.github/workflows/build.yml` runs on every pull request and push to `main`:
-the Core tests on net8.0 and net10.0, then a build of all four configurations.
-Every job is required. The `Debug R26` and `Debug R27` jobs upload the add-in
+`.github/workflows/build.yml` runs on every pull request and push to `main`,
+through the reusable `_build.yml`: the Core tests on net8.0 and net10.0, a
+build of all four configurations, and a Windows job that builds the MSI from
+`Release R26` + `Release R27` and uploads it as the `GanttIt-msi` artifact
+(the manual-install zips as `GanttIt-zips`). Every job is required. The `Debug R26` and `Debug R27` jobs upload the add-in
 as the `GanttIt-Debug-R26` / `GanttIt-Debug-R27` artifacts, laid out like an
 `Addins\<year>\` folder:
 
@@ -54,6 +92,10 @@ as the `GanttIt-Debug-R26` / `GanttIt-Debug-R27` artifacts, laid out like an
 GanttIt.addin
 GanttIt\GanttIt.Revit.dll, GanttIt.Core.dll, Resources\icons\…
 ```
+
+Releases are cut by pushing a `v*` tag: `.github/workflows/release.yml` builds
+the tagged commit and publishes the GitHub Release with the MSI attached. The
+version comes from the tag alone; see [docs/RELEASING.md](docs/RELEASING.md).
 
 ## Dev deployment
 
