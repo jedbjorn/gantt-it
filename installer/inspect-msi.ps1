@@ -31,8 +31,9 @@
     - REVIT<year>FOUND is set by AppSearch from exactly two Revit.exe
       searches: in the InstallLocation of the Revit <year> uninstall entry
       (64-bit HKLM) and in [ProgramFiles64Folder]Autodesk\Revit <year>;
-    - the LaunchCondition table holds exactly the "none was found" check,
-      which lets an installed product (repair, uninstall) through;
+    - the LaunchCondition table holds the "none was found" check, which
+      lets an installed product (repair, uninstall) through, and nothing
+      else but MajorUpgrade's downgrade check;
     - the package is x64 (64-bit registry search; ICE80);
     - each year's GanttIt.Revit.dll has ProductVersion (the assembly's
       InformationalVersion, which the add-in stamps as AppVersion) equal to
@@ -270,12 +271,19 @@ foreach ($year in $Years) {
 }
 
 # Launch condition: blocks a first install without any supported Revit,
-# never a repair or uninstall.
+# never a repair or uninstall. MajorUpgrade adds its own downgrade check
+# (NOT WIX_DOWNGRADE_DETECTED); nothing else may be there.
 $launch = Query 'SELECT `Condition`, `Description` FROM `LaunchCondition`' 2
 Write-Host "Launch conditions ($($launch.Count)):"
 $launch | ForEach-Object { Write-Host "  [$($_[0])] $($_[1])" }
-if ($launch.Count -ne 1 -or $launch[0][0] -ne $LaunchCondition -or $launch[0][1] -ne $LaunchMessage) {
-  $problems += "LaunchCondition table is not exactly [$LaunchCondition] '$LaunchMessage'"
+$revitLaunch = @($launch | Where-Object { $_[0] -eq $LaunchCondition -and $_[1] -eq $LaunchMessage })
+if ($revitLaunch.Count -ne 1) {
+  $problems += "LaunchCondition table has no [$LaunchCondition] '$LaunchMessage'"
+}
+foreach ($r in $launch) {
+  if ($r[0] -ne $LaunchCondition -and $r[0] -ne 'NOT WIX_DOWNGRADE_DETECTED') {
+    $problems += "unexpected launch condition [$($r[0])] '$($r[1])'"
+  }
 }
 
 # Folder cleanup on uninstall (RemoveFile rows with no file name = RemoveFolder).

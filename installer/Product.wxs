@@ -132,7 +132,8 @@
 
     <!-- Per-user directory layout under %AppData% (Roaming). No admin
          elevation is needed to install. Every folder the MSI creates is
-         declared here, so the folder-cleanup components below can name it. -->
+         declared, here and per Revit year below, so the folder-cleanup
+         components can name it. -->
     <StandardDirectory Id="AppDataFolder">
       <Directory Id="AutodeskFolder" Name="Autodesk">
         <Directory Id="RevitFolder" Name="Revit">
