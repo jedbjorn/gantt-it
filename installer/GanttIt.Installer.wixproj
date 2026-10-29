@@ -61,12 +61,14 @@
                    (GanttIt\, Resources\, icons\ per year). It deliberately
                    does not list Autodesk\Revit\Addins\<year>\ and its
                    parents: Revit owns them and other add-ins live there,
-                   so ICE64 still fires for those four directories.
+                   so ICE64 still fires for exactly those five (Autodesk,
+                   Revit, Addins, 2026, 2027; verified in CI with ICE64
+                   unsuppressed) and stays suppressed.
            ICE61 — warns that MajorUpgrade/@AllowSameVersionUpgrades also
                    replaces an install of the same ProductVersion. That is
                    deliberate (Product.wxs): an rc and its final share the
                    numeric a.b.c, and must not end up side by side. -->
-    <SuppressIces>ICE38;ICE91;ICE61</SuppressIces>
+    <SuppressIces>ICE38;ICE64;ICE91;ICE61</SuppressIces>
   </PropertyGroup>
 
   <!-- WixUI dialog set for the branded setup UI (WixUI_Minimal). The SDK
