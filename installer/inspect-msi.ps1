@@ -60,7 +60,9 @@ foreach ($r in (Query 'SELECT `Directory`, `Directory_Parent`, `DefaultDir` FROM
 function DirPath([string] $id) {
   $d = $dirs[$id]
   if ($null -eq $d) { return $id }
-  if ([string]::IsNullOrEmpty($d.Parent) -or $d.Parent -eq $id) { return $id }  # root / standard directory
+  # TARGETDIR is the root; its children are standard folders (AppDataFolder,
+  # resolved by Windows Installer at install time), so print those by id.
+  if ([string]::IsNullOrEmpty($d.Parent) -or $d.Parent -eq $id -or $d.Parent -eq 'TARGETDIR') { return $id }
   $parent = DirPath $d.Parent
   if ($d.Name -eq '.') { return $parent }
   return "$parent\$($d.Name)"
