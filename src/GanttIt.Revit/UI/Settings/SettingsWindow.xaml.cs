@@ -1,4 +1,5 @@
 using System.Windows;
+using GanttIt.Revit.UI.Theming;
 
 namespace GanttIt.Revit.UI.Settings;
 
@@ -8,6 +9,7 @@ public partial class SettingsWindow : Window
     public SettingsWindow(SettingsViewModel model)
     {
         InitializeComponent();
+        DarkTitleBar.Attach(this);
         DataContext = model;
         model.CloseRequested += () =>
         {

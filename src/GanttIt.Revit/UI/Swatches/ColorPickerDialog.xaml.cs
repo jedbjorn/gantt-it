@@ -2,6 +2,7 @@ using System.Windows;
 using System.Windows.Interop;
 using GanttIt.Core.Model;
 using GanttIt.Revit.UI.Dialogs;
+using GanttIt.Revit.UI.Theming;
 
 namespace GanttIt.Revit.UI.Swatches;
 
@@ -13,6 +14,7 @@ public partial class ColorPickerDialog : Window
     public ColorPickerDialog(Rgb current, IReadOnlyList<Rgb> palette, Point? anchor, Rect workArea)
     {
         InitializeComponent();
+        DarkTitleBar.Attach(this);
         var model = new ColorPickerViewModel(current, palette, GanttItSession.RecentColors, MoreColors, PickFromScreen);
         model.Picked += color =>
         {

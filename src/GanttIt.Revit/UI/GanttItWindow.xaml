@@ -8,7 +8,7 @@
         ResizeMode="CanResize" ShowInTaskbar="False" WindowStartupLocation="CenterOwner"
         FontFamily="Segoe UI" FontSize="12" UseLayoutRounding="True"
         TextOptions.TextFormattingMode="Display"
-        Background="{DynamicResource WindowBrush}"
+        Background="{DynamicResource WindowBrush}" Foreground="{DynamicResource TextBrush}"
         AutomationProperties.AutomationId="GanttItWindow">
     <!-- The modal Gantt-It window (D7), owned by Revit's main window. DataContext: MainViewModel. -->
     <Window.Resources>

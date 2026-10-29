@@ -3,6 +3,7 @@ using System.Windows;
 using System.Windows.Input;
 using System.Windows.Threading;
 using GanttIt.Revit.UI.Dialogs;
+using GanttIt.Revit.UI.Theming;
 
 namespace GanttIt.Revit.UI;
 
@@ -18,7 +19,10 @@ public partial class GanttItWindow : Window
 
     public GanttItWindow(GanttItSession session)
     {
+        // Revit's UI theme, read on every open (§2.5); Theme.xaml and every dialog follow it.
+        GanttItTheme.Refresh();
         InitializeComponent();
+        DarkTitleBar.Attach(this);
         _dialogs = new DialogService(this);
         _model = new MainViewModel(session, _dialogs);
         _model.CloseRequested += () =>

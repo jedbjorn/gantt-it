@@ -7,7 +7,7 @@
         WindowStyle="ToolWindow" WindowStartupLocation="Manual"
         FontFamily="Segoe UI" FontSize="12" UseLayoutRounding="True"
         TextOptions.TextFormattingMode="Display"
-        Background="{DynamicResource WindowBrush}"
+        Background="{DynamicResource WindowBrush}" Foreground="{DynamicResource TextBrush}"
         AutomationProperties.AutomationId="ColorPickerDialog">
     <Window.Resources>
         <ResourceDictionary>
