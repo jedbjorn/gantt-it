@@ -1,5 +1,7 @@
 using System.Globalization;
+using GanttIt.Core.Localization;
 using GanttIt.Core.Model;
+using GanttIt.Core.Resources;
 
 namespace GanttIt.Core.Editing;
 
@@ -16,17 +18,17 @@ public static class EditorInput
         error = null;
         if (!int.TryParse(text?.Trim(), NumberStyles.Integer, CultureInfo.InvariantCulture, out var value))
         {
-            error = "The duration must be a whole number of days.";
+            error = CoreStrings.Duration_NotWhole;
             return false;
         }
         if (value < 1)
         {
-            error = "The duration must be at least 1 day.";
+            error = CoreStrings.Duration_TooShort;
             return false;
         }
         if (value > MaxDurationDays)
         {
-            error = $"The duration can be at most {MaxDurationDays.ToString(CultureInfo.InvariantCulture)} days.";
+            error = CoreStrings.Duration_TooLong(MaxDurationDays.ToString(CultureInfo.InvariantCulture));
             return false;
         }
         days = value;
@@ -34,16 +36,18 @@ public static class EditorInput
     }
 
     /// <summary>
-    /// The default name of a new chart: "Gantt Chart 1", "Gantt Chart 2", … — the
-    /// first not used by any view, compared the way <c>ChartValidator</c> does
+    /// The default name of a new chart in the chart <paramref name="language"/>:
+    /// "Gantt Chart 1", "Gantt Chart 2", … ("Diagramme de Gantt 1", "Gantt-Diagramm 1"…)
+    /// — the first not used by any view, compared the way <c>ChartValidator</c> does
     /// (trimmed, case-insensitive), so a new chart never starts with a name error.
     /// </summary>
-    public static string UniqueChartName(IEnumerable<string> viewNames)
+    public static string UniqueChartName(IEnumerable<string> viewNames, Language language = Language.English)
     {
+        var text = ChartText.For(language);
         var taken = new HashSet<string>(viewNames.Select(n => n.Trim()), StringComparer.OrdinalIgnoreCase);
         for (var i = 1; ; i++)
         {
-            var name = $"Gantt Chart {i.ToString(CultureInfo.InvariantCulture)}";
+            var name = text.DefaultChartName(i);
             if (!taken.Contains(name)) return name;
         }
     }
@@ -78,7 +82,7 @@ public static class EditorInput
     {
         error = SupportedDates.Contains(date)
             ? null
-            : $"Dates must be between {SupportedDates.Min.Year} and {SupportedDates.Max.Year}.";
+            : CoreStrings.Date_OutOfRange(SupportedDates.Min.Year, SupportedDates.Max.Year);
         return error is null;
     }
 }

@@ -1,5 +1,6 @@
 using System.Globalization;
 using GanttIt.Core.Dates;
+using GanttIt.Core.Localization;
 
 namespace GanttIt.Core.Timeline;
 
@@ -9,7 +10,8 @@ namespace GanttIt.Core.Timeline;
 /// labelled cell, e.g. <c>January</c> or <c>Jan</c> for every month, never a mix.
 /// No format is ambiguous on its own: a month is at least its 3-letter
 /// abbreviation and a top-tier date always names its month, so where those
-/// don't fit the tier labels every k-th tick instead. All text is culture-invariant.
+/// don't fit the tier labels every k-th tick instead. The words come from the
+/// chart language's tables (<see cref="ChartText"/>), never from the machine's culture.
 /// </summary>
 public static class TimescaleLabels
 {
@@ -18,15 +20,16 @@ public static class TimescaleLabels
     /// <paramref name="cellStart"/>, one per format, in the same order for every
     /// cell of a tier. Tier-1 labels carry the context that the tier above
     /// would otherwise give (a month above weeks names its year).
-    /// <paramref name="dateFormat"/> is the chart's date pattern, used for full week dates.
+    /// <paramref name="dateFormat"/> is the chart's date pattern, used for full week dates;
+    /// <paramref name="language"/> is the chart language (§2.6).
     /// </summary>
-    public static IReadOnlyList<string> Candidates(TimeUnit unit, bool isTier1, DateOnly cellStart, string dateFormat)
+    public static IReadOnlyList<string> Candidates(
+        TimeUnit unit, bool isTier1, DateOnly cellStart, string dateFormat, Language language = Language.English)
     {
+        var text = ChartText.For(language);
         var day = cellStart.Day.ToString(CultureInfo.InvariantCulture);
-        var month = DateFormats.MonthName(cellStart.Month);
-        var abbr = DateFormats.MonthAbbreviation(cellStart.Month);
-        var year = cellStart.Year.ToString(CultureInfo.InvariantCulture);
-        var shortYear = "'" + (cellStart.Year % 100).ToString("00", CultureInfo.InvariantCulture);
+        var month = cellStart.Month;
+        var year = cellStart.Year;
 
         return unit switch
         {
@@ -34,25 +37,34 @@ public static class TimescaleLabels
             // A week is named by its first day on the axis: its Monday, unless
             // the cell is clipped at the axis start. The label sits at that edge.
             // A bare day number would name no month here, so there is no third format,
-            // and a chart date pattern that names no month (e.g. "dd") is not offered.
-            TimeUnit.Week when isTier1 => NamesMonth(dateFormat)
-                ? [DateFormats.Format(cellStart, dateFormat), $"{day} {abbr}"]
-                : [$"{day} {abbr}"],
+            // and a chart date pattern that can't tell two weeks apart (e.g. "dd" or
+            // "MMM yyyy") is not offered.
+            TimeUnit.Week when isTier1 => NamesWeek(dateFormat, language)
+                ? [DateFormats.Format(cellStart, dateFormat, language), text.DayMonth(cellStart.Day, month)]
+                : [text.DayMonth(cellStart.Day, month)],
             TimeUnit.Week => [day],
-            TimeUnit.Month when isTier1 => [$"{month} {year}", $"{abbr} {year}", $"{abbr} {shortYear}"],
-            TimeUnit.Month => [month, abbr],
-            TimeUnit.Quarter => [$"Q{(cellStart.Month - 1) / 3 + 1}"],
-            TimeUnit.Year => [year, shortYear],
+            TimeUnit.Month when isTier1 =>
+                [text.MonthYear(month, year, abbreviated: false), text.MonthYear(month, year, abbreviated: true), text.MonthShortYear(month, year)],
+            TimeUnit.Month => [text.MonthName(month), text.MonthAbbreviation(month)],
+            TimeUnit.Quarter => [text.Quarter((month - 1) / 3 + 1)],
+            TimeUnit.Year => text.HasShortYears ? [ChartText.Year(year), ChartText.ShortYear(year)] : [ChartText.Year(year)],
             _ => throw new ArgumentOutOfRangeException(nameof(unit), unit, null),
         };
     }
 
     /// <summary>
-    /// True when <paramref name="pattern"/> shows the month: 1 Feb and 1 Mar 2026
-    /// share their year, day and weekday, so only a month field tells them apart.
+    /// True when <paramref name="pattern"/> can name a week by its first day: it shows
+    /// the month (1 Feb and 1 Mar 2026 share their year, day and weekday, so only a
+    /// month field tells them apart) and the day (1 and 8 Feb 2026 share their year,
+    /// month and weekday, so only a day field tells them apart). <c>MM/yyyy</c> or
+    /// <c>MMM yyyy</c> would give every week of a month the same label.
     /// </summary>
-    private static bool NamesMonth(string pattern) =>
-        DateFormats.Format(new DateOnly(2026, 2, 1), pattern) != DateFormats.Format(new DateOnly(2026, 3, 1), pattern);
+    private static bool NamesWeek(string pattern, Language language)
+    {
+        var first = DateFormats.Format(new DateOnly(2026, 2, 1), pattern, language);
+        return first != DateFormats.Format(new DateOnly(2026, 3, 1), pattern, language)
+               && first != DateFormats.Format(new DateOnly(2026, 2, 8), pattern, language);
+    }
 
     /// <summary>
     /// Group sizes k for thinning a tier's labels, smallest first: label every

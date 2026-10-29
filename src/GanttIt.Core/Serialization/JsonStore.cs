@@ -1,6 +1,7 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using GanttIt.Core.Model;
+using GanttIt.Core.Resources;
 
 namespace GanttIt.Core.Serialization;
 
@@ -58,25 +59,25 @@ internal static class JsonStore
     public static LoadResult<T> Deserialize<T>(string? json, int currentVersion, Func<T, string?> validate)
         where T : class
     {
-        if (string.IsNullOrWhiteSpace(json)) return LoadResult<T>.Invalid("The stored JSON is empty.");
+        if (string.IsNullOrWhiteSpace(json)) return LoadResult<T>.Invalid(CoreStrings.Json_Empty);
 
         int version;
         try
         {
             using var doc = JsonDocument.Parse(json);
             if (doc.RootElement.ValueKind != JsonValueKind.Object)
-                return LoadResult<T>.Invalid("The stored JSON is not an object.");
+                return LoadResult<T>.Invalid(CoreStrings.Json_NotObject);
             if (!doc.RootElement.TryGetProperty("schemaVersion", out var v)
                 || v.ValueKind != JsonValueKind.Number
                 || !v.TryGetInt32(out version))
-                return LoadResult<T>.Invalid("The stored JSON has no integer schemaVersion.");
+                return LoadResult<T>.Invalid(CoreStrings.Json_NoVersion);
         }
         catch (JsonException ex)
         {
-            return LoadResult<T>.Invalid($"The stored JSON is malformed: {ex.Message}");
+            return LoadResult<T>.Invalid(CoreStrings.Json_Malformed(ex.Message));
         }
 
-        if (version < 1) return LoadResult<T>.Invalid($"Unsupported schemaVersion {version}.");
+        if (version < 1) return LoadResult<T>.Invalid(CoreStrings.Json_UnsupportedVersion(version));
 
         if (version > currentVersion)
         {
@@ -86,12 +87,12 @@ internal static class JsonStore
             var preview = TryRead<T>(json, out _);
             if (preview is not null && validate(preview) is not null) preview = null;
             return new LoadResult<T>(LoadStatus.NewerVersion, preview,
-                $"Written by a newer version of Gantt-It (schema {version}; this version reads {currentVersion}). It is read-only here.");
+                CoreStrings.Json_Newer(version, currentVersion));
         }
 
         // Older versions would be migrated forward here; version 1 is the first.
         var value = TryRead<T>(json, out var error);
-        if (value is null) return LoadResult<T>.Invalid(error ?? "The stored JSON is empty.");
+        if (value is null) return LoadResult<T>.Invalid(error ?? CoreStrings.Json_Empty);
         var problem = validate(value);
         return problem is null ? new LoadResult<T>(LoadStatus.Ok, value, null) : LoadResult<T>.Invalid(problem);
     }
@@ -105,7 +106,7 @@ internal static class JsonStore
         }
         catch (Exception ex) when (ex is JsonException or NotSupportedException or FormatException or ArgumentException or InvalidOperationException)
         {
-            error = $"The stored JSON does not match the expected shape: {ex.Message}";
+            error = CoreStrings.Json_Shape(ex.Message);
             return null;
         }
     }

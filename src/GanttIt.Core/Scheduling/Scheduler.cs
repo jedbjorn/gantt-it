@@ -1,10 +1,12 @@
 using GanttIt.Core.Model;
+using GanttIt.Core.Resources;
 
 namespace GanttIt.Core.Scheduling;
 
 /// <summary>
 /// Something the editor must show inline because the user's action changed
-/// more than they directly edited (§5.1: "never a silent change").
+/// more than they directly edited (§5.1: "never a silent change"). The message is
+/// in the UI language.
 /// </summary>
 public sealed record ScheduleNotice(string Message, IReadOnlyList<Link> RemovedLinks);
 
@@ -122,14 +124,17 @@ public static class Scheduler
         return removed.Count == 0
             ? null
             : new ScheduleNotice(
-                $"Moving \"{moved.Name}\" removed {Plural(removed.Count, "link")}. Re-tick them if the sections still depend on each other.",
+                removed.Count == 1
+                    ? CoreStrings.Notice_MoveRemovedOne(moved.Name)
+                    : CoreStrings.Notice_MoveRemovedMany(moved.Name, removed.Count),
                 removed);
     }
 
     /// <summary>
     /// Appends a section (§2.2): it starts the day after the previous section's
     /// end (or on <paramref name="startIfEmpty"/> in an empty chart), lasts
-    /// <see cref="NewSectionDays"/> days and takes the next palette color.
+    /// <see cref="NewSectionDays"/> days and takes the next palette color. Without a
+    /// <paramref name="name"/> it is "Section N" (the editor passes the name in the chart language).
     /// </summary>
     public static Section AddSection(
         Chart chart, IReadOnlyList<Rgb> palette, DateOnly startIfEmpty, string? name = null, Guid? id = null)
@@ -159,7 +164,11 @@ public static class Scheduler
         var removed = RemoveNonNeighbourLinks(chart);
         return removed.Count == 0
             ? null
-            : new ScheduleNotice($"Deleting \"{name}\" removed {Plural(removed.Count, "link")}.", removed);
+            : new ScheduleNotice(
+                removed.Count == 1
+                    ? CoreStrings.Notice_DeleteRemovedOne(name)
+                    : CoreStrings.Notice_DeleteRemovedMany(name, removed.Count),
+                removed);
     }
 
     /// <summary>
@@ -220,6 +229,4 @@ public static class Scheduler
         var index = chart.IndexOf(sectionId);
         return index >= 0 ? index : throw new ArgumentException($"No section with id {sectionId}.", nameof(sectionId));
     }
-
-    private static string Plural(int n, string noun) => n == 1 ? $"1 {noun}" : $"{n} {noun}s";
 }

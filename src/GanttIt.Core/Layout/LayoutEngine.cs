@@ -1,5 +1,6 @@
 using System.Globalization;
 using GanttIt.Core.Dates;
+using GanttIt.Core.Localization;
 using GanttIt.Core.Model;
 using GanttIt.Core.Timeline;
 
@@ -36,11 +37,6 @@ public static class LayoutEngine
     /// <summary>Slack for the share comparison, so exactly a quarter (3 of 12 months) counts as a quarter.</summary>
     private const double ShareTolerance = 1e-9;
 
-    public const string NameHeader = "Section";
-    public const string StartHeader = "Start";
-    public const string EndHeader = "End";
-    public const string DurationHeader = "Dur";
-
     /// <summary>Runs BuildCells → Measure → SolveGrid → Emit.</summary>
     public static ChartLayout Layout(Chart chart, ProjectSettings settings, ITextMeasurer measurer)
     {
@@ -50,7 +46,10 @@ public static class LayoutEngine
         return new ChartLayout(grid, Emit(grid, chart));
     }
 
-    /// <summary>Every string the chart may draw, with its style (§6.1).</summary>
+    /// <summary>
+    /// Every string the chart may draw, with its style (§6.1). Headers, month names and
+    /// other words are in the settings' chart language (§2.6).
+    /// </summary>
     public static CellSet BuildCells(Chart chart, ProjectSettings settings)
     {
         var columns = new List<TableColumn> { TableColumn.Name };
@@ -58,9 +57,10 @@ public static class LayoutEngine
         if (chart.Columns.HasFlag(ChartColumns.End)) columns.Add(TableColumn.End);
         if (chart.Columns.HasFlag(ChartColumns.Duration)) columns.Add(TableColumn.Duration);
 
-        var headers = columns.Select(c => Header(HeaderText(c))).ToList();
+        var text = ChartText.For(settings.ChartLanguage);
+        var headers = columns.Select(c => Header(HeaderText(c, text))).ToList();
         var rows = chart.Sections
-            .Select(s => (IReadOnlyList<TextRequest>)columns.Select(c => Body(BodyText(s, c, settings.DateFormat))).ToList())
+            .Select(s => (IReadOnlyList<TextRequest>)columns.Select(c => Body(BodyText(s, c, settings.DateFormat, text.Language))).ToList())
             .ToList();
 
         var axis = TimeAxis.ForChart(chart);
@@ -257,7 +257,7 @@ public static class LayoutEngine
         var cells = axis.Cells(unit);
         var candidates = cells
             .Select(c => (IReadOnlyList<TextRequest>)TimescaleLabels
-                .Candidates(unit, isTier1, c.Start, settings.DateFormat)
+                .Candidates(unit, isTier1, c.Start, settings.DateFormat, settings.ChartLanguage)
                 .Select(Header)
                 .ToList())
             .ToList();
@@ -441,20 +441,21 @@ public static class LayoutEngine
     private static TextAlign Align(TableColumn column) =>
         column == TableColumn.Duration ? TextAlign.Right : TextAlign.Left;
 
-    private static string HeaderText(TableColumn column) => column switch
+    /// <summary>The column header in the chart language, e.g. "Section", "Début", "Dauer".</summary>
+    public static string HeaderText(TableColumn column, ChartText text) => column switch
     {
-        TableColumn.Name => NameHeader,
-        TableColumn.Start => StartHeader,
-        TableColumn.End => EndHeader,
-        TableColumn.Duration => DurationHeader,
+        TableColumn.Name => text.NameHeader,
+        TableColumn.Start => text.StartHeader,
+        TableColumn.End => text.EndHeader,
+        TableColumn.Duration => text.DurationHeader,
         _ => throw new ArgumentOutOfRangeException(nameof(column), column, null),
     };
 
-    private static string BodyText(Section s, TableColumn column, string dateFormat) => column switch
+    private static string BodyText(Section s, TableColumn column, string dateFormat, Language language) => column switch
     {
         TableColumn.Name => s.Name,
-        TableColumn.Start => DateFormats.Format(s.Start, dateFormat),
-        TableColumn.End => DateFormats.Format(s.End, dateFormat),
+        TableColumn.Start => DateFormats.Format(s.Start, dateFormat, language),
+        TableColumn.End => DateFormats.Format(s.End, dateFormat, language),
         TableColumn.Duration => s.Duration.ToString(CultureInfo.InvariantCulture),
         _ => throw new ArgumentOutOfRangeException(nameof(column), column, null),
     };
