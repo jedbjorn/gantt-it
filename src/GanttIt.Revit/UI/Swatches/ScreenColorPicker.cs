@@ -20,23 +20,29 @@ namespace GanttIt.Revit.UI.Swatches;
 /// <item>The whole virtual screen is captured once, in physical pixels, and each overlay
 /// shows its monitor's part full screen: snapshot-then-pick, so the magnifier and the
 /// result both come from the same frozen bitmap.</item>
-/// <item>Left click picks the pixel under the pointer's hotspot; Esc, right click or
-/// switching to another app cancels. Arrow keys move the pointer one pixel (Shift: ten),
-/// Enter or Space picks.</item>
+/// <item>Left click picks the pixel under the pointer's hotspot; Esc, right click, Alt+F4
+/// or switching to another app cancels, also while the screen is still being captured.
+/// Arrow keys move the pointer one pixel (Shift: ten), Enter or Space picks.</item>
 /// </list>
 /// Every path, exceptions included, closes the overlays and shows the hidden windows
-/// again where they were, with the color picker active.
+/// again where they were, with the color picker active. Clicks and keys that trail the
+/// pick (a double click's second click, a held Enter or Esc) are swallowed so they don't
+/// land on the restored windows.
 /// </summary>
 internal sealed class ScreenColorPicker
 {
     private static readonly TimeSpan HideSettle = TimeSpan.FromMilliseconds(150);
+    private static readonly TimeSpan TrailingInput = TimeSpan.FromMilliseconds(350);
+    private static readonly TimeSpan HeldKeyLimit = TimeSpan.FromSeconds(5);
 
     private readonly Window _popup;
     private readonly List<Window> _hidden = [];
     private readonly List<ScreenPickOverlay> _overlays = [];
     private ScreenSnapshot? _snapshot;
     private DispatcherFrame? _frame;
+    private bool _finished;
     private (int X, int Y)? _pressedAt;
+    private Key? _finishKey;
     private Rgb? _result;
     private Exception? _error;
 
@@ -54,6 +60,8 @@ internal sealed class ScreenColorPicker
 
     private Rgb? Run()
     {
+        var dispatcher = _popup.Dispatcher;
+        dispatcher.UnhandledExceptionFilter += OnUnhandledException;
         try
         {
             List<PixelRect> monitors;
@@ -74,8 +82,8 @@ internal sealed class ScreenColorPicker
                         e.Handled = true;
                         Finish(null);
                     };
-                    overlay.Deactivated += (_, _) => _popup.Dispatcher.BeginInvoke(DispatcherPriority.Input, new Action(CancelIfInactive));
-                    overlay.Closed += (_, _) => Finish(null); // closed from outside (Alt+F4): cancel
+                    overlay.Deactivated += (_, _) => dispatcher.BeginInvoke(DispatcherPriority.Input, new Action(CancelIfInactive));
+                    overlay.Closed += (_, _) => Finish(null); // closed from outside: cancel
                     _overlays.Add(overlay);
                     overlay.Show(); // off-screen and tiny until Cover()
                 }
@@ -84,6 +92,8 @@ internal sealed class ScreenColorPicker
 
             HideGanttItWindows();
             Wait(HideSettle);
+            // Esc or Alt+Tab while the windows were going away (the first overlay has the keyboard).
+            if (_finished) return _result;
             NativeScreen.FlushCompositor();
             NativeScreen.FlushCompositor();
 
@@ -107,14 +117,22 @@ internal sealed class ScreenColorPicker
             ActivateOverlayUnderPointer();
             Track();
 
-            _frame = new DispatcherFrame();
-            Dispatcher.PushFrame(_frame);
+            // Never leave topmost overlays up without the keyboard: if another app holds the
+            // foreground now, Esc couldn't reach them and the next click would pick by accident.
+            if (!_finished && !_overlays.Any(o => o.IsActive)) Finish(null);
+            if (!_finished)
+            {
+                _frame = new DispatcherFrame();
+                Dispatcher.PushFrame(_frame);
+            }
             if (_error is not null) throw new InvalidOperationException(_error.Message, _error);
             return _result;
         }
         finally
         {
+            dispatcher.UnhandledExceptionFilter -= OnUnhandledException;
             Restore();
+            SwallowTrailingInput(_finishKey);
         }
     }
 
@@ -123,7 +141,7 @@ internal sealed class ScreenColorPicker
     /// <summary>Moves the magnifier to the pointer, on whichever monitor it is.</summary>
     private void Track()
     {
-        if (_snapshot is null) return;
+        if (_snapshot is null || _finished) return;
         var (x, y) = Pointer();
         var index = PixelRect.IndexAt(_overlays.Select(o => o.Monitor).ToList(), x, y);
         for (var i = 0; i < _overlays.Count; i++)
@@ -138,6 +156,7 @@ internal sealed class ScreenColorPicker
         e.Handled = true;
         Guard(() =>
         {
+            if (_snapshot is null) return; // still capturing
             _pressedAt = Pointer();
             ((UIElement)sender).CaptureMouse();
         });
@@ -156,17 +175,31 @@ internal sealed class ScreenColorPicker
 
     private void OnKeyDown(object sender, KeyEventArgs e)
     {
+        if (e.Key == Key.System)
+        {
+            // Alt+F4 cancels; other Alt combinations are left alone.
+            if (e.SystemKey != Key.F4) return;
+            e.Handled = true;
+            _finishKey = Key.F4;
+            Finish(null);
+            return;
+        }
+
         e.Handled = true;
+        if (e.IsRepeat && e.Key is Key.Enter or Key.Space or Key.Escape) return;
         var step = Keyboard.Modifiers.HasFlag(ModifierKeys.Shift) ? 10 : 1;
         Guard(() =>
         {
             switch (e.Key)
             {
                 case Key.Escape:
+                    _finishKey = e.Key;
                     Finish(null);
                     break;
                 case Key.Enter:
                 case Key.Space:
+                    if (_snapshot is null) break; // still capturing
+                    _finishKey = e.Key;
                     var (x, y) = Pointer();
                     PickAt(x, y);
                     break;
@@ -193,18 +226,23 @@ internal sealed class ScreenColorPicker
         if (_snapshot?.ColorAt(x, y) is { } color) Finish(color);
     }
 
-    /// <summary>Another app took the foreground (Alt+Tab, Win key): cancel instead of leaving overlays up.</summary>
+    /// <summary>
+    /// Another app took the foreground (Alt+Tab, Win key): cancel instead of leaving overlays
+    /// up. Also during the capture, so the pick never starts in the background.
+    /// </summary>
     private void CancelIfInactive()
     {
-        if (_frame is null || _overlays.Any(o => o.IsActive)) return;
+        if (_finished || _overlays.Any(o => o.IsActive)) return;
         Finish(null);
     }
 
+    /// <summary>Ends the pick once; a cancel before the overlays are up is kept and honoured.</summary>
     private void Finish(Rgb? color)
     {
-        if (_frame is null) return;
+        if (_finished) return;
+        _finished = true;
         _result = color;
-        _frame.Continue = false;
+        if (_frame is not null) _frame.Continue = false;
         _frame = null;
     }
 
@@ -220,6 +258,17 @@ internal sealed class ScreenColorPicker
             _error ??= ex;
             Finish(null);
         }
+    }
+
+    /// <summary>
+    /// Any other unhandled exception on the UI thread while picking: end the pick and put
+    /// the windows back first, so the Gantt-It window's error dialog doesn't open hidden
+    /// under the topmost overlays. The dialog itself still reports the error.
+    /// </summary>
+    private void OnUnhandledException(object sender, DispatcherUnhandledExceptionFilterEventArgs e)
+    {
+        Finish(null);
+        Restore();
     }
 
     private static (int X, int Y) Pointer()
@@ -251,23 +300,29 @@ internal sealed class ScreenColorPicker
         }
     }
 
-    /// <summary>Never throws: shows the hidden windows (owners first), closes the overlays, activates the picker.</summary>
+    /// <summary>
+    /// Never throws, safe to call twice: shows the hidden windows (owners first), closes
+    /// the overlays, activates the picker.
+    /// </summary>
     private void Restore()
     {
+        if (_frame is not null) _frame.Continue = false;
         _frame = null;
         for (var i = _hidden.Count - 1; i >= 0; i--)
         {
+            var window = _hidden[i];
             Try(() =>
             {
-                var hwnd = new WindowInteropHelper(_hidden[i]).Handle;
-                NativeScreen.Show(hwnd, activate: _hidden[i] == _popup);
+                var hwnd = new WindowInteropHelper(window).Handle;
+                NativeScreen.Show(hwnd, activate: window == _popup);
                 NativeScreen.SetTransitionsDisabled(hwnd, false);
             });
         }
         _hidden.Clear();
 
-        foreach (var overlay in _overlays) Try(overlay.Close);
+        var overlays = _overlays.ToList();
         _overlays.Clear();
+        foreach (var overlay in overlays) Try(overlay.Close);
         _snapshot = null;
 
         Try(() =>
@@ -275,6 +330,52 @@ internal sealed class ScreenColorPicker
             _popup.Activate();
             _popup.Focus();
         });
+    }
+
+    /// <summary>
+    /// For a moment after the pick, mouse buttons and key presses don't reach Gantt-It's
+    /// windows (a double click's second click, a key that ended the pick), and a key that
+    /// ended the pick is ignored until it is released (auto-repeat of a held Enter or Esc
+    /// would otherwise press the restored window's buttons or close the picker).
+    /// </summary>
+    private static void SwallowTrailingInput(Key? heldKey)
+    {
+        var started = DateTime.UtcNow;
+        bool Active() =>
+            DateTime.UtcNow - started < TrailingInput
+            || (heldKey is { } k && Keyboard.IsKeyDown(k) && DateTime.UtcNow - started < HeldKeyLimit);
+
+        PreProcessInputEventHandler filter = (_, e) =>
+        {
+            var input = e.StagingItem.Input;
+            if (DateTime.UtcNow - started < TrailingInput)
+            {
+                if (input is MouseButtonEventArgs || input is KeyEventArgs { IsDown: true }) e.Cancel();
+            }
+            else if (heldKey is { } k && input is KeyEventArgs { IsDown: true } key && key.Key == k)
+            {
+                e.Cancel();
+            }
+        };
+
+        try
+        {
+            InputManager.Current.PreProcessInput += filter;
+        }
+        catch (Exception ex)
+        {
+            Trace.TraceWarning($"Gantt-It: Pick from screen input filter: {ex.Message}");
+            return;
+        }
+
+        var timer = new DispatcherTimer(DispatcherPriority.Input) { Interval = TimeSpan.FromMilliseconds(50) };
+        timer.Tick += (_, _) =>
+        {
+            if (Active()) return;
+            timer.Stop();
+            InputManager.Current.PreProcessInput -= filter;
+        };
+        timer.Start();
     }
 
     private static void Try(Action action)

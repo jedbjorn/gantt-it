@@ -11,7 +11,12 @@ public class ScreenSamplingTests
     private static readonly PixelRect Primary = new(0, 0, 1920, 1080);
     private static readonly PixelRect Above = new(200, -768, 1366, 768);
 
-    /// <summary>A snapshot whose pixel (x, y) has R = x mod 256, G = y mod 256, B = 7.</summary>
+    /// <summary>
+    /// A snapshot whose every pixel has its own color: the absolute screen position packed
+    /// into 24 bits (13 for x + 4096, 11 for y + 800), unique across the whole test layout.
+    /// An off-by-one or origin error in the lookup therefore always reads a different color,
+    /// on positive coordinates as much as negative ones.
+    /// </summary>
     private static ScreenSnapshot Snapshot(PixelRect bounds)
     {
         var stride = bounds.Width * 4 + 8; // padded rows must not shift pixels
@@ -20,17 +25,34 @@ public class ScreenSamplingTests
             for (var col = 0; col < bounds.Width; col++)
             {
                 var i = row * stride + col * 4;
-                var x = bounds.Left + col;
-                var y = bounds.Top + row;
-                pixels[i] = 7;                                  // B
-                pixels[i + 1] = (byte)(((y % 256) + 256) % 256); // G
-                pixels[i + 2] = (byte)(((x % 256) + 256) % 256); // R
-                pixels[i + 3] = 0;                              // undefined in screen captures
+                var c = Expected(bounds.Left + col, bounds.Top + row);
+                pixels[i] = c.B;
+                pixels[i + 1] = c.G;
+                pixels[i + 2] = c.R;
+                pixels[i + 3] = 0; // undefined in screen captures
             }
         return new ScreenSnapshot(bounds, pixels, stride);
     }
 
-    private static Rgb Expected(int x, int y) => new((byte)(((x % 256) + 256) % 256), (byte)(((y % 256) + 256) % 256), 7);
+    private static Rgb Expected(int x, int y)
+    {
+        Assert.InRange(x, -4096, 4095);
+        Assert.InRange(y, -800, 1247);
+        var v = ((x + 4096) << 11) | (y + 800);
+        return new Rgb((byte)(v >> 16), (byte)(v >> 8), (byte)v);
+    }
+
+    [Fact]
+    public void TheTestEncoding_IsUniquePerPixel()
+    {
+        var seen = new HashSet<Rgb>();
+        var all = PixelRect.Union([Primary, Left, Above]);
+        for (var y = all.Top; y < all.Bottom; y += 7)
+            for (var x = all.Left; x < all.Right; x += 3)
+                Assert.True(seen.Add(Expected(x, y)));
+        Assert.NotEqual(Expected(1, 0), Expected(257, 0));
+        Assert.NotEqual(Expected(0, 1), Expected(0, 257));
+    }
 
     [Fact]
     public void Union_IsTheVirtualScreen_IncludingNegativeCoordinates()
