@@ -1,0 +1,217 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <!--
+    Spanish UI strings. Keys and {N} placeholders must match CoreStrings.resx (ResourceTests). After adding or renaming a key, run python3 tools/gen_strings.py. Terminology: docs/TRANSLATIONS.md.
+  -->
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+
+  <data name="DateFormat_Blank" xml:space="preserve">
+    <value>El formato de fecha está vacío.</value>
+  </data>
+  <data name="DateFormat_Invalid" xml:space="preserve">
+    <value>"{0}" no es un formato de fecha válido: {1}</value>
+  </data>
+  <data name="DateFormat_NotSingleLine" xml:space="preserve">
+    <value>"{0}" no produce una sola línea de texto.</value>
+  </data>
+  <data name="DateFormat_TypedError" xml:space="preserve">
+    <value>"{0}" no es una fecha en el formato de este diagrama. Escríbala como {1}, por ejemplo {2}.</value>
+  </data>
+  <data name="Summary_NoSections" xml:space="preserve">
+    <value>Sin secciones</value>
+  </data>
+  <data name="Summary_SectionsOne" xml:space="preserve">
+    <value>1 sección</value>
+  </data>
+  <data name="Summary_SectionsMany" xml:space="preserve">
+    <value>{0} secciones</value>
+  </data>
+  <data name="Summary_NotPlaced" xml:space="preserve">
+    <value>Sin colocar</value>
+  </data>
+  <data name="Summary_OnOneSheet" xml:space="preserve">
+    <value>En 1 plano</value>
+  </data>
+  <data name="Summary_OnSheets" xml:space="preserve">
+    <value>En {0} planos</value>
+  </data>
+  <data name="Duration_NotWhole" xml:space="preserve">
+    <value>La duración debe ser un número entero de días.</value>
+  </data>
+  <data name="Duration_TooShort" xml:space="preserve">
+    <value>La duración debe ser de al menos 1 día.</value>
+  </data>
+  <data name="Duration_TooLong" xml:space="preserve">
+    <value>La duración puede ser como máximo de {0} días.</value>
+  </data>
+  <data name="Date_OutOfRange" xml:space="preserve">
+    <value>Las fechas deben estar entre {0} y {1}.</value>
+  </data>
+  <data name="Issue_TimelineWidth" xml:space="preserve">
+    <value>El ancho de la línea de tiempo debe ser mayor que cero.</value>
+  </data>
+  <data name="Issue_NameMaxWidth" xml:space="preserve">
+    <value>La columna de nombres debe ser más ancha que el doble del margen de celda.</value>
+  </data>
+  <data name="Issue_NoSections" xml:space="preserve">
+    <value>Agregue al menos una sección.</value>
+  </data>
+  <data name="Issue_SectionNameBlank" xml:space="preserve">
+    <value>Una sección no tiene nombre.</value>
+  </data>
+  <data name="Issue_EndBeforeStart" xml:space="preserve">
+    <value>"{0}" termina antes de empezar.</value>
+  </data>
+  <data name="Issue_DateOutOfRange" xml:space="preserve">
+    <value>"{0}" tiene una fecha fuera de {1}–{2}.</value>
+  </data>
+  <data name="Issue_LinkNotNeighbours" xml:space="preserve">
+    <value>Un vínculo no une dos secciones contiguas.</value>
+  </data>
+  <data name="Issue_LinkLag" xml:space="preserve">
+    <value>El desfase de un vínculo no coincide con las fechas de sus secciones.</value>
+  </data>
+  <data name="Issue_CellPadding" xml:space="preserve">
+    <value>El margen de celda debe ser mayor que cero.</value>
+  </data>
+  <data name="Issue_PaletteEmpty" xml:space="preserve">
+    <value>La paleta no tiene colores.</value>
+  </data>
+  <data name="Issue_ChartNameBlank" xml:space="preserve">
+    <value>El diagrama necesita un nombre.</value>
+  </data>
+  <data name="Issue_ChartNameChars" xml:space="preserve">
+    <value>El nombre del diagrama contiene un carácter que Revit no admite en los nombres de vista.</value>
+  </data>
+  <data name="Issue_ChartNameInUse" xml:space="preserve">
+    <value>Ya existe una vista llamada "{0}".</value>
+  </data>
+  <data name="Notice_MoveRemovedOne" xml:space="preserve">
+    <value>Al mover "{0}" se quitó 1 vínculo. Vuelva a marcarlo si las secciones aún dependen entre sí.</value>
+  </data>
+  <data name="Notice_MoveRemovedMany" xml:space="preserve">
+    <value>Al mover "{0}" se quitaron {1} vínculos. Vuelva a marcarlos si las secciones aún dependen entre sí.</value>
+  </data>
+  <data name="Notice_DeleteRemovedOne" xml:space="preserve">
+    <value>Al eliminar "{0}" se quitó 1 vínculo.</value>
+  </data>
+  <data name="Notice_DeleteRemovedMany" xml:space="preserve">
+    <value>Al eliminar "{0}" se quitaron {1} vínculos.</value>
+  </data>
+  <data name="Json_Empty" xml:space="preserve">
+    <value>El JSON almacenado está vacío.</value>
+  </data>
+  <data name="Json_NotObject" xml:space="preserve">
+    <value>El JSON almacenado no es un objeto.</value>
+  </data>
+  <data name="Json_NoVersion" xml:space="preserve">
+    <value>El JSON almacenado no tiene un schemaVersion entero.</value>
+  </data>
+  <data name="Json_Malformed" xml:space="preserve">
+    <value>El JSON almacenado está mal formado: {0}</value>
+  </data>
+  <data name="Json_UnsupportedVersion" xml:space="preserve">
+    <value>schemaVersion {0} no compatible.</value>
+  </data>
+  <data name="Json_Newer" xml:space="preserve">
+    <value>Escrito por una versión más reciente de Gantt-It (esquema {0}; esta versión lee el {1}). Aquí es de solo lectura.</value>
+  </data>
+  <data name="Json_Shape" xml:space="preserve">
+    <value>El JSON almacenado no tiene la estructura esperada: {0}</value>
+  </data>
+  <data name="Chart_NoName" xml:space="preserve">
+    <value>El diagrama no tiene nombre.</value>
+  </data>
+  <data name="Chart_NoTitle" xml:space="preserve">
+    <value>El diagrama no tiene campo de título.</value>
+  </data>
+  <data name="Chart_NoSections" xml:space="preserve">
+    <value>El diagrama no tiene lista de secciones.</value>
+  </data>
+  <data name="Chart_NoLinks" xml:space="preserve">
+    <value>El diagrama no tiene lista de vínculos.</value>
+  </data>
+  <data name="Chart_NonFiniteWidth" xml:space="preserve">
+    <value>El diagrama tiene un ancho no finito.</value>
+  </data>
+  <data name="Chart_UnknownTimescale" xml:space="preserve">
+    <value>El diagrama tiene una escala de tiempo desconocida.</value>
+  </data>
+  <data name="Chart_UnknownColumns" xml:space="preserve">
+    <value>El diagrama tiene columnas desconocidas.</value>
+  </data>
+  <data name="Chart_EmptySection" xml:space="preserve">
+    <value>El diagrama tiene una entrada de sección vacía.</value>
+  </data>
+  <data name="Chart_SectionNoName" xml:space="preserve">
+    <value>La sección {0} no tiene nombre.</value>
+  </data>
+  <data name="Chart_SectionDate" xml:space="preserve">
+    <value>La sección {0} tiene una fecha fuera de {1}–{2}.</value>
+  </data>
+  <data name="Chart_DuplicateId" xml:space="preserve">
+    <value>El identificador de sección {0} aparece dos veces.</value>
+  </data>
+  <data name="Chart_EmptyLink" xml:space="preserve">
+    <value>El diagrama tiene una entrada de vínculo vacía.</value>
+  </data>
+  <data name="Chart_LinkMissing" xml:space="preserve">
+    <value>Un vínculo hace referencia a una sección que no existe.</value>
+  </data>
+  <data name="Chart_LinkNotNeighbours" xml:space="preserve">
+    <value>Un vínculo une secciones que no son contiguas.</value>
+  </data>
+  <data name="Chart_LinkTwice" xml:space="preserve">
+    <value>Un vínculo aparece dos veces.</value>
+  </data>
+  <data name="Settings_NoPalette" xml:space="preserve">
+    <value>La configuración no tiene paleta.</value>
+  </data>
+  <data name="Settings_NonFinitePadding" xml:space="preserve">
+    <value>La configuración tiene un margen de celda no finito.</value>
+  </data>
+  <data name="Settings_UnknownLanguage" xml:space="preserve">
+    <value>La configuración tiene un idioma de diagrama desconocido.</value>
+  </data>
+  <data name="Settings_StyleIncomplete" xml:space="preserve">
+    <value>Una referencia de estilo está incompleta.</value>
+  </data>
+</root>

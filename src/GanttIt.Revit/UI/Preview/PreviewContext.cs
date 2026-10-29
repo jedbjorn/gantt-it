@@ -1,6 +1,7 @@
 using GanttIt.Core.Layout;
 using GanttIt.Core.Model;
 using GanttIt.Core.Validation;
+using GanttIt.Revit.Resources;
 using GanttIt.Revit.Services;
 
 namespace GanttIt.Revit.UI.Preview;
@@ -26,12 +27,12 @@ public sealed record PreviewContext(
         var settingsIssues = ChartValidator.ValidateSettings(settings);
         if (settingsIssues.Count > 0)
         {
-            message = $"No preview: {settingsIssues[0].Message}";
+            message = Strings.Preview_None(settingsIssues[0].Message);
             return null;
         }
         if (!(chart.TimelineWidth > 0) || !(chart.NameMaxWidth > 0))
         {
-            message = "No preview: the timeline and name column widths must be greater than zero.";
+            message = Strings.Preview_WidthsZero;
             return null;
         }
 
@@ -41,7 +42,7 @@ public sealed record PreviewContext(
         }
         catch (Exception ex)
         {
-            message = $"No preview: {ex.Message}";
+            message = Strings.Preview_None(ex.Message);
             return null;
         }
     }

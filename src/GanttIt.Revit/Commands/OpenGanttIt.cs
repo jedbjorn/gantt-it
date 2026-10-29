@@ -2,6 +2,7 @@ using System.Windows.Interop;
 using Autodesk.Revit.Attributes;
 using Autodesk.Revit.DB;
 using Autodesk.Revit.UI;
+using GanttIt.Revit.Resources;
 using GanttIt.Revit.Services;
 using GanttIt.Revit.UI;
 
@@ -19,10 +20,11 @@ public sealed class OpenGanttIt : IExternalCommand
     public Result Execute(ExternalCommandData commandData, ref string message, ElementSet elements)
     {
         var uiapp = commandData.Application;
+        RevitLanguage.TryApply(() => uiapp.Application.Language);
         var uidoc = uiapp.ActiveUIDocument;
         if (uidoc?.Document is not { } document || document.IsFamilyDocument)
         {
-            TaskDialog.Show("Gantt-It", "Open a project model to create Gantt charts. Charts are legend views, which families don't have.");
+            TaskDialog.Show("Gantt-It", Strings.Command_NeedsProject);
             return Result.Cancelled;
         }
 
@@ -37,7 +39,7 @@ public sealed class OpenGanttIt : IExternalCommand
         catch (Exception ex)
         {
             // Nothing has run yet, so Failed can't undo any work. Revit reports this message.
-            message = $"Gantt-It could not open: {ex.Message}";
+            message = Strings.Command_CouldNotOpen(ex.Message);
             return Result.Failed;
         }
 
@@ -50,7 +52,7 @@ public sealed class OpenGanttIt : IExternalCommand
         }
         catch (Exception ex)
         {
-            TaskDialog.Show("Gantt-It", $"Gantt-It closed because of an unexpected error:\n\n{ex.Message}");
+            TaskDialog.Show("Gantt-It", Strings.Command_UnexpectedClose(ex.Message));
             return Result.Succeeded;
         }
 
@@ -67,7 +69,7 @@ public sealed class OpenGanttIt : IExternalCommand
         }
         catch (Exception ex)
         {
-            TaskDialog.Show("Gantt-It", $"The legend could not be opened: {ex.Message}\n\nOpen it from the Project Browser instead.");
+            TaskDialog.Show("Gantt-It", Strings.Command_OpenViewFailed(ex.Message));
         }
     }
 }

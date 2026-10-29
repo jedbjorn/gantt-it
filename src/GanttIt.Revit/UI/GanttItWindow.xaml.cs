@@ -2,6 +2,7 @@ using System.ComponentModel;
 using System.Windows;
 using System.Windows.Input;
 using System.Windows.Threading;
+using GanttIt.Revit.Resources;
 using GanttIt.Revit.UI.Dialogs;
 using GanttIt.Revit.UI.Theming;
 
@@ -67,7 +68,6 @@ public partial class GanttItWindow : Window
     private void OnUnhandledException(object sender, DispatcherUnhandledExceptionEventArgs e)
     {
         e.Handled = true;
-        _dialogs.ShowMessage("Gantt-It error",
-            $"Gantt-It stopped this step because of an unexpected error:\n\n{e.Exception.Message}");
+        _dialogs.ShowMessage(Strings.Error_Title, Strings.Error_Unexpected(e.Exception.Message));
     }
 }

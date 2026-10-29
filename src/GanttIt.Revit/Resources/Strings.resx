@@ -1,0 +1,799 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <!--
+    English (neutral) UI strings. Keys and {N} placeholders must match Strings.resx (ResourceTests). After adding or renaming a key, run python3 tools/gen_strings.py. Terminology: docs/TRANSLATIONS.md.
+  -->
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+
+  <data name="Ribbon_Tooltip" xml:space="preserve">
+    <value>Create and edit Gantt charts as legend views.</value>
+  </data>
+  <data name="Command_NeedsProject" xml:space="preserve">
+    <value>Open a project model to create Gantt charts. Charts are legend views, which families don't have.</value>
+  </data>
+  <data name="Command_CouldNotOpen" xml:space="preserve">
+    <value>Gantt-It could not open: {0}</value>
+  </data>
+  <data name="Command_UnexpectedClose" xml:space="preserve">
+    <value>Gantt-It closed because of an unexpected error:
+
+{0}</value>
+  </data>
+  <data name="Command_OpenViewFailed" xml:space="preserve">
+    <value>The legend could not be opened: {0}
+
+Open it from the Project Browser instead.</value>
+  </data>
+  <data name="Common_Cancel" xml:space="preserve">
+    <value>Cancel</value>
+  </data>
+  <data name="Common_OK" xml:space="preserve">
+    <value>OK</value>
+  </data>
+  <data name="Common_Dismiss" xml:space="preserve">
+    <value>Dismiss</value>
+  </data>
+  <data name="Common_Settings" xml:space="preserve">
+    <value>Settings</value>
+  </data>
+  <data name="Common_SettingsTip" xml:space="preserve">
+    <value>Project settings: styles, date format, chart language, padding</value>
+  </data>
+  <data name="Error_Title" xml:space="preserve">
+    <value>Gantt-It error</value>
+  </data>
+  <data name="Error_Unexpected" xml:space="preserve">
+    <value>Gantt-It stopped this step because of an unexpected error:
+
+{0}</value>
+  </data>
+  <data name="Window_TitleEdit" xml:space="preserve">
+    <value>Gantt-It — Edit {0}</value>
+  </data>
+  <data name="Window_TitleNew" xml:space="preserve">
+    <value>Gantt-It — New chart</value>
+  </data>
+  <data name="Dialog_NotEditableTitle" xml:space="preserve">
+    <value>Chart is not editable</value>
+  </data>
+  <data name="Dialog_NotGeneratedTitle" xml:space="preserve">
+    <value>Chart was not generated</value>
+  </data>
+  <data name="Dialog_NotUpdatedTitle" xml:space="preserve">
+    <value>Chart was not updated</value>
+  </data>
+  <data name="Dialog_Items" xml:space="preserve">
+    <value>Items</value>
+  </data>
+  <data name="Owner_CheckFailed" xml:space="preserve">
+    <value>Gantt-It could not check who owns this chart: {0}</value>
+  </data>
+  <data name="Result_RolledBack" xml:space="preserve">
+    <value>The change was rolled back; the model is as it was.</value>
+  </data>
+  <data name="Result_NotDeleted" xml:space="preserve">
+    <value>The chart could not be deleted.</value>
+  </data>
+  <data name="Result_NotGenerated" xml:space="preserve">
+    <value>The chart could not be generated.</value>
+  </data>
+  <data name="Result_NotUpdated" xml:space="preserve">
+    <value>The chart could not be updated.</value>
+  </data>
+  <data name="Delete_Title" xml:space="preserve">
+    <value>Delete chart</value>
+  </data>
+  <data name="Delete_Button" xml:space="preserve">
+    <value>Delete</value>
+  </data>
+  <data name="Delete_ConfirmNotPlaced" xml:space="preserve">
+    <value>Delete the chart "{0}" and its legend view? It is not placed on any sheet.</value>
+  </data>
+  <data name="Delete_ConfirmOneSheet" xml:space="preserve">
+    <value>Delete the chart "{0}" and its legend view? It is placed on this sheet, and deleting the view removes its viewport from it:</value>
+  </data>
+  <data name="Delete_ConfirmSheets" xml:space="preserve">
+    <value>Delete the chart "{0}" and its legend view? It is placed on these {1} sheets, and deleting the view removes its viewports from them:</value>
+  </data>
+  <data name="Delete_FailedTitle" xml:space="preserve">
+    <value>Chart was not deleted</value>
+  </data>
+  <data name="Status_Deleted" xml:space="preserve">
+    <value>Deleted "{0}".</value>
+  </data>
+  <data name="Status_Generated" xml:space="preserve">
+    <value>Generated "{0}".</value>
+  </data>
+  <data name="Status_Updated" xml:space="preserve">
+    <value>Updated "{0}".</value>
+  </data>
+  <data name="Status_SettingsSaved" xml:space="preserve">
+    <value>Settings saved.</value>
+  </data>
+  <data name="Home_NewChart" xml:space="preserve">
+    <value>New chart</value>
+  </data>
+  <data name="Home_NewChartHint" xml:space="preserve">
+    <value>Creates a legend view</value>
+  </data>
+  <data name="Home_NoPreview" xml:space="preserve">
+    <value>No preview</value>
+  </data>
+  <data name="Home_Edit" xml:space="preserve">
+    <value>Edit</value>
+  </data>
+  <data name="Home_OpenView" xml:space="preserve">
+    <value>Open view</value>
+    <comment>Card button; the card is 264 px wide, so keep it to one short word.</comment>
+  </data>
+  <data name="Home_OpenViewTip" xml:space="preserve">
+    <value>Closes Gantt-It and opens this legend</value>
+  </data>
+  <data name="Home_Delete" xml:space="preserve">
+    <value>Delete</value>
+  </data>
+  <data name="Home_Heading" xml:space="preserve">
+    <value>Gantt charts</value>
+  </data>
+  <data name="Home_Subheading" xml:space="preserve">
+    <value>Each chart is a legend view you can place on any number of sheets.</value>
+  </data>
+  <data name="Home_Empty" xml:space="preserve">
+    <value>No charts in this model yet.</value>
+  </data>
+  <data name="Home_ChartList" xml:space="preserve">
+    <value>Charts</value>
+  </data>
+  <data name="Home_NoSettings" xml:space="preserve">
+    <value>This model has no Gantt-It settings yet. They open the first time you create a chart.</value>
+  </data>
+  <data name="Home_MissingStyles" xml:space="preserve">
+    <value>Some styles in Settings no longer exist ({0}). Charts can't be generated until each is replaced.</value>
+  </data>
+  <data name="Home_ListFailed" xml:space="preserve">
+    <value>The charts in this model could not be read: {0}</value>
+  </data>
+  <data name="Card_NewerVersion" xml:space="preserve">
+    <value>Written by a newer version of Gantt-It. It is read-only here.</value>
+  </data>
+  <data name="Card_Invalid" xml:space="preserve">
+    <value>This chart's stored data can't be read: {0}</value>
+  </data>
+  <data name="Card_NotPlacedTip" xml:space="preserve">
+    <value>Not placed on any sheet</value>
+  </data>
+  <data name="Card_ThumbnailName" xml:space="preserve">
+    <value>Thumbnail of {0}</value>
+  </data>
+  <data name="Card_EditName" xml:space="preserve">
+    <value>Edit {0}</value>
+  </data>
+  <data name="Card_OpenViewName" xml:space="preserve">
+    <value>Open view {0}</value>
+  </data>
+  <data name="Card_DeleteName" xml:space="preserve">
+    <value>Delete {0}</value>
+  </data>
+  <data name="Editor_HeadingEdit" xml:space="preserve">
+    <value>Edit chart: {0}</value>
+  </data>
+  <data name="Editor_Generate" xml:space="preserve">
+    <value>Generate</value>
+  </data>
+  <data name="Editor_Update" xml:space="preserve">
+    <value>Update</value>
+  </data>
+  <data name="Editor_Name" xml:space="preserve">
+    <value>Name</value>
+  </data>
+  <data name="Editor_ChartName" xml:space="preserve">
+    <value>Chart name</value>
+  </data>
+  <data name="Editor_Title" xml:space="preserve">
+    <value>Title</value>
+  </data>
+  <data name="Editor_ChartTitle" xml:space="preserve">
+    <value>Chart title</value>
+  </data>
+  <data name="Editor_TitleTip" xml:space="preserve">
+    <value>Drawn above the chart. Follows the name until you change it; blank means no title.</value>
+  </data>
+  <data name="Editor_Timescale" xml:space="preserve">
+    <value>Timescale</value>
+  </data>
+  <data name="Editor_Columns" xml:space="preserve">
+    <value>Columns</value>
+  </data>
+  <data name="Editor_SectionAlways" xml:space="preserve">
+    <value>Section (always)</value>
+  </data>
+  <data name="Editor_Start" xml:space="preserve">
+    <value>Start</value>
+  </data>
+  <data name="Editor_End" xml:space="preserve">
+    <value>End</value>
+  </data>
+  <data name="Editor_Duration" xml:space="preserve">
+    <value>Duration</value>
+  </data>
+  <data name="Editor_TimelineWidth" xml:space="preserve">
+    <value>Timeline width</value>
+    <comment>Label beside a 110 px field; keep it short.</comment>
+  </data>
+  <data name="Editor_TimelineWidthTip" xml:space="preserve">
+    <value>Width of the timeline on paper, in project units</value>
+  </data>
+  <data name="Editor_NameMax" xml:space="preserve">
+    <value>Name column max</value>
+    <comment>Label beside a 110 px field; keep it short.</comment>
+  </data>
+  <data name="Editor_NameMaxName" xml:space="preserve">
+    <value>Name column maximum width</value>
+  </data>
+  <data name="Editor_NameMaxTip" xml:space="preserve">
+    <value>Longest the section name column gets on paper, in project units; longer names wrap</value>
+  </data>
+  <data name="Editor_AddSectionButton" xml:space="preserve">
+    <value>+  Add section</value>
+  </data>
+  <data name="Editor_AddSection" xml:space="preserve">
+    <value>Add section</value>
+  </data>
+  <data name="Editor_Sections" xml:space="preserve">
+    <value>Sections</value>
+  </data>
+  <data name="Editor_SplitterTip" xml:space="preserve">
+    <value>Drag to resize the preview</value>
+  </data>
+  <data name="Editor_Preview" xml:space="preserve">
+    <value>Preview</value>
+  </data>
+  <data name="Editor_PreviewName" xml:space="preserve">
+    <value>Chart preview</value>
+  </data>
+  <data name="Editor_DeleteChart" xml:space="preserve">
+    <value>Delete chart</value>
+  </data>
+  <data name="Editor_CancelTip" xml:space="preserve">
+    <value>Discard changes and go back</value>
+  </data>
+  <data name="Editor_Problems" xml:space="preserve">
+    <value>Problems</value>
+  </data>
+  <data name="Editor_RestoredNotice" xml:space="preserve">
+    <value>Restored the chart you were editing before Gantt-It closed. Press Generate to create it.</value>
+  </data>
+  <data name="Editor_ReadyGenerate" xml:space="preserve">
+    <value>Ready to generate.</value>
+  </data>
+  <data name="Editor_ReadyUpdate" xml:space="preserve">
+    <value>Ready to update.</value>
+  </data>
+  <data name="Editor_ProblemsOneGenerate" xml:space="preserve">
+    <value>1 problem to fix before generating:</value>
+  </data>
+  <data name="Editor_ProblemsManyGenerate" xml:space="preserve">
+    <value>{0} problems to fix before generating:</value>
+  </data>
+  <data name="Editor_ProblemsOneUpdate" xml:space="preserve">
+    <value>1 problem to fix before updating:</value>
+  </data>
+  <data name="Editor_ProblemsManyUpdate" xml:space="preserve">
+    <value>{0} problems to fix before updating:</value>
+  </data>
+  <data name="Editor_DurationNotice" xml:space="preserve">
+    <value>"{0}": {1}</value>
+  </data>
+  <data name="Editor_DiscardedOne" xml:space="preserve">
+    <value>Section {0}: discarded {1}, which was not a date. The dates shown are the section's dates.</value>
+  </data>
+  <data name="Editor_DiscardedTwo" xml:space="preserve">
+    <value>Section {0}: discarded {1} and {2}, which were not dates. The dates shown are the section's dates.</value>
+  </data>
+  <data name="Editor_ViewNamesFailed" xml:space="preserve">
+    <value>The model's view names could not be read, so a name clash will only be caught by Revit: {0}</value>
+  </data>
+  <data name="Timescale_Auto" xml:space="preserve">
+    <value>Auto</value>
+  </data>
+  <data name="Timescale_Days" xml:space="preserve">
+    <value>Days</value>
+  </data>
+  <data name="Timescale_Weeks" xml:space="preserve">
+    <value>Weeks</value>
+  </data>
+  <data name="Timescale_Months" xml:space="preserve">
+    <value>Months</value>
+  </data>
+  <data name="Timescale_Quarters" xml:space="preserve">
+    <value>Quarters</value>
+  </data>
+  <data name="Grid_Days" xml:space="preserve">
+    <value>Days</value>
+  </data>
+  <data name="Grid_LinkPrevious" xml:space="preserve">
+    <value>Relates to previous</value>
+    <comment>Column header 72 px wide, wraps to two lines.</comment>
+  </data>
+  <data name="Grid_LinkFollowing" xml:space="preserve">
+    <value>Relates to following</value>
+    <comment>Column header 72 px wide, wraps to two lines.</comment>
+  </data>
+  <data name="Grid_Color" xml:space="preserve">
+    <value>Color</value>
+  </data>
+  <data name="Row_DragTip" xml:space="preserve">
+    <value>Drag to reorder (or Alt+Up / Alt+Down)</value>
+  </data>
+  <data name="Row_Reorder" xml:space="preserve">
+    <value>Reorder</value>
+  </data>
+  <data name="Row_SectionName" xml:space="preserve">
+    <value>Section name</value>
+  </data>
+  <data name="Row_DurationName" xml:space="preserve">
+    <value>Duration in days</value>
+  </data>
+  <data name="Row_LinkPreviousTip" xml:space="preserve">
+    <value>Relates to previous: keeps this section's gap after the previous one</value>
+  </data>
+  <data name="Row_LinkFollowingTip" xml:space="preserve">
+    <value>Relates to following: keeps the next section's gap after this one</value>
+  </data>
+  <data name="Row_ColorName" xml:space="preserve">
+    <value>Color {0}</value>
+  </data>
+  <data name="Row_DeleteSection" xml:space="preserve">
+    <value>Delete section</value>
+  </data>
+  <data name="Row_DiscardedStart" xml:space="preserve">
+    <value>Start "{0}"</value>
+  </data>
+  <data name="Row_DiscardedEnd" xml:space="preserve">
+    <value>End "{0}"</value>
+  </data>
+  <data name="Issue_TimelineWidthField" xml:space="preserve">
+    <value>Timeline width: {0}</value>
+  </data>
+  <data name="Issue_NameWidthField" xml:space="preserve">
+    <value>Name column width: {0}</value>
+  </data>
+  <data name="Issue_RowStart" xml:space="preserve">
+    <value>Section {0} Start: {1}</value>
+  </data>
+  <data name="Issue_RowEnd" xml:space="preserve">
+    <value>Section {0} End: {1}</value>
+  </data>
+  <data name="Issue_Settings" xml:space="preserve">
+    <value>Settings: {0}</value>
+  </data>
+  <data name="Issue_SettingsNewer" xml:space="preserve">
+    <value>the settings were written by a newer version of Gantt-It and are read-only here.</value>
+  </data>
+  <data name="Issue_StyleMissing" xml:space="preserve">
+    <value>Settings: {0} no longer exists. Choose a replacement in Settings.</value>
+  </data>
+  <data name="Issue_StyleUnset" xml:space="preserve">
+    <value>Settings: choose a style for "{0}" in Settings.</value>
+  </data>
+  <data name="Date_CalendarTip" xml:space="preserve">
+    <value>Choose from the calendar (Alt+Down)</value>
+  </data>
+  <data name="Date_Calendar" xml:space="preserve">
+    <value>Calendar</value>
+  </data>
+  <data name="Date_PreviousMonth" xml:space="preserve">
+    <value>Previous month</value>
+  </data>
+  <data name="Date_NextMonth" xml:space="preserve">
+    <value>Next month</value>
+  </data>
+  <data name="Edit_Cut" xml:space="preserve">
+    <value>Cu_t</value>
+  </data>
+  <data name="Edit_Copy" xml:space="preserve">
+    <value>_Copy</value>
+  </data>
+  <data name="Edit_Paste" xml:space="preserve">
+    <value>_Paste</value>
+  </data>
+  <data name="Date_FieldCalendar" xml:space="preserve">
+    <value>{0} calendar</value>
+  </data>
+  <data name="Date_TypeTip" xml:space="preserve">
+    <value>Type the date as {0}, or press Alt+Down for the calendar.</value>
+  </data>
+  <data name="Length_Invalid" xml:space="preserve">
+    <value>"{0}" is not a length. Enter it in the project's units, for example {1}.</value>
+  </data>
+  <data name="Preview_None" xml:space="preserve">
+    <value>No preview: {0}</value>
+  </data>
+  <data name="Preview_WidthsZero" xml:space="preserve">
+    <value>No preview: the timeline and name column widths must be greater than zero.</value>
+  </data>
+  <data name="Preview_Approximate" xml:space="preserve">
+    <value>Preview text sizes are approximate: the text styles could not be calibrated ({0}).</value>
+  </data>
+  <data name="Preview_ApproximateUntilStyles" xml:space="preserve">
+    <value>Preview text sizes are approximate until every text style is chosen in Settings.</value>
+  </data>
+  <data name="Preview_MeasurerUnavailable" xml:space="preserve">
+    <value>the preview measurer is unavailable ({0}).</value>
+  </data>
+  <data name="Settings_WindowTitle" xml:space="preserve">
+    <value>Gantt-It Settings</value>
+  </data>
+  <data name="Settings_Heading" xml:space="preserve">
+    <value>Project settings</value>
+  </data>
+  <data name="Settings_Subheading" xml:space="preserve">
+    <value>Stored in this model and used by every chart in it. Changing them does not redraw existing charts on its own.</value>
+  </data>
+  <data name="Settings_FirstRun" xml:space="preserve">
+    <value>This model has no Gantt-It settings yet. Choose the styles charts should use, then save to continue.</value>
+  </data>
+  <data name="Settings_TextStyles" xml:space="preserve">
+    <value>Text styles</value>
+  </data>
+  <data name="Settings_LineStyles" xml:space="preserve">
+    <value>Line styles</value>
+  </data>
+  <data name="Settings_Format" xml:space="preserve">
+    <value>Format</value>
+  </data>
+  <data name="Settings_ChartLanguage" xml:space="preserve">
+    <value>Chart language</value>
+  </data>
+  <data name="Settings_ChartLanguageHint" xml:space="preserve">
+    <value>Language of the text drawn on charts: column headers, month names, quarters. Redraw existing charts to apply it.</value>
+  </data>
+  <data name="Settings_DateFormat" xml:space="preserve">
+    <value>Date format</value>
+  </data>
+  <data name="Settings_CustomPattern" xml:space="preserve">
+    <value>Custom pattern…</value>
+  </data>
+  <data name="Settings_CustomPatternName" xml:space="preserve">
+    <value>Custom date pattern</value>
+  </data>
+  <data name="Settings_CustomPatternTip" xml:space="preserve">
+    <value>A .NET date pattern, e.g. d MMM yyyy</value>
+  </data>
+  <data name="Settings_DateSample" xml:space="preserve">
+    <value>31 December 2026 shows as {0}</value>
+  </data>
+  <data name="Settings_CellPadding" xml:space="preserve">
+    <value>Cell padding</value>
+  </data>
+  <data name="Settings_CellPaddingHint" xml:space="preserve">
+    <value>Space between text and cell lines, in project units</value>
+  </data>
+  <data name="Settings_CellPaddingPositive" xml:space="preserve">
+    <value>The cell padding must be greater than zero.</value>
+  </data>
+  <data name="Settings_UseAsDefault" xml:space="preserve">
+    <value>Use as my default for new projects</value>
+  </data>
+  <data name="Settings_UseAsDefaultTip" xml:space="preserve">
+    <value>Saves the style names to your Gantt-It defaults; new models match styles by these names first.</value>
+  </data>
+  <data name="Settings_RegenerateAll" xml:space="preserve">
+    <value>Regenerate all charts now</value>
+  </data>
+  <data name="Settings_RegenerateAllTip" xml:space="preserve">
+    <value>Saves these settings and redraws every chart in this model</value>
+  </data>
+  <data name="Settings_Save" xml:space="preserve">
+    <value>Save</value>
+  </data>
+  <data name="Settings_MissingSummary" xml:space="preserve">
+    <value>Some styles no longer exist in this model ({0}). Charts can't be generated until each is replaced.</value>
+  </data>
+  <data name="Settings_NotEditableTitle" xml:space="preserve">
+    <value>Settings are not editable</value>
+  </data>
+  <data name="Settings_NotSavedTitle" xml:space="preserve">
+    <value>Settings were not saved</value>
+  </data>
+  <data name="Settings_NotSaved" xml:space="preserve">
+    <value>The settings could not be saved.</value>
+  </data>
+  <data name="Settings_DefaultsNotSavedTitle" xml:space="preserve">
+    <value>Defaults were not saved</value>
+  </data>
+  <data name="Settings_DefaultsNotSaved" xml:space="preserve">
+    <value>The settings were saved to this model, but your defaults for new projects could not be written: {0}</value>
+  </data>
+  <data name="Settings_RegeneratedTitle" xml:space="preserve">
+    <value>Charts regenerated</value>
+  </data>
+  <data name="Settings_NotRegeneratedTitle" xml:space="preserve">
+    <value>Charts were not regenerated</value>
+  </data>
+  <data name="Settings_Regenerated" xml:space="preserve">
+    <value>Every chart in this model was redrawn with the new settings.</value>
+  </data>
+  <data name="Settings_NotRegenerated" xml:space="preserve">
+    <value>The charts could not be regenerated. The model was not changed.</value>
+  </data>
+  <data name="Settings_OwnerCheckFailed" xml:space="preserve">
+    <value>Gantt-It could not check who owns the settings: {0}</value>
+  </data>
+  <data name="Settings_ReadFailed" xml:space="preserve">
+    <value>The settings could not be read: {0}</value>
+  </data>
+  <data name="Style_TitleText" xml:space="preserve">
+    <value>Title text style</value>
+    <comment>Must equal the Settings label; also used in missing-style messages.</comment>
+  </data>
+  <data name="Style_HeaderText" xml:space="preserve">
+    <value>Header text style</value>
+  </data>
+  <data name="Style_BodyText" xml:space="preserve">
+    <value>Body text style</value>
+  </data>
+  <data name="Style_ChartLine" xml:space="preserve">
+    <value>Chart line style</value>
+  </data>
+  <data name="Style_HeaderLine" xml:space="preserve">
+    <value>Header line style</value>
+  </data>
+  <data name="Style_LabelWithName" xml:space="preserve">
+    <value>{0} "{1}"</value>
+  </data>
+  <data name="Style_MissingHint" xml:space="preserve">
+    <value>"{0}" no longer exists in this model. Choose a replacement.</value>
+  </data>
+  <data name="Style_ChooseHint" xml:space="preserve">
+    <value>Choose a style.</value>
+  </data>
+  <data name="Styles_Unset" xml:space="preserve">
+    <value>Choose a style in Settings for: {0}.</value>
+  </data>
+  <data name="Styles_Missing" xml:space="preserve">
+    <value>These styles no longer exist in the model; choose replacements in Settings: {0}.</value>
+  </data>
+  <data name="NoLegend_Heading" xml:space="preserve">
+    <value>This model has no legend view yet</value>
+  </data>
+  <data name="NoLegend_Message" xml:space="preserve">
+    <value>Revit's API can't create a legend view from scratch, so Gantt-It makes each chart by duplicating an existing legend. Your chart has not been generated, and nothing is downloaded or copied from another model.
+
+Revit is paused while Gantt-It is open, so:</value>
+  </data>
+  <data name="NoLegend_Step1" xml:space="preserve">
+    <value>Close Gantt-It with × or Esc. Your chart is kept. (Cancel discards it.)</value>
+  </data>
+  <data name="NoLegend_Step2" xml:space="preserve">
+    <value>In Revit, choose View › Legends › Legend. Any name and scale will do.</value>
+  </data>
+  <data name="NoLegend_Step3" xml:space="preserve">
+    <value>Open Gantt-It again and press Generate.</value>
+  </data>
+  <data name="Color_DialogTitle" xml:space="preserve">
+    <value>Section color</value>
+  </data>
+  <data name="Color_Palette" xml:space="preserve">
+    <value>Palette</value>
+  </data>
+  <data name="Color_Recent" xml:space="preserve">
+    <value>Recent</value>
+  </data>
+  <data name="Color_Hex" xml:space="preserve">
+    <value>Hex</value>
+  </data>
+  <data name="Color_HexName" xml:space="preserve">
+    <value>Hex color</value>
+  </data>
+  <data name="Color_CurrentTip" xml:space="preserve">
+    <value>Current color</value>
+  </data>
+  <data name="Color_Apply" xml:space="preserve">
+    <value>Apply</value>
+  </data>
+  <data name="Color_PickTip" xml:space="preserve">
+    <value>Pick from screen: click any pixel on any monitor (Esc cancels). Picks the color as displayed.</value>
+  </data>
+  <data name="Color_PickName" xml:space="preserve">
+    <value>Pick from screen</value>
+  </data>
+  <data name="Color_More" xml:space="preserve">
+    <value>More…</value>
+  </data>
+  <data name="Color_MoreName" xml:space="preserve">
+    <value>More colors</value>
+  </data>
+  <data name="Color_HexError" xml:space="preserve">
+    <value>Enter a color as #RRGGBB, for example #4F8EF7.</value>
+  </data>
+  <data name="Color_PickFailed" xml:space="preserve">
+    <value>Couldn't pick from the screen: {0}</value>
+  </data>
+  <data name="Pick_WindowTitle" xml:space="preserve">
+    <value>Pick a color</value>
+  </data>
+  <data name="Pick_Hint" xml:space="preserve">
+    <value>Click to pick · Esc to cancel</value>
+  </data>
+  <data name="Pick_ListFailed" xml:space="preserve">
+    <value>Windows did not list the monitors.</value>
+  </data>
+  <data name="Pick_AreaTooLarge" xml:space="preserve">
+    <value>The screen area {0} × {1} can't be captured.</value>
+  </data>
+  <data name="Pick_NoAccess" xml:space="preserve">
+    <value>Windows did not give access to the screen.</value>
+  </data>
+  <data name="Pick_CopyRefused" xml:space="preserve">
+    <value>Windows refused to copy the screen.</value>
+  </data>
+  <data name="Pick_PointerFailed" xml:space="preserve">
+    <value>The pointer position could not be read.</value>
+  </data>
+  <data name="Pick_NoMonitors" xml:space="preserve">
+    <value>Windows reported no monitors.</value>
+  </data>
+  <data name="Backend_NeedsProject" xml:space="preserve">
+    <value>Gantt-It needs an open project.</value>
+  </data>
+  <data name="Backend_SettingsUnreadable" xml:space="preserve">
+    <value>The stored Gantt-It settings could not be read and will be replaced when saved. {0}</value>
+  </data>
+  <data name="Backend_SettingsNewer" xml:space="preserve">
+    <value>These settings were written by a newer version of Gantt-It and are read-only here.</value>
+  </data>
+  <data name="Backend_ViewGone" xml:space="preserve">
+    <value>The chart's legend view no longer exists.</value>
+  </data>
+  <data name="Backend_DeleteFailed" xml:space="preserve">
+    <value>Delete failed: {0}</value>
+  </data>
+  <data name="Gen_NoLegend" xml:space="preserve">
+    <value>Revit's API can't create a legend view from scratch, so Gantt-It copies an existing legend. This model has none yet. Create one with View › Legends › Legend (any name and scale), then press Generate again. Your chart stays in the editor.</value>
+  </data>
+  <data name="Gen_NewerChart" xml:space="preserve">
+    <value>This chart was written by a newer version of Gantt-It and is read-only here.</value>
+  </data>
+  <data name="Gen_NewerChartByHand" xml:space="preserve">
+    <value>This chart was written by a newer version of Gantt-It and is read-only here. It can still be deleted by hand in Revit.</value>
+  </data>
+  <data name="Gen_NewerSettings" xml:space="preserve">
+    <value>The model's Gantt-It settings were written by a newer version of Gantt-It and are read-only here.</value>
+  </data>
+  <data name="Gen_FillsRemoved" xml:space="preserve">
+    <value>Removed unused fill types: {0}.</value>
+  </data>
+  <data name="Gen_Skipped" xml:space="preserve">
+    <value>"{0}" ({1})</value>
+  </data>
+  <data name="Gen_NoneRegenerated" xml:space="preserve">
+    <value>No chart could be regenerated: {0}</value>
+  </data>
+  <data name="Gen_NoCharts" xml:space="preserve">
+    <value>There are no charts to regenerate.</value>
+  </data>
+  <data name="Gen_RegeneratedOne" xml:space="preserve">
+    <value>Regenerated 1 chart.</value>
+  </data>
+  <data name="Gen_RegeneratedMany" xml:space="preserve">
+    <value>Regenerated {0} charts.</value>
+  </data>
+  <data name="Gen_SkippedList" xml:space="preserve">
+    <value>Skipped: {0}.</value>
+  </data>
+  <data name="Gen_NotChart" xml:space="preserve">
+    <value>That view is not a Gantt-It chart (or it no longer exists).</value>
+  </data>
+  <data name="Gen_Detached" xml:space="preserve">
+    <value>"{0}" is a plain legend, not a live Gantt-It chart: it holds none of the elements Gantt-It drew (a copy made in Revit, or a chart whose elements were deleted). Use New chart instead.</value>
+  </data>
+  <data name="Gen_WidenedBars" xml:space="preserve">
+    <value>{0} very short bar(s) were widened to Revit's minimum line length.</value>
+  </data>
+  <data name="Fill_NoRegionType" xml:space="preserve">
+    <value>The model has no filled region type to duplicate.</value>
+  </data>
+  <data name="Fill_NoSolidPattern" xml:space="preserve">
+    <value>The model has no solid drafting fill pattern.</value>
+  </data>
+  <data name="Fill_NoInvisibleLines" xml:space="preserve">
+    <value>The &lt;Invisible lines&gt; style was not found.</value>
+  </data>
+  <data name="Tx_Generate" xml:space="preserve">
+    <value>Generate</value>
+    <comment>Revit Undo list: 'Gantt-It: &lt;action&gt; &lt;chart name&gt;'.</comment>
+  </data>
+  <data name="Tx_Update" xml:space="preserve">
+    <value>Update</value>
+  </data>
+  <data name="Tx_Delete" xml:space="preserve">
+    <value>Delete</value>
+  </data>
+  <data name="Tx_RegenerateAll" xml:space="preserve">
+    <value>Regenerate all charts</value>
+  </data>
+  <data name="Tx_SaveSettings" xml:space="preserve">
+    <value>Save settings</value>
+  </data>
+  <data name="Tx_NotStarted" xml:space="preserve">
+    <value>{0}: Revit did not start the transaction.</value>
+  </data>
+  <data name="Tx_RolledBack" xml:space="preserve">
+    <value>{0} was rolled back: {1}</value>
+  </data>
+  <data name="Tx_Status" xml:space="preserve">
+    <value>status {0}</value>
+  </data>
+  <data name="Tx_Failed" xml:space="preserve">
+    <value>{0} failed and was rolled back: {1}</value>
+  </data>
+  <data name="Ws_AnotherUser" xml:space="preserve">
+    <value>another user</value>
+  </data>
+  <data name="Ws_Owned" xml:space="preserve">
+    <value>This can't be changed right now because it is being edited by {0}. Ask them to synchronize and relinquish, then try again.</value>
+  </data>
+  <data name="Ws_View" xml:space="preserve">
+    <value>view "{0}"</value>
+  </data>
+  <data name="Ws_Settings" xml:space="preserve">
+    <value>the Gantt-It settings</value>
+  </data>
+  <data name="Ws_Element" xml:space="preserve">
+    <value>element {0}</value>
+  </data>
+  <data name="Exit_NoTarget" xml:space="preserve">
+    <value>The chart is Revit's active view and Gantt-It found no other view Revit would switch to. Nothing was changed. Open another view, then delete the chart.</value>
+  </data>
+  <data name="Exit_NotBackOnChart" xml:space="preserve">
+    <value>Revit did not switch back to the chart's view you were on; open it again from the Project Browser.</value>
+  </data>
+  <data name="Exit_ChartNotReopened" xml:space="preserve">
+    <value>You are back on your view, but the chart's view, closed for the retry, could not be reopened; open it from the Project Browser.</value>
+  </data>
+  <data name="Exit_NotBackOnView" xml:space="preserve">
+    <value>The chart's view was reopened, but Revit did not switch back to the view you were on.</value>
+  </data>
+  <data name="Exit_NeitherBack" xml:space="preserve">
+    <value>Revit did not switch back to the view you were on, and the chart's view, closed for the retry, could not be reopened.</value>
+  </data>
+</root>

@@ -1,10 +1,11 @@
-using System.Globalization;
 using GanttIt.Core.Dates;
+using GanttIt.Core.Localization;
 using GanttIt.Core.Model;
+using GanttIt.Core.Resources;
 
 namespace GanttIt.Core.Editing;
 
-/// <summary>The one-line facts a home-screen card shows about a chart (§2.1).</summary>
+/// <summary>The one-line facts a home-screen card shows about a chart (§2.1), in the UI language.</summary>
 public static class ChartSummary
 {
     /// <summary>
@@ -26,25 +27,26 @@ public static class ChartSummary
     }
 
     /// <summary>
-    /// "2026-10-01 – 2027-01-10" in <paramref name="dateFormat"/>, falling back
-    /// to ISO when the pattern is invalid; "No sections" for an empty chart.
+    /// "2026-10-01 – 2027-01-10" in <paramref name="dateFormat"/> (month names in the UI
+    /// language), falling back to ISO when the pattern is invalid; "No sections" for an empty chart.
     /// </summary>
     public static string DescribeSpan(Chart chart, string? dateFormat)
     {
-        if (!TryGetSpan(chart, out var first, out var last)) return "No sections";
+        if (!TryGetSpan(chart, out var first, out var last)) return CoreStrings.Summary_NoSections;
         var pattern = DateFormats.IsValidPattern(dateFormat, out _) ? dateFormat! : DateFormats.Iso;
-        return $"{DateFormats.Format(first, pattern)} – {DateFormats.Format(last, pattern)}";
+        var language = UiLanguage.Current;
+        return $"{DateFormats.Format(first, pattern, language)} – {DateFormats.Format(last, pattern, language)}";
     }
 
     /// <summary>"1 section" / "5 sections".</summary>
     public static string DescribeSections(int count) =>
-        count == 1 ? "1 section" : $"{count.ToString(CultureInfo.InvariantCulture)} sections";
+        count == 1 ? CoreStrings.Summary_SectionsOne : CoreStrings.Summary_SectionsMany(count);
 
     /// <summary>"Not placed" / "On 1 sheet" / "On 3 sheets".</summary>
     public static string DescribePlacement(int sheetCount) => sheetCount switch
     {
-        <= 0 => "Not placed",
-        1 => "On 1 sheet",
-        _ => $"On {sheetCount.ToString(CultureInfo.InvariantCulture)} sheets",
+        <= 0 => CoreStrings.Summary_NotPlaced,
+        1 => CoreStrings.Summary_OnOneSheet,
+        _ => CoreStrings.Summary_OnSheets(sheetCount),
     };
 }

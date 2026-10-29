@@ -1,6 +1,7 @@
 using Autodesk.Revit.DB;
 using Autodesk.Revit.UI;
 using GanttIt.Core.Views;
+using GanttIt.Revit.Resources;
 
 namespace GanttIt.Revit.Services;
 
@@ -38,9 +39,7 @@ internal sealed class ChartViewExit
         _originalActiveId = Safe(() => uidoc?.ActiveView?.Id);
     }
 
-    public const string NoTargetMessage =
-        "The chart is Revit's active view and Gantt-It found no other view Revit would switch to. "
-        + "Nothing was changed. Open another view, then delete the chart.";
+    public static string NoTargetMessage => Strings.Exit_NoTarget;
 
     /// <summary>
     /// Makes sure the chart isn't the active view. Null when done (or nothing was
@@ -116,13 +115,13 @@ internal sealed class ChartViewExit
         _closedWindows = false;
 
         if (wasOnChart)
-            return chartBack ? null : "Revit did not switch back to the chart's view you were on; open it again from the Project Browser.";
+            return chartBack ? null : Strings.Exit_NotBackOnChart;
         return (chartBack, originalBack) switch
         {
             (true, true) => null,
-            (false, true) => "You are back on your view, but the chart's view, closed for the retry, could not be reopened; open it from the Project Browser.",
-            (true, false) => "The chart's view was reopened, but Revit did not switch back to the view you were on.",
-            _ => "Revit did not switch back to the view you were on, and the chart's view, closed for the retry, could not be reopened.",
+            (false, true) => Strings.Exit_ChartNotReopened,
+            (true, false) => Strings.Exit_NotBackOnView,
+            _ => Strings.Exit_NeitherBack,
         };
     }
 

@@ -1,10 +1,15 @@
 using System.Globalization;
+using GanttIt.Core.Localization;
+using GanttIt.Core.Resources;
 
 namespace GanttIt.Core.Dates;
 
 /// <summary>
 /// Date formatting for the date columns and timescale labels (§2.3).
-/// Always culture-invariant, so output never depends on the machine's locale.
+/// Patterns are culture-invariant, so output never depends on the machine's locale;
+/// only month and day names (<c>MMM</c>, <c>MMMM</c>, <c>ddd</c>, <c>dddd</c>) follow
+/// a <see cref="Language"/>: the chart language for chart output, the UI language in
+/// the editor's fields (§2.6). English (the default) is the invariant names.
 /// </summary>
 public static class DateFormats
 {
@@ -18,9 +23,12 @@ public static class DateFormats
 
     private static readonly DateOnly Probe = new(2026, 12, 31);
 
-    /// <summary>Formats <paramref name="date"/> with <paramref name="pattern"/>, culture-invariant.</summary>
-    public static string Format(DateOnly date, string pattern) =>
-        date.ToString(pattern, CultureInfo.InvariantCulture);
+    /// <summary>
+    /// Formats <paramref name="date"/> with <paramref name="pattern"/>: invariant digits
+    /// and separators, month and day names in <paramref name="language"/>.
+    /// </summary>
+    public static string Format(DateOnly date, string pattern, Language language = Language.English) =>
+        date.ToString(pattern, ChartText.For(language).DateFormat);
 
     /// <summary>
     /// Checks a custom pattern: it must format without error, produce
@@ -31,7 +39,7 @@ public static class DateFormats
         error = null;
         if (string.IsNullOrWhiteSpace(pattern))
         {
-            error = "The date format is blank.";
+            error = CoreStrings.DateFormat_Blank;
             return false;
         }
 
@@ -42,13 +50,13 @@ public static class DateFormats
         }
         catch (FormatException ex)
         {
-            error = $"'{pattern}' is not a valid date format: {ex.Message}";
+            error = CoreStrings.DateFormat_Invalid(pattern, ex.Message);
             return false;
         }
 
         if (string.IsNullOrWhiteSpace(sample) || sample.AsSpan().IndexOfAny('\r', '\n') >= 0)
         {
-            error = $"'{pattern}' does not produce a single line of text.";
+            error = CoreStrings.DateFormat_NotSingleLine(pattern);
             return false;
         }
 
@@ -64,9 +72,10 @@ public static class DateFormats
     /// a day, month or year field (e.g. <c>MMM yyyy</c>) can't identify a date, so the
     /// fields fall back to ISO instead of guessing the missing part. The same goes for a
     /// two-digit year (<c>dd/MM/yy</c>): it can't tell 1926 from 2026 within the supported
-    /// range, which the probes cover end to end.
+    /// range, which the probes cover end to end. Month and day names are read in
+    /// <paramref name="language"/>.
     /// </summary>
-    public static string EntryPattern(string? pattern)
+    public static string EntryPattern(string? pattern, Language language = Language.English)
     {
         if (!IsValidPattern(pattern, out _)) return Iso;
         foreach (var probe in RoundTripProbes)
@@ -74,13 +83,13 @@ public static class DateFormats
             string text;
             try
             {
-                text = Format(probe, pattern!);
+                text = Format(probe, pattern!, language);
             }
             catch (FormatException)
             {
                 return Iso;
             }
-            if (!TryParseExact(text, pattern!, out var back) || back != probe) return Iso;
+            if (!TryParseExact(text, pattern!, language, out var back) || back != probe) return Iso;
         }
         return pattern!;
     }
@@ -91,24 +100,26 @@ public static class DateFormats
     /// be in the pattern's order, so <c>03/04/2026</c> is 3 April with <c>dd/MM/yyyy</c>
     /// and 4 March with <c>MM/dd/yyyy</c>, never the machine locale's reading. Leading
     /// zeros may be left out (<c>2026-1-5</c> for <c>yyyy-MM-dd</c>); surrounding
-    /// spaces are ignored.
+    /// spaces are ignored. Month and day names are read in <paramref name="language"/>
+    /// (any case).
     /// </summary>
-    public static bool TryParse(string? text, string pattern, out DateOnly date)
+    public static bool TryParse(string? text, string pattern, out DateOnly date, Language language = Language.English)
     {
         date = default;
         if (string.IsNullOrWhiteSpace(text) || string.IsNullOrWhiteSpace(pattern)) return false;
         var s = text.Trim();
-        if (TryParseExact(s, pattern, out date)) return true;
+        if (TryParseExact(s, pattern, language, out date)) return true;
         var relaxed = WithoutLeadingZeros(pattern);
-        return relaxed != pattern && TryParseExact(s, relaxed, out date);
+        return relaxed != pattern && TryParseExact(s, relaxed, language, out date);
     }
 
     /// <summary>
-    /// The message for typed text that <see cref="TryParse"/> rejected, naming the
-    /// pattern with an example (shown in the field's tooltip and the editor's issue list).
+    /// The UI message for typed text that <see cref="TryParse"/> rejected, naming the
+    /// pattern with an example in <paramref name="language"/> (shown in the field's
+    /// tooltip and the editor's issue list).
     /// </summary>
-    public static string TypedDateError(string text, string pattern) =>
-        $"\"{text.Trim()}\" is not a date in this chart's format. Type it as {pattern}, for example {Format(ErrorSample, pattern)}.";
+    public static string TypedDateError(string text, string pattern, Language language = Language.English) =>
+        CoreStrings.DateFormat_TypedError(text.Trim(), pattern, Format(ErrorSample, pattern, language));
 
     private static readonly DateOnly ErrorSample = new(2026, 12, 31);
 
@@ -161,11 +172,11 @@ public static class DateFormats
     private static readonly DateOnly[] RoundTripProbes =
         [Model.SupportedDates.Min, new(2026, 12, 31), new(2027, 1, 2), new(2031, 7, 9), Model.SupportedDates.Max];
 
-    private static bool TryParseExact(string text, string pattern, out DateOnly date)
+    private static bool TryParseExact(string text, string pattern, Language language, out DateOnly date)
     {
         try
         {
-            return DateOnly.TryParseExact(text, pattern, CultureInfo.InvariantCulture, DateTimeStyles.AllowWhiteSpaces, out date);
+            return DateOnly.TryParseExact(text, pattern, ChartText.For(language).DateFormat, DateTimeStyles.AllowWhiteSpaces, out date);
         }
         catch (FormatException)
         {
@@ -174,11 +185,11 @@ public static class DateFormats
         }
     }
 
-    /// <summary>Full invariant month name, e.g. "January".</summary>
-    public static string MonthName(int month) =>
-        CultureInfo.InvariantCulture.DateTimeFormat.GetMonthName(month);
+    /// <summary>Full month name in <paramref name="language"/>, e.g. "January", "janvier".</summary>
+    public static string MonthName(int month, Language language = Language.English) =>
+        ChartText.For(language).MonthName(month);
 
-    /// <summary>Abbreviated invariant month name, e.g. "Jan".</summary>
-    public static string MonthAbbreviation(int month) =>
-        CultureInfo.InvariantCulture.DateTimeFormat.GetAbbreviatedMonthName(month);
+    /// <summary>Abbreviated month name in <paramref name="language"/>, e.g. "Jan", "janv.".</summary>
+    public static string MonthAbbreviation(int month, Language language = Language.English) =>
+        ChartText.For(language).MonthAbbreviation(month);
 }

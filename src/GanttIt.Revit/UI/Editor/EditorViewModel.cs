@@ -3,9 +3,11 @@ using System.Windows.Input;
 using Autodesk.Revit.DB;
 using GanttIt.Core.Dates;
 using GanttIt.Core.Editing;
+using GanttIt.Core.Localization;
 using GanttIt.Core.Model;
 using GanttIt.Core.Scheduling;
 using GanttIt.Core.Validation;
+using GanttIt.Revit.Resources;
 using GanttIt.Revit.Services;
 using GanttIt.Revit.UI.Dialogs;
 using GanttIt.Revit.UI.Mvvm;
@@ -46,7 +48,7 @@ public sealed class EditorViewModel : ObservableObject
         var backend = main.Session.Backend;
 
         _otherViewNames = ReadOtherViewNames(backend, existing?.ViewId, out var namesError);
-        Chart = existing?.Load.Value?.Clone() ?? draft ?? NewChart(_otherViewNames, main.Palette);
+        Chart = existing?.Load.Value?.Clone() ?? draft ?? NewChart(_otherViewNames, main.Palette, ChartTextNow);
         OriginalName = existing?.ViewName ?? Chart.Name;
 
         TimelineWidth = new LengthField(backend, Chart.TimelineWidth, v => { Chart.TimelineWidth = v; OnEdited(); });
@@ -69,7 +71,7 @@ public sealed class EditorViewModel : ObservableObject
         {
             // §7.1: back after creating a legend by hand. Keep the draft until Generate succeeds or Cancel.
             _keepDraft = true;
-            AddNotice("Restored the chart you were editing before Gantt-It closed. Press Generate to create it.", RestoredNoticeId);
+            AddNotice(Strings.Editor_RestoredNotice, RestoredNoticeId);
         }
 
         if (namesError is not null) AddNotice(namesError);
@@ -88,10 +90,10 @@ public sealed class EditorViewModel : ObservableObject
     /// <summary>The legend view's name when the editor opened.</summary>
     public string OriginalName { get; }
 
-    public string Heading => IsExisting ? $"Edit chart: {OriginalName}" : "New chart";
+    public string Heading => IsExisting ? Strings.Editor_HeadingEdit(OriginalName) : Strings.Home_NewChart;
 
     /// <summary>"Generate" for a new chart, "Update" for an existing one (§2.2).</summary>
-    public string GenerateText => IsExisting ? "Update" : "Generate";
+    public string GenerateText => IsExisting ? Strings.Editor_Update : Strings.Editor_Generate;
 
     // ---- Chart properties (§2.2 item 1) ----------------------------------------------------
 
@@ -125,11 +127,11 @@ public sealed class EditorViewModel : ObservableObject
 
     public IReadOnlyList<TimescaleOption> TimescaleOptions { get; } =
     [
-        new(Timescale.Auto, "Auto"),
-        new(Timescale.Days, "Days"),
-        new(Timescale.Weeks, "Weeks"),
-        new(Timescale.Months, "Months"),
-        new(Timescale.Quarters, "Quarters"),
+        new(Timescale.Auto, Strings.Timescale_Auto),
+        new(Timescale.Days, Strings.Timescale_Days),
+        new(Timescale.Weeks, Strings.Timescale_Weeks),
+        new(Timescale.Months, Strings.Timescale_Months),
+        new(Timescale.Quarters, Strings.Timescale_Quarters),
     ];
 
     public Timescale Timescale
@@ -172,7 +174,7 @@ public sealed class EditorViewModel : ObservableObject
     /// format (Settings, the same one the chart uses), or ISO when that pattern can't
     /// identify a day (<see cref="DateFormats.EntryPattern"/>).
     /// </summary>
-    public string DateEntryPattern => DateFormats.EntryPattern(_main.Session.Settings.Settings.DateFormat);
+    public string DateEntryPattern => DateFormats.EntryPattern(_main.Session.Settings.Settings.DateFormat, UiLanguage.Current);
 
     // ---- Sections (§2.2 item 2) --------------------------------------------------------------
 
@@ -187,12 +189,10 @@ public sealed class EditorViewModel : ObservableObject
 
     public string IssueSummary => Issues.Count switch
     {
-        0 => IsExisting ? "Ready to update." : "Ready to generate.",
-        1 => $"1 problem to fix before {Gerund}:",
-        _ => $"{Issues.Count} problems to fix before {Gerund}:",
+        0 => IsExisting ? Strings.Editor_ReadyUpdate : Strings.Editor_ReadyGenerate,
+        1 => IsExisting ? Strings.Editor_ProblemsOneUpdate : Strings.Editor_ProblemsOneGenerate,
+        _ => IsExisting ? Strings.Editor_ProblemsManyUpdate(Issues.Count) : Strings.Editor_ProblemsManyGenerate(Issues.Count),
     };
-
-    private string Gerund => IsExisting ? "updating" : "generating";
 
     public bool CanGenerate
     {
@@ -236,7 +236,7 @@ public sealed class EditorViewModel : ObservableObject
     {
         if (!EditorInput.TryParseDuration(text, out var days, out var error))
         {
-            AddNotice($"\"{row.Name}\": {error}");
+            AddNotice(Strings.Editor_DurationNotice(row.Name, error));
             return;
         }
         if (days == row.Section.Duration) return;
@@ -286,7 +286,9 @@ public sealed class EditorViewModel : ObservableObject
     {
         foreach (var row in Rows)
             if (row.DiscardPendingText() is { Count: > 0 } dropped)
-                AddNotice($"Section {row.Number}: discarded {string.Join(" and ", dropped)}, which was not a date. The dates shown are the section's dates.");
+                AddNotice(dropped.Count == 1
+                    ? Strings.Editor_DiscardedOne(row.Number, dropped[0])
+                    : Strings.Editor_DiscardedTwo(row.Number, dropped[0], dropped[1]));
     }
 
     /// <summary>A date field's typed text became invalid or valid again: only the issue list changes.</summary>
@@ -312,7 +314,8 @@ public sealed class EditorViewModel : ObservableObject
 
     private void AddSection()
     {
-        var section = Scheduler.AddSection(Chart, _main.Palette, DateOnly.FromDateTime(DateTime.Today));
+        var section = Scheduler.AddSection(Chart, _main.Palette, DateOnly.FromDateTime(DateTime.Today),
+            ChartTextNow.DefaultSectionName(Chart.Sections.Count + 1));
         Rows.Add(new SectionRowViewModel(this, section));
         OnScheduleChanged();
     }
@@ -334,7 +337,7 @@ public sealed class EditorViewModel : ObservableObject
             var owner = Guard(() => backend.CheckEditable(_existing.ViewId));
             if (owner is not null)
             {
-                _dialogs.ShowMessage("Chart is not editable", owner);
+                _dialogs.ShowMessage(Strings.Dialog_NotEditableTitle, owner);
                 return;
             }
         }
@@ -357,7 +360,7 @@ public sealed class EditorViewModel : ObservableObject
             case ActionStatus.Ok:
                 _keepDraft = false;
                 _main.Session.Drafts.Clear();
-                _main.ShowHome(_existing is null ? $"Generated \"{Chart.Name.Trim()}\"." : $"Updated \"{Chart.Name.Trim()}\".");
+                _main.ShowHome(_existing is null ? Strings.Status_Generated(Chart.Name.Trim()) : Strings.Status_Updated(Chart.Name.Trim()));
                 break;
             case ActionStatus.NoLegend:
                 // §7.1 / A10: explain, keep everything in the editor, and park it in case the user closes Gantt-It.
@@ -366,12 +369,12 @@ public sealed class EditorViewModel : ObservableObject
                 _dialogs.ShowNoLegend();
                 break;
             default: // Blocked or Failed
-                _dialogs.ShowMessage($"Chart was not {Past}", MainViewModel.ResultMessage(result, Past));
+                _dialogs.ShowMessage(
+                    IsExisting ? Strings.Dialog_NotUpdatedTitle : Strings.Dialog_NotGeneratedTitle,
+                    MainViewModel.ResultMessage(result, IsExisting ? Strings.Result_NotUpdated : Strings.Result_NotGenerated));
                 break;
         }
     }
-
-    private string Past => IsExisting ? "updated" : "generated";
 
     private void Cancel()
     {
@@ -406,13 +409,13 @@ public sealed class EditorViewModel : ObservableObject
         var issues = ChartValidator.Validate(Chart, settings, _otherViewNames);
         var lines = new List<string>();
 
-        if (TimelineWidth.Error is { } tw) lines.Add($"Timeline width: {tw}");
-        if (NameMaxWidth.Error is { } nw) lines.Add($"Name column width: {nw}");
+        if (TimelineWidth.Error is { } tw) lines.Add(Strings.Issue_TimelineWidthField(tw));
+        if (NameMaxWidth.Error is { } nw) lines.Add(Strings.Issue_NameWidthField(nw));
         foreach (var row in Rows)
         {
             // Text in a date field that isn't a date: the section keeps its old date, so block (as for lengths).
-            if (row.StartTextError is { } se) lines.Add($"Section {row.Number} Start: {se}");
-            if (row.EndTextError is { } ee) lines.Add($"Section {row.Number} End: {ee}");
+            if (row.StartTextError is { } se) lines.Add(Strings.Issue_RowStart(row.Number, se));
+            if (row.EndTextError is { } ee) lines.Add(Strings.Issue_RowEnd(row.Number, ee));
         }
         lines.AddRange(issues.Select(i => i.Message));
 
@@ -420,15 +423,15 @@ public sealed class EditorViewModel : ObservableObject
         if (session.SettingsReadOnly)
         {
             // §7.2: settings from a newer Gantt-It can't be drawn with or saved over here.
-            lines.Add($"Settings: {session.Settings.Error ?? "the settings were written by a newer version of Gantt-It and are read-only here."}");
+            lines.Add(Strings.Issue_Settings(session.Settings.Error ?? Strings.Issue_SettingsNewer));
         }
         else if (session.Settings.Stored)
         {
             foreach (var missing in session.Settings.MissingStyles)
-                lines.Add($"Settings: the {missing.ToLowerInvariant()} no longer exists. Choose a replacement in Settings.");
+                lines.Add(Strings.Issue_StyleMissing(missing));
             foreach (var (label, style) in StyleFields(settings))
                 if (style is null && !session.Settings.MissingStyles.Contains(label, StringComparer.OrdinalIgnoreCase))
-                    lines.Add($"Settings: choose a {label.ToLowerInvariant()} in Settings.");
+                    lines.Add(Strings.Issue_StyleUnset(label));
         }
 
         foreach (var row in Rows)
@@ -503,10 +506,17 @@ public sealed class EditorViewModel : ObservableObject
         while (Notices.Count > MaxNotices) Notices.RemoveAt(Notices.Count - 1);
     }
 
-    private static Chart NewChart(IReadOnlyCollection<string> otherViewNames, IReadOnlyList<Rgb> palette)
+    /// <summary>
+    /// The chart language's words for pre-filled names (§2.6): a new chart's default name
+    /// and title and each added section's default name. Once the user keeps or edits them
+    /// they are user text and are never translated again.
+    /// </summary>
+    private ChartText ChartTextNow => ChartText.For(_main.Session.Settings.Settings.ChartLanguage);
+
+    private static Chart NewChart(IReadOnlyCollection<string> otherViewNames, IReadOnlyList<Rgb> palette, ChartText text)
     {
-        var chart = Chart.Create(EditorInput.UniqueChartName(otherViewNames));
-        Scheduler.AddSection(chart, palette, DateOnly.FromDateTime(DateTime.Today));
+        var chart = Chart.Create(EditorInput.UniqueChartName(otherViewNames, text.Language));
+        Scheduler.AddSection(chart, palette, DateOnly.FromDateTime(DateTime.Today), text.DefaultSectionName(1));
         return chart;
     }
 
@@ -519,7 +529,7 @@ public sealed class EditorViewModel : ObservableObject
         }
         catch (Exception ex)
         {
-            error = $"The model's view names could not be read, so a name clash will only be caught by Revit: {ex.Message}";
+            error = Strings.Editor_ViewNamesFailed(ex.Message);
             return [];
         }
     }
@@ -532,7 +542,7 @@ public sealed class EditorViewModel : ObservableObject
         }
         catch (Exception ex)
         {
-            return $"Gantt-It could not check who owns this chart: {ex.Message}";
+            return Strings.Owner_CheckFailed(ex.Message);
         }
     }
 }

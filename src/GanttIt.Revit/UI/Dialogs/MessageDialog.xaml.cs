@@ -39,9 +39,12 @@ public sealed record MessageDialogModel(
     string Heading,
     string Message,
     IReadOnlyList<string> Items,
-    string ConfirmText = "OK",
+    string? ConfirmText = null,
     bool HasCancel = false,
     bool Danger = false)
 {
     public bool HasItems => Items.Count > 0;
+
+    /// <summary>The confirm button's text: as given, or OK in the UI language.</summary>
+    public string ConfirmText { get; init; } = ConfirmText ?? Resources.Strings.Common_OK;
 }

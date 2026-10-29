@@ -3,6 +3,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:home="clr-namespace:GanttIt.Revit.UI.Home"
              xmlns:preview="clr-namespace:GanttIt.Revit.UI.Preview"
+             xmlns:l="clr-namespace:GanttIt.Revit.UI.Localization"
              AutomationProperties.AutomationId="HomeView">
     <!-- Home (§2.1). DataContext: HomeViewModel. -->
     <UserControl.Resources>
@@ -25,13 +26,13 @@
             <DataTemplate DataType="{x:Type home:NewChartCardViewModel}">
                 <Button Command="{Binding NewChartCommand}" Width="264" Height="268" Margin="0,0,12,12"
                         Background="{StaticResource SurfaceAltBrush}" BorderBrush="{StaticResource BorderBrush}"
-                        AutomationProperties.AutomationId="Home.NewChart" AutomationProperties.Name="New chart">
+                        AutomationProperties.AutomationId="Home.NewChart" AutomationProperties.Name="{l:Tr Home_NewChart}">
                     <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
                         <TextBlock Text="&#xE710;" FontFamily="{StaticResource IconFont}" FontSize="28"
                                    Foreground="{StaticResource AccentForegroundBrush}" HorizontalAlignment="Center" />
-                        <TextBlock Text="New chart" FontSize="14" FontWeight="SemiBold" Margin="0,10,0,0"
+                        <TextBlock Text="{l:Tr Home_NewChart}" FontSize="14" FontWeight="SemiBold" Margin="0,10,0,0"
                                    HorizontalAlignment="Center" />
-                        <TextBlock Text="Creates a legend view" Style="{StaticResource MutedText}" Margin="0,2,0,0"
+                        <TextBlock Text="{l:Tr Home_NewChartHint}" Style="{StaticResource MutedText}" Margin="0,2,0,0"
                                    HorizontalAlignment="Center" />
                     </StackPanel>
                 </Button>
@@ -48,23 +49,23 @@
                                 <preview:PreviewCanvas Layout="{Binding Thumbnail}" Metrics="{Binding Metrics}"
                                                        IsThumbnail="True" Inset="6"
                                                        AutomationProperties.AutomationId="Home.ChartCard.Thumbnail"
-                                                       AutomationProperties.Name="{Binding Name, StringFormat='Thumbnail of {0}'}" />
-                                <TextBlock Text="No preview" Style="{StaticResource MutedText}"
+                                                       AutomationProperties.Name="{Binding ThumbnailName}" />
+                                <TextBlock Text="{l:Tr Home_NoPreview}" Style="{StaticResource MutedText}"
                                            HorizontalAlignment="Center" VerticalAlignment="Center"
                                            Visibility="{Binding HasThumbnail, Converter={StaticResource BoolToCollapsed}}" />
                             </Grid>
                         </Border>
 
                         <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" Margin="8,0,8,8">
-                            <Button Content="Edit" Command="{Binding EditCommand}" MinWidth="64"
+                            <Button Content="{l:Tr Home_Edit}" Command="{Binding EditCommand}" MinWidth="64"
                                     Visibility="{Binding CanEdit, Converter={StaticResource BoolToVisible}}"
                                     AutomationProperties.AutomationId="Home.ChartCard.Edit"
                                     AutomationProperties.Name="{Binding EditName}" />
-                            <Button Content="Open view" Command="{Binding OpenViewCommand}" Margin="6,0,0,0"
+                            <Button Content="{l:Tr Home_OpenView}" Command="{Binding OpenViewCommand}" Margin="6,0,0,0"
                                     AutomationProperties.AutomationId="Home.ChartCard.OpenView"
                                     AutomationProperties.Name="{Binding OpenViewName}"
-                                    ToolTip="Closes Gantt-It and opens this legend" />
-                            <Button Content="Delete" Command="{Binding DeleteCommand}" Margin="6,0,0,0"
+                                    ToolTip="{l:Tr Home_OpenViewTip}" />
+                            <Button Content="{l:Tr Home_Delete}" Command="{Binding DeleteCommand}" Margin="6,0,0,0"
                                     Style="{StaticResource DangerButton}"
                                     Visibility="{Binding CanDelete, Converter={StaticResource BoolToVisible}}"
                                     AutomationProperties.AutomationId="Home.ChartCard.Delete"
@@ -111,16 +112,16 @@
         <!-- Header -->
         <DockPanel DockPanel.Dock="Top" Margin="0,0,0,12">
             <Button DockPanel.Dock="Right" Command="{Binding SettingsCommand}" VerticalAlignment="Center"
-                    AutomationProperties.AutomationId="Home.Settings" AutomationProperties.Name="Settings"
-                    ToolTip="Project settings: styles, date format, padding">
+                    AutomationProperties.AutomationId="Home.Settings" AutomationProperties.Name="{l:Tr Common_Settings}"
+                    ToolTip="{l:Tr Common_SettingsTip}">
                 <StackPanel Orientation="Horizontal">
                     <TextBlock Text="&#xE713;" FontFamily="{StaticResource IconFont}" FontSize="14" VerticalAlignment="Center" />
-                    <TextBlock Text="Settings" Margin="6,0,0,0" VerticalAlignment="Center" />
+                    <TextBlock Text="{l:Tr Common_Settings}" Margin="6,0,0,0" VerticalAlignment="Center" />
                 </StackPanel>
             </Button>
             <StackPanel>
-                <TextBlock Text="Gantt charts" Style="{StaticResource HeadingText}" />
-                <TextBlock Text="Each chart is a legend view you can place on any number of sheets."
+                <TextBlock Text="{l:Tr Home_Heading}" Style="{StaticResource HeadingText}" />
+                <TextBlock Text="{l:Tr Home_Subheading}"
                            Style="{StaticResource MutedText}" Margin="0,2,0,0" />
             </StackPanel>
         </DockPanel>
@@ -142,14 +143,14 @@
             </Border>
         </StackPanel>
 
-        <TextBlock DockPanel.Dock="Bottom" Text="No charts in this model yet." Style="{StaticResource MutedText}"
+        <TextBlock DockPanel.Dock="Bottom" Text="{l:Tr Home_Empty}" Style="{StaticResource MutedText}"
                    Margin="0,4,0,0" Visibility="{Binding HasCharts, Converter={StaticResource BoolToCollapsed}}"
                    AutomationProperties.AutomationId="Home.Empty" />
 
         <!-- Cards: a ListBox so each card is a UI Automation list item named after its chart. -->
         <ListBox ItemsSource="{Binding Cards}" BorderThickness="0" Background="Transparent" Padding="0"
                  ScrollViewer.HorizontalScrollBarVisibility="Disabled" KeyboardNavigation.TabNavigation="Continue"
-                 AutomationProperties.AutomationId="Home.ChartList" AutomationProperties.Name="Charts">
+                 AutomationProperties.AutomationId="Home.ChartList" AutomationProperties.Name="{l:Tr Home_ChartList}">
             <ListBox.ItemsPanel>
                 <ItemsPanelTemplate>
                     <WrapPanel />

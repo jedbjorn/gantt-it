@@ -5,6 +5,8 @@ using Autodesk.Revit.UI;
 using Autodesk.Revit.UI.Events;
 using GanttIt.Core.Theming;
 using GanttIt.Revit.Commands;
+using GanttIt.Revit.Resources;
+using GanttIt.Revit.Services;
 using GanttIt.Revit.UI.Theming;
 
 namespace GanttIt.Revit;
@@ -21,6 +23,9 @@ public sealed class App : IExternalApplication
 
     public Result OnStartup(UIControlledApplication application)
     {
+        // UI language from Revit's (§2.6). The panel and button keep the product name.
+        RevitLanguage.TryApply(() => application.ControlledApplication.Language);
+
         // CreateRibbonPanel without a tab name targets the built-in Add-Ins tab.
         var panel = application.CreateRibbonPanel(PanelName);
         var button = new PushButtonData(
@@ -29,7 +34,7 @@ public sealed class App : IExternalApplication
             Assembly.GetExecutingAssembly().Location,
             typeof(OpenGanttIt).FullName)
         {
-            ToolTip = "Create and edit Gantt charts as legend views.",
+            ToolTip = Strings.Ribbon_Tooltip,
         };
         _button = panel.AddItem(button) as PushButton;
         // The icon follows Revit's ribbon (§2.5): a dark tile on the dark theme.

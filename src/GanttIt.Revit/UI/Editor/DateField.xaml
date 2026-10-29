@@ -1,6 +1,7 @@
 <UserControl x:Class="GanttIt.Revit.UI.Editor.DateField"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:l="clr-namespace:GanttIt.Revit.UI.Localization"
              Focusable="False">
     <!--
         A date field that shows and reads dates in the project's date format (Settings),
@@ -25,7 +26,7 @@
 
         <Button x:Name="CalendarButton" Grid.Column="1" Style="{StaticResource IconButton}"
                 Padding="4,0" MinHeight="22" MinWidth="24" Margin="0,2,2,2" Focusable="False"
-                ToolTip="Choose from the calendar (Alt+Down)" AutomationProperties.Name="Calendar">
+                ToolTip="{l:Tr Date_CalendarTip}" AutomationProperties.Name="{l:Tr Date_Calendar}">
             <TextBlock Text="&#xE787;" FontFamily="{StaticResource IconFont}" FontSize="13" />
         </Button>
 

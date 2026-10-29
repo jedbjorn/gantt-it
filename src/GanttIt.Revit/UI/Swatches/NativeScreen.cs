@@ -75,7 +75,7 @@ internal static class NativeScreen
             return true;
         };
         if (!EnumDisplayMonitors(IntPtr.Zero, IntPtr.Zero, proc, IntPtr.Zero))
-            throw new Win32Exception(Marshal.GetLastWin32Error(), "Windows did not list the monitors.");
+            throw new Win32Exception(Marshal.GetLastWin32Error(), Resources.Strings.Pick_ListFailed);
         GC.KeepAlive(proc);
         return monitors;
     }
@@ -85,10 +85,10 @@ internal static class NativeScreen
     {
         var stride = (long)bounds.Width * 4;
         if (bounds.IsEmpty || stride * bounds.Height > int.MaxValue)
-            throw new InvalidOperationException($"The screen area {bounds.Width} × {bounds.Height} can't be captured.");
+            throw new InvalidOperationException(Resources.Strings.Pick_AreaTooLarge(bounds.Width, bounds.Height));
 
         var screen = GetDC(IntPtr.Zero);
-        if (screen == IntPtr.Zero) throw new Win32Exception("Windows did not give access to the screen.");
+        if (screen == IntPtr.Zero) throw new Win32Exception(Resources.Strings.Pick_NoAccess);
         var memory = IntPtr.Zero;
         var bitmap = IntPtr.Zero;
         var old = IntPtr.Zero;
@@ -111,7 +111,7 @@ internal static class NativeScreen
             old = SelectObject(memory, bitmap);
 
             if (!BitBlt(memory, 0, 0, bounds.Width, bounds.Height, screen, bounds.Left, bounds.Top, SrcCopy | CaptureBlt))
-                throw new Win32Exception(Marshal.GetLastWin32Error(), "Windows refused to copy the screen.");
+                throw new Win32Exception(Marshal.GetLastWin32Error(), Resources.Strings.Pick_CopyRefused);
             GdiFlush();
 
             var pixels = new byte[stride * bounds.Height];
@@ -129,7 +129,7 @@ internal static class NativeScreen
 
     public static (int X, int Y) CursorPosition()
     {
-        if (!GetCursorPos(out var p)) throw new Win32Exception(Marshal.GetLastWin32Error(), "The pointer position could not be read.");
+        if (!GetCursorPos(out var p)) throw new Win32Exception(Marshal.GetLastWin32Error(), Resources.Strings.Pick_PointerFailed);
         return (p.X, p.Y);
     }
 

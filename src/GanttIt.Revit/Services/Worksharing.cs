@@ -1,5 +1,6 @@
 using Autodesk.Revit.DB;
 using Autodesk.Revit.DB.ExtensibleStorage;
+using GanttIt.Revit.Resources;
 
 namespace GanttIt.Revit.Services;
 
@@ -46,9 +47,8 @@ internal static class Worksharing
         }
         if (owners.Count == 0) return null;
 
-        var parts = owners.Select(o => $"{(string.IsNullOrEmpty(o.Key) ? "another user" : o.Key)} ({string.Join(", ", o.Value)})");
-        return "This can't be changed right now because it is being edited by " + string.Join("; ", parts)
-               + ". Ask them to synchronize and relinquish, then try again.";
+        var parts = owners.Select(o => $"{(string.IsNullOrEmpty(o.Key) ? Strings.Ws_AnotherUser : o.Key)} ({string.Join(", ", o.Value)})");
+        return Strings.Ws_Owned(string.Join("; ", parts));
     }
 
     private static string Describe(Document doc, ElementId id)
@@ -56,9 +56,9 @@ internal static class Worksharing
         var e = doc.GetElement(id);
         return e switch
         {
-            View v => $"view \"{v.Name}\"",
-            DataStorage => "the Gantt-It settings",
-            null => $"element {id.Value}",
+            View v => Strings.Ws_View(v.Name),
+            DataStorage => Strings.Ws_Settings,
+            null => Strings.Ws_Element(id.Value),
             _ => $"{e.Category?.Name ?? e.GetType().Name} {id.Value}",
         };
     }

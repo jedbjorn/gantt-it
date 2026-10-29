@@ -4,6 +4,7 @@
              xmlns:mvvm="clr-namespace:GanttIt.Revit.UI.Mvvm"
              xmlns:editor="clr-namespace:GanttIt.Revit.UI.Editor"
              xmlns:preview="clr-namespace:GanttIt.Revit.UI.Preview"
+             xmlns:l="clr-namespace:GanttIt.Revit.UI.Localization"
              AutomationProperties.AutomationId="EditorView">
     <!-- Chart editor (§2.2). DataContext: EditorViewModel. -->
     <UserControl.Resources>
@@ -75,11 +76,11 @@
         <!-- 0 Header -->
         <DockPanel Margin="0,0,0,10">
             <Button DockPanel.Dock="Right" Command="{Binding SettingsCommand}"
-                    AutomationProperties.AutomationId="Editor.Settings" AutomationProperties.Name="Settings"
-                    ToolTip="Project settings: styles, date format, padding">
+                    AutomationProperties.AutomationId="Editor.Settings" AutomationProperties.Name="{l:Tr Common_Settings}"
+                    ToolTip="{l:Tr Common_SettingsTip}">
                 <StackPanel Orientation="Horizontal">
                     <TextBlock Text="&#xE713;" FontFamily="{StaticResource IconFont}" FontSize="14" VerticalAlignment="Center" />
-                    <TextBlock Text="Settings" Margin="6,0,0,0" VerticalAlignment="Center" />
+                    <TextBlock Text="{l:Tr Common_Settings}" Margin="6,0,0,0" VerticalAlignment="Center" />
                 </StackPanel>
             </Button>
             <TextBlock Text="{Binding Heading}" Style="{StaticResource HeadingText}" VerticalAlignment="Center"
@@ -103,52 +104,52 @@
                     <RowDefinition Height="Auto" />
                 </Grid.RowDefinitions>
 
-                <TextBlock Text="Name" Style="{StaticResource LabelText}" />
+                <TextBlock Text="{l:Tr Editor_Name}" Style="{StaticResource LabelText}" />
                 <TextBox Grid.Column="1" Text="{Binding Name, UpdateSourceTrigger=PropertyChanged}"
                          mvvm:Behaviors.HasError="{Binding HasNameError}" ToolTip="{Binding NameError}"
-                         AutomationProperties.AutomationId="Editor.ChartName" AutomationProperties.Name="Chart name" />
+                         AutomationProperties.AutomationId="Editor.ChartName" AutomationProperties.Name="{l:Tr Editor_ChartName}" />
 
-                <TextBlock Grid.Column="2" Text="Title" Style="{StaticResource LabelText}" Margin="16,0,8,0" />
+                <TextBlock Grid.Column="2" Text="{l:Tr Editor_Title}" Style="{StaticResource LabelText}" Margin="16,0,8,0" />
                 <TextBox Grid.Column="3" Text="{Binding Title, UpdateSourceTrigger=PropertyChanged}"
-                         ToolTip="Drawn above the chart. Follows the name until you change it; blank means no title."
-                         AutomationProperties.AutomationId="Editor.ChartTitle" AutomationProperties.Name="Chart title" />
+                         ToolTip="{l:Tr Editor_TitleTip}"
+                         AutomationProperties.AutomationId="Editor.ChartTitle" AutomationProperties.Name="{l:Tr Editor_ChartTitle}" />
 
-                <TextBlock Grid.Column="4" Text="Timescale" Style="{StaticResource LabelText}" Margin="16,0,8,0" />
+                <TextBlock Grid.Column="4" Text="{l:Tr Editor_Timescale}" Style="{StaticResource LabelText}" Margin="16,0,8,0" />
                 <ComboBox Grid.Column="5" ItemsSource="{Binding TimescaleOptions}" DisplayMemberPath="Label"
                           SelectedValuePath="Value" SelectedValue="{Binding Timescale}"
-                          AutomationProperties.AutomationId="Editor.Timescale" AutomationProperties.Name="Timescale" />
+                          AutomationProperties.AutomationId="Editor.Timescale" AutomationProperties.Name="{l:Tr Editor_Timescale}" />
 
                 <TextBlock Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="5" Text="{Binding NameError}"
                            Style="{StaticResource ErrorText}" FontSize="11" Margin="0,3,0,0"
                            Visibility="{Binding NameError, Converter={StaticResource NullToCollapsed}}"
                            AutomationProperties.AutomationId="Editor.ChartNameError" />
 
-                <TextBlock Grid.Row="2" Text="Columns" Style="{StaticResource LabelText}" Margin="0,10,8,0" />
+                <TextBlock Grid.Row="2" Text="{l:Tr Editor_Columns}" Style="{StaticResource LabelText}" Margin="0,10,8,0" />
                 <StackPanel Grid.Row="2" Grid.Column="1" Orientation="Horizontal" Margin="0,10,0,0" VerticalAlignment="Center">
-                    <TextBlock Text="Section (always)" Style="{StaticResource MutedText}" VerticalAlignment="Center" Margin="0,0,12,0" />
-                    <CheckBox Content="Start" IsChecked="{Binding ShowStart}" Margin="0,0,12,0"
+                    <TextBlock Text="{l:Tr Editor_SectionAlways}" Style="{StaticResource MutedText}" VerticalAlignment="Center" Margin="0,0,12,0" />
+                    <CheckBox Content="{l:Tr Editor_Start}" IsChecked="{Binding ShowStart}" Margin="0,0,12,0"
                               AutomationProperties.AutomationId="Editor.ShowStart" />
-                    <CheckBox Content="End" IsChecked="{Binding ShowEnd}" Margin="0,0,12,0"
+                    <CheckBox Content="{l:Tr Editor_End}" IsChecked="{Binding ShowEnd}" Margin="0,0,12,0"
                               AutomationProperties.AutomationId="Editor.ShowEnd" />
-                    <CheckBox Content="Duration" IsChecked="{Binding ShowDuration}"
+                    <CheckBox Content="{l:Tr Editor_Duration}" IsChecked="{Binding ShowDuration}"
                               AutomationProperties.AutomationId="Editor.ShowDuration" />
                 </StackPanel>
 
                 <StackPanel Grid.Row="2" Grid.Column="2" Grid.ColumnSpan="4" Orientation="Horizontal" Margin="16,10,0,0"
                             HorizontalAlignment="Right">
-                    <TextBlock Text="Timeline width" Style="{StaticResource LabelText}" />
+                    <TextBlock Text="{l:Tr Editor_TimelineWidth}" Style="{StaticResource LabelText}" />
                     <TextBox Width="110" Text="{Binding TimelineWidth.Text, UpdateSourceTrigger=LostFocus}"
                              mvvm:Behaviors.CommitOnEnter="True"
                              mvvm:Behaviors.HasError="{Binding TimelineWidth.HasError}"
-                             ToolTip="Width of the timeline on paper, in project units"
-                             AutomationProperties.AutomationId="Editor.TimelineWidth" AutomationProperties.Name="Timeline width" />
-                    <TextBlock Text="Name column max" Style="{StaticResource LabelText}" Margin="16,0,8,0" />
+                             ToolTip="{l:Tr Editor_TimelineWidthTip}"
+                             AutomationProperties.AutomationId="Editor.TimelineWidth" AutomationProperties.Name="{l:Tr Editor_TimelineWidth}" />
+                    <TextBlock Text="{l:Tr Editor_NameMax}" Style="{StaticResource LabelText}" Margin="16,0,8,0" />
                     <TextBox Width="110" Text="{Binding NameMaxWidth.Text, UpdateSourceTrigger=LostFocus}"
                              mvvm:Behaviors.CommitOnEnter="True"
                              mvvm:Behaviors.HasError="{Binding NameMaxWidth.HasError}"
-                             ToolTip="Longest the section name column gets on paper, in project units; longer names wrap"
+                             ToolTip="{l:Tr Editor_NameMaxTip}"
                              AutomationProperties.AutomationId="Editor.NameMaxWidth"
-                             AutomationProperties.Name="Name column maximum width" />
+                             AutomationProperties.Name="{l:Tr Editor_NameMaxName}" />
                 </StackPanel>
             </Grid>
         </Border>
@@ -163,7 +164,7 @@
                             <Button DockPanel.Dock="Right" Style="{StaticResource IconButton}" VerticalAlignment="Center"
                                     Command="{Binding DataContext.DismissNoticeCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
                                     CommandParameter="{Binding}"
-                                    AutomationProperties.AutomationId="Editor.Notice.Dismiss" AutomationProperties.Name="Dismiss">
+                                    AutomationProperties.AutomationId="Editor.Notice.Dismiss" AutomationProperties.Name="{l:Tr Common_Dismiss}">
                                 <TextBlock Text="&#xE711;" FontFamily="{StaticResource IconFont}" FontSize="10" />
                             </Button>
                             <TextBlock Text="{Binding Message}" TextWrapping="Wrap" VerticalAlignment="Center"
@@ -195,21 +196,21 @@
                             <ColumnDefinition Width="{Binding Source={x:Static SystemParameters.VerticalScrollBarWidth}, Converter={StaticResource DoubleToGridLength}}" />
                         </Grid.ColumnDefinitions>
                         <TextBlock Grid.Column="1" Text="#" Style="{StaticResource ColumnHeaderText}" />
-                        <TextBlock Grid.Column="2" Text="Name" Style="{StaticResource ColumnHeaderText}" Margin="4,0,0,0" />
-                        <TextBlock Grid.Column="3" Text="Start" Style="{StaticResource ColumnHeaderText}" Margin="6,0,0,0" />
-                        <TextBlock Grid.Column="4" Text="End" Style="{StaticResource ColumnHeaderText}" Margin="6,0,0,0" />
-                        <TextBlock Grid.Column="5" Text="Days" Style="{StaticResource ColumnHeaderText}" Margin="6,0,0,0" />
-                        <TextBlock Grid.Column="6" Text="Relates to previous" Style="{StaticResource ColumnHeaderText}"
+                        <TextBlock Grid.Column="2" Text="{l:Tr Editor_Name}" Style="{StaticResource ColumnHeaderText}" Margin="4,0,0,0" />
+                        <TextBlock Grid.Column="3" Text="{l:Tr Editor_Start}" Style="{StaticResource ColumnHeaderText}" Margin="6,0,0,0" />
+                        <TextBlock Grid.Column="4" Text="{l:Tr Editor_End}" Style="{StaticResource ColumnHeaderText}" Margin="6,0,0,0" />
+                        <TextBlock Grid.Column="5" Text="{l:Tr Grid_Days}" Style="{StaticResource ColumnHeaderText}" Margin="6,0,0,0" />
+                        <TextBlock Grid.Column="6" Text="{l:Tr Grid_LinkPrevious}" Style="{StaticResource ColumnHeaderText}"
                                    TextAlignment="Center" />
-                        <TextBlock Grid.Column="7" Text="Relates to following" Style="{StaticResource ColumnHeaderText}"
+                        <TextBlock Grid.Column="7" Text="{l:Tr Grid_LinkFollowing}" Style="{StaticResource ColumnHeaderText}"
                                    TextAlignment="Center" />
-                        <TextBlock Grid.Column="8" Text="Color" Style="{StaticResource ColumnHeaderText}" TextAlignment="Center" />
+                        <TextBlock Grid.Column="8" Text="{l:Tr Grid_Color}" Style="{StaticResource ColumnHeaderText}" TextAlignment="Center" />
                     </Grid>
                 </Border>
 
                 <Border DockPanel.Dock="Bottom" BorderBrush="{StaticResource DividerBrush}" BorderThickness="0,1,0,0" Padding="8,6">
-                    <Button Content="+  Add section" HorizontalAlignment="Left" Command="{Binding AddSectionCommand}"
-                            AutomationProperties.AutomationId="Editor.AddSection" AutomationProperties.Name="Add section" />
+                    <Button Content="{l:Tr Editor_AddSectionButton}" HorizontalAlignment="Left" Command="{Binding AddSectionCommand}"
+                            AutomationProperties.AutomationId="Editor.AddSection" AutomationProperties.Name="{l:Tr Editor_AddSection}" />
                 </Border>
 
                 <!-- Virtualized (Beyond Intention: hundreds of sections). The ItemsControl hosts its own
@@ -217,7 +218,7 @@
                 <ItemsControl x:Name="SectionsList" ItemsSource="{Binding Rows}" Focusable="False" AllowDrop="True"
                               VirtualizingPanel.IsVirtualizing="True" VirtualizingPanel.VirtualizationMode="Standard"
                               VirtualizingPanel.ScrollUnit="Pixel" ScrollViewer.CanContentScroll="True"
-                              AutomationProperties.AutomationId="Editor.Sections" AutomationProperties.Name="Sections">
+                              AutomationProperties.AutomationId="Editor.Sections" AutomationProperties.Name="{l:Tr Editor_Sections}">
                         <ItemsControl.Template>
                             <ControlTemplate TargetType="ItemsControl">
                                 <ScrollViewer x:Name="PART_Scroller" Focusable="False" CanContentScroll="True"
@@ -253,11 +254,11 @@
                                         <!-- Drag handle (also Alt+Up / Alt+Down when focused) -->
                                         <Border Background="Transparent" Cursor="SizeNS" Focusable="True"
                                                 FocusVisualStyle="{StaticResource FocusRing}"
-                                                ToolTip="Drag to reorder (or Alt+Up / Alt+Down)"
+                                                ToolTip="{l:Tr Row_DragTip}"
                                                 PreviewMouseLeftButtonDown="OnHandleMouseDown" MouseMove="OnHandleMouseMove"
                                                 KeyDown="OnHandleKeyDown"
                                                 AutomationProperties.AutomationId="{Binding Number, StringFormat='Section{0}.DragHandle'}"
-                                                AutomationProperties.Name="Reorder">
+                                                AutomationProperties.Name="{l:Tr Row_Reorder}">
                                             <TextBlock Text="&#xE76F;" FontFamily="{StaticResource IconFont}" FontSize="12"
                                                        Foreground="{StaticResource MutedTextBrush}"
                                                        HorizontalAlignment="Center" VerticalAlignment="Center" />
@@ -270,7 +271,7 @@
                                                  Margin="0,0,6,0"
                                                  mvvm:Behaviors.HasError="{Binding HasNameError}"
                                                  AutomationProperties.AutomationId="{Binding Number, StringFormat='Section{0}.Name'}"
-                                                 AutomationProperties.Name="Section name" />
+                                                 AutomationProperties.Name="{l:Tr Row_SectionName}" />
 
                                         <!-- Dates in the chart's date format (Settings), typed or from the calendar -->
                                         <editor:DateField Grid.Column="3" SelectedDate="{Binding StartDate}" Margin="0,0,6,0"
@@ -280,7 +281,7 @@
                                                           DisplayDateEnd="{x:Static editor:EditorDates.Max}"
                                                           HasError="{Binding HasDateError}"
                                                           FieldId="{Binding Number, StringFormat='Section{0}.Start'}"
-                                                          FieldName="Start" />
+                                                          FieldName="{l:Tr Editor_Start}" />
 
                                         <editor:DateField Grid.Column="4" SelectedDate="{Binding EndDate}" Margin="0,0,6,0"
                                                           PendingText="{Binding EndPendingText}"
@@ -289,36 +290,36 @@
                                                           DisplayDateEnd="{x:Static editor:EditorDates.Max}"
                                                           HasError="{Binding HasDateError}"
                                                           FieldId="{Binding Number, StringFormat='Section{0}.End'}"
-                                                          FieldName="End" />
+                                                          FieldName="{l:Tr Editor_End}" />
 
                                         <TextBox Grid.Column="5" Text="{Binding DurationText, UpdateSourceTrigger=LostFocus}"
                                                  Margin="0,0,6,0" HorizontalContentAlignment="Right"
                                                  mvvm:Behaviors.CommitOnEnter="True"
                                                  AutomationProperties.AutomationId="{Binding Number, StringFormat='Section{0}.Duration'}"
-                                                 AutomationProperties.Name="Duration in days" />
+                                                 AutomationProperties.Name="{l:Tr Row_DurationName}" />
 
                                         <CheckBox Grid.Column="6" IsChecked="{Binding LinkPrevious}" HorizontalAlignment="Center"
                                                   IsEnabled="{Binding IsFirst, Converter={StaticResource InverseBool}}"
-                                                  ToolTip="Relates to previous: keeps this section's gap after the previous one"
+                                                  ToolTip="{l:Tr Row_LinkPreviousTip}"
                                                   AutomationProperties.AutomationId="{Binding Number, StringFormat='Section{0}.LinkPrevious'}"
-                                                  AutomationProperties.Name="Relates to previous" />
+                                                  AutomationProperties.Name="{l:Tr Grid_LinkPrevious}" />
 
                                         <CheckBox Grid.Column="7" IsChecked="{Binding LinkFollowing}" HorizontalAlignment="Center"
                                                   IsEnabled="{Binding IsLast, Converter={StaticResource InverseBool}}"
-                                                  ToolTip="Relates to following: keeps the next section's gap after this one"
+                                                  ToolTip="{l:Tr Row_LinkFollowingTip}"
                                                   AutomationProperties.AutomationId="{Binding Number, StringFormat='Section{0}.LinkFollowing'}"
-                                                  AutomationProperties.Name="Relates to following" />
+                                                  AutomationProperties.Name="{l:Tr Grid_LinkFollowing}" />
 
                                         <Button Grid.Column="8" Style="{StaticResource SwatchButton}" Background="{Binding ColorBrush}"
                                                 HorizontalAlignment="Center" Command="{Binding PickColorCommand}"
                                                 ToolTip="{Binding ColorHex}"
                                                 AutomationProperties.AutomationId="{Binding Number, StringFormat='Section{0}.Color'}"
-                                                AutomationProperties.Name="{Binding ColorHex, StringFormat='Color {0}'}" />
+                                                AutomationProperties.Name="{Binding ColorName}" />
 
                                         <Button Grid.Column="9" Style="{StaticResource IconButton}" Command="{Binding RemoveCommand}"
-                                                HorizontalAlignment="Center" ToolTip="Delete section"
+                                                HorizontalAlignment="Center" ToolTip="{l:Tr Row_DeleteSection}"
                                                 AutomationProperties.AutomationId="{Binding Number, StringFormat='Section{0}.Delete'}"
-                                                AutomationProperties.Name="Delete section">
+                                                AutomationProperties.Name="{l:Tr Row_DeleteSection}">
                                             <TextBlock Text="&#xE74D;" FontFamily="{StaticResource IconFont}" FontSize="13" />
                                         </Button>
                                     </Grid>
@@ -332,13 +333,13 @@
         <!-- 4 Splitter: drag to give the preview more room -->
         <GridSplitter Grid.Row="4" Height="10" HorizontalAlignment="Stretch" VerticalAlignment="Center"
                       Background="Transparent" ResizeBehavior="PreviousAndNext" Focusable="False"
-                      ToolTip="Drag to resize the preview" />
+                      ToolTip="{l:Tr Editor_SplitterTip}" />
 
         <!-- 5 Live preview (§2.2, §6) -->
         <Border Grid.Row="5" Style="{StaticResource Panel}" Padding="0">
             <DockPanel>
                 <DockPanel DockPanel.Dock="Top" Margin="10,6,10,0">
-                    <TextBlock Text="Preview" Style="{StaticResource SectionText}" Margin="0" />
+                    <TextBlock Text="{l:Tr Editor_Preview}" Style="{StaticResource SectionText}" Margin="0" />
                     <TextBlock Text="{Binding Preview.Note}" Style="{StaticResource MutedText}" FontSize="11"
                                HorizontalAlignment="Right" VerticalAlignment="Center" Margin="12,0,0,0"
                                ToolTip="{Binding Preview.Note}"
@@ -347,7 +348,7 @@
                 <Grid>
                     <preview:PreviewCanvas Layout="{Binding Preview.Layout}" Metrics="{Binding Preview.Metrics}"
                                            AutomationProperties.AutomationId="Editor.Preview"
-                                           AutomationProperties.Name="Chart preview" />
+                                           AutomationProperties.Name="{l:Tr Editor_PreviewName}" />
                     <TextBlock Text="{Binding Preview.Message}" Style="{StaticResource MutedText}" TextWrapping="Wrap"
                                HorizontalAlignment="Center" VerticalAlignment="Center" Margin="20"
                                Visibility="{Binding Preview.Message, Converter={StaticResource NullToCollapsed}}"
@@ -359,11 +360,11 @@
         <!-- 6 Validation + buttons -->
         <DockPanel Grid.Row="6" Margin="0,10,0,0">
             <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Bottom">
-                <Button Content="Delete chart" Command="{Binding DeleteCommand}" Style="{StaticResource DangerButton}"
+                <Button Content="{l:Tr Editor_DeleteChart}" Command="{Binding DeleteCommand}" Style="{StaticResource DangerButton}"
                         Visibility="{Binding IsExisting, Converter={StaticResource BoolToVisible}}" Margin="0,0,24,0"
                         AutomationProperties.AutomationId="Editor.Delete" />
-                <Button Content="Cancel" Command="{Binding CancelCommand}" MinWidth="88"
-                        ToolTip="Discard changes and go back"
+                <Button Content="{l:Tr Common_Cancel}" Command="{Binding CancelCommand}" MinWidth="88"
+                        ToolTip="{l:Tr Editor_CancelTip}"
                         AutomationProperties.AutomationId="Editor.Cancel" />
                 <Button Content="{Binding GenerateText}" Command="{Binding GenerateCommand}" Margin="8,0,0,0"
                         Style="{StaticResource PrimaryButton}"
@@ -387,7 +388,7 @@
                 <ScrollViewer MaxHeight="52" VerticalScrollBarVisibility="Auto" Focusable="False"
                               Visibility="{Binding HasIssues, Converter={StaticResource BoolToVisible}}">
                     <ItemsControl ItemsSource="{Binding Issues}" Focusable="False"
-                                  AutomationProperties.AutomationId="Editor.Issues" AutomationProperties.Name="Problems">
+                                  AutomationProperties.AutomationId="Editor.Issues" AutomationProperties.Name="{l:Tr Editor_Problems}">
                         <ItemsControl.ItemTemplate>
                             <DataTemplate>
                                 <TextBlock Text="{Binding StringFormat='•  {0}'}" Style="{StaticResource ErrorText}"

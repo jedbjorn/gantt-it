@@ -7,7 +7,7 @@ using static GanttIt.Core.Tests.Support.TestCharts;
 namespace GanttIt.Core.Tests.Layout;
 
 /// <summary>A3: the grid solver rules (§6.2) and clean-line emission (§6.3), with a fake measurer.</summary>
-public class LayoutEngineTests
+public partial class LayoutEngineTests
 {
     private const double Eps = 1e-12;
     private static readonly double Pad = ProjectSettings.DefaultCellPadding;
@@ -194,7 +194,7 @@ public class LayoutEngineTests
 
         var durationColumn = layout.Grid.Columns.ToList().IndexOf(TableColumn.Duration);
         var right = layout.Grid.ColumnEdges[durationColumn + 1];
-        Assert.All(texts.Where(t => t.Text is "46" or "56" or LayoutEngine.DurationHeader),
+        Assert.All(texts.Where(t => t.Text is "46" or "56" or "Dur"),
             t => Assert.Equal(TextAlign.Right, t.Align));
         Assert.Contains(texts, t => t.Text == "46" && Math.Abs(t.Anchor.X - (right - Pad)) < Eps);
     }

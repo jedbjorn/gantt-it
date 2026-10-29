@@ -1,3 +1,5 @@
+using GanttIt.Core.Localization;
+
 namespace GanttIt.Core.Model;
 
 /// <summary>
@@ -37,6 +39,15 @@ public sealed class ProjectSettings
     /// <summary>Palette used by the color picker and to auto-assign colors to new sections.</summary>
     public List<Rgb> Palette { get; set; } = [.. Model.Palette.Default];
 
+    /// <summary>
+    /// The language of the text drawn on charts (§2.6, decision #22): column headers,
+    /// month names, quarter labels, default names. Added to schema 1 as an optional
+    /// field: stored settings without it were generated in English, so a missing value
+    /// reads as <see cref="Language.English"/>. New settings start in the UI language
+    /// (the Revit side sets it when it creates them).
+    /// </summary>
+    public Language ChartLanguage { get; set; } = Language.English;
+
     public int SchemaVersion { get; set; } = SchemaVersions.Settings;
 
     /// <summary>A copy that Settings can edit without touching the original until saved.</summary>
@@ -50,6 +61,7 @@ public sealed class ProjectSettings
         DateFormat = DateFormat,
         CellPadding = CellPadding,
         Palette = [.. Palette],
+        ChartLanguage = ChartLanguage,
         SchemaVersion = SchemaVersion,
     };
 }

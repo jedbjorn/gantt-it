@@ -18,8 +18,8 @@
     - the MSI is named GanttIt-<Version>.msi and its ProductVersion is the
       numeric a.b.c of -Version;
     - it holds exactly the expected add-in files for both Revit years;
-    - it removes GanttIt\, Resources\ and icons\ (per year) on uninstall,
-      and never Addins\<year>\;
+    - it removes GanttIt\, Resources\, icons\ and the fr\, es\, de\
+      satellite folders (per year) on uninstall, and never Addins\<year>\;
     - each year's GanttIt.Revit.dll has ProductVersion (the assembly's
       InformationalVersion, which the add-in stamps as AppVersion) equal to
       -Version; with -AllowBuildMetadata a "+<commit>" suffix is accepted
@@ -117,9 +117,11 @@ if ($props['ProductVersion'] -ne $numeric) {
 }
 $msiName = Split-Path -Leaf $Msi
 if ($msiName -ne "GanttIt-$Version.msi") { $problems += "MSI is named $msiName, expected GanttIt-$Version.msi" }
-# The exact file set, per Revit year (10 files each, 20 in all): PDBs ship,
-# XML doc files do not (installer/stage.sh drops them). A file added to the
-# add-in output must be added here too, deliberately.
+# The exact file set, per Revit year (16 files each, 32 in all): PDBs ship,
+# XML doc files do not (installer/stage.sh drops them); the fr, es and de
+# satellite assemblies carry the translated UI strings of both assemblies.
+# A file added to the add-in output must be added here too, deliberately.
+$Satellites = 'fr', 'es', 'de'
 $perYear = @(
   'GanttIt.addin',
   'GanttIt\GanttIt.Core.dll',
@@ -132,6 +134,10 @@ $perYear = @(
   'GanttIt\Resources\icons\gantt_32.png',
   'GanttIt\Resources\icons\gantt_32_dark.png'
 )
+foreach ($lang in $Satellites) {
+  $perYear += "GanttIt\$lang\GanttIt.Core.resources.dll"
+  $perYear += "GanttIt\$lang\GanttIt.Revit.resources.dll"
+}
 $expected = foreach ($year in '2026', '2027') {
   foreach ($rel in $perYear) { "AppDataFolder\Autodesk\Revit\Addins\$year\$rel" }
 }
@@ -156,7 +162,7 @@ Write-Host "Folders removed on uninstall ($($removed.Count)):"
 $removed | ForEach-Object { Write-Host "  $_" }
 foreach ($year in '2026', '2027') {
   $base = "AppDataFolder\Autodesk\Revit\Addins\$year"
-  foreach ($sub in 'GanttIt', 'GanttIt\Resources', 'GanttIt\Resources\icons') {
+  foreach ($sub in @('GanttIt', 'GanttIt\Resources', 'GanttIt\Resources\icons') + ($Satellites | ForEach-Object { "GanttIt\$_" })) {
     if ($removed -notcontains "$base\$sub") { $problems += "uninstall does not remove $base\$sub" }
   }
   if ($removed -contains $base) { $problems += "uninstall removes $base (Revit's folder, shared with other add-ins)" }

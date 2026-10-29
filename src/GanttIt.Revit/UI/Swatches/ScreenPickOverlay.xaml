@@ -1,7 +1,8 @@
 <Window x:Class="GanttIt.Revit.UI.Swatches.ScreenPickOverlay"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="Pick a color" WindowStyle="None" ResizeMode="NoResize" ShowInTaskbar="False"
+        xmlns:l="clr-namespace:GanttIt.Revit.UI.Localization"
+        Title="{l:Tr Pick_WindowTitle}" WindowStyle="None" ResizeMode="NoResize" ShowInTaskbar="False"
         Topmost="True" ShowActivated="False" WindowStartupLocation="Manual"
         Left="-32000" Top="-32000" Width="16" Height="16"
         Background="Black" Cursor="Cross" ForceCursor="True"
@@ -45,7 +46,7 @@
                                    VerticalAlignment="Center" Foreground="{StaticResource TextBrush}"
                                    AutomationProperties.AutomationId="ScreenPick.Hex" />
                     </StackPanel>
-                    <TextBlock Text="Click to pick · Esc to cancel" Style="{StaticResource MutedText}"
+                    <TextBlock Text="{l:Tr Pick_Hint}" Style="{StaticResource MutedText}"
                                FontSize="11" Margin="0,4,0,0" />
                 </StackPanel>
             </Border>

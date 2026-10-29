@@ -1,4 +1,5 @@
 using GanttIt.Core.Model;
+using GanttIt.Core.Resources;
 using GanttIt.Core.Scheduling;
 
 namespace GanttIt.Core.Serialization;
@@ -27,38 +28,38 @@ public static class ChartJson
     /// <summary>Structural consistency the editor and layout rely on.</summary>
     private static string? Problem(Chart chart)
     {
-        if (chart.Name is null) return "The chart has no name.";
-        if (chart.Title is null) return "The chart has no title field.";
-        if (chart.Sections is null) return "The chart has no section list.";
-        if (chart.Links is null) return "The chart has no link list.";
+        if (chart.Name is null) return CoreStrings.Chart_NoName;
+        if (chart.Title is null) return CoreStrings.Chart_NoTitle;
+        if (chart.Sections is null) return CoreStrings.Chart_NoSections;
+        if (chart.Links is null) return CoreStrings.Chart_NoLinks;
         if (!double.IsFinite(chart.TimelineWidth) || !double.IsFinite(chart.NameMaxWidth))
-            return "The chart has a non-finite width.";
-        if (!Enum.IsDefined(chart.Timescale)) return "The chart has an unknown timescale.";
-        if ((chart.Columns & ~ChartColumns.All) != 0) return "The chart has unknown columns.";
+            return CoreStrings.Chart_NonFiniteWidth;
+        if (!Enum.IsDefined(chart.Timescale)) return CoreStrings.Chart_UnknownTimescale;
+        if ((chart.Columns & ~ChartColumns.All) != 0) return CoreStrings.Chart_UnknownColumns;
 
         var index = new Dictionary<Guid, int>();
         for (var i = 0; i < chart.Sections.Count; i++)
         {
             var s = chart.Sections[i];
-            if (s is null) return "The chart has an empty section entry.";
-            if (s.Name is null) return $"Section {i + 1} has no name.";
+            if (s is null) return CoreStrings.Chart_EmptySection;
+            if (s.Name is null) return CoreStrings.Chart_SectionNoName(i + 1);
             if (!SupportedDates.Contains(s.Start) || !SupportedDates.Contains(s.End))
-                return $"Section {i + 1} has a date outside {SupportedDates.Min.Year}–{SupportedDates.Max.Year}.";
-            if (!index.TryAdd(s.Id, i)) return $"Section id {s.Id} appears twice.";
+                return CoreStrings.Chart_SectionDate(i + 1, SupportedDates.Min.Year, SupportedDates.Max.Year);
+            if (!index.TryAdd(s.Id, i)) return CoreStrings.Chart_DuplicateId(s.Id);
         }
 
         var seen = new HashSet<(Guid, Guid)>();
         foreach (var link in chart.Links)
         {
-            if (link is null) return "The chart has an empty link entry.";
+            if (link is null) return CoreStrings.Chart_EmptyLink;
             if (!index.TryGetValue(link.FromSectionId, out var from) || !index.TryGetValue(link.ToSectionId, out var to))
-                return "A link refers to a section that does not exist.";
-            if (to != from + 1) return "A link joins sections that are not neighbours.";
-            if (!seen.Add((link.FromSectionId, link.ToSectionId))) return "A link appears twice.";
+                return CoreStrings.Chart_LinkMissing;
+            if (to != from + 1) return CoreStrings.Chart_LinkNotNeighbours;
+            if (!seen.Add((link.FromSectionId, link.ToSectionId))) return CoreStrings.Chart_LinkTwice;
             // Every Scheduler path keeps To.Start = From.End + 1 + LagDays, so a
             // mismatch means outside edits; trusting it would shift the chain.
             if (link.LagDays != Scheduler.CurrentLag(chart.Sections[from], chart.Sections[to]))
-                return "A link's lag does not match its sections' dates.";
+                return CoreStrings.Issue_LinkLag;
         }
         return null;
     }

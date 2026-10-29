@@ -1,7 +1,8 @@
 <ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
                     xmlns:mvvm="clr-namespace:GanttIt.Revit.UI.Mvvm"
-                    xmlns:theming="clr-namespace:GanttIt.Revit.UI.Theming">
+                    xmlns:theming="clr-namespace:GanttIt.Revit.UI.Theming"
+                    xmlns:l="clr-namespace:GanttIt.Revit.UI.Localization">
 
     <!--
         Gantt-It theme: a neutral, compact palette that sits comfortably inside
@@ -229,15 +230,16 @@
     <!--
         The text boxes' Cut/Copy/Paste menu. WPF's built-in one is a private ContextMenu
         subclass that implicit styles can't reach, so every text box gets this copy instead
-        (one per text box: x:Shared="False"). Headers and shortcuts come from the commands,
-        in Windows' language, as in the built-in menu.
+        (one per text box: x:Shared="False"). Headers are Gantt-It's own resources in the UI
+        language (§2.6): the commands' built-in text follows WPF's culture, not Revit's
+        language. Shortcuts still come from the commands.
     -->
     <ContextMenu x:Key="TextBoxContextMenu" x:Shared="False">
-        <MenuItem Command="ApplicationCommands.Cut"
+        <MenuItem Command="ApplicationCommands.Cut" Header="{l:Tr Edit_Cut}"
                   CommandTarget="{Binding PlacementTarget, RelativeSource={RelativeSource AncestorType=ContextMenu}}" />
-        <MenuItem Command="ApplicationCommands.Copy"
+        <MenuItem Command="ApplicationCommands.Copy" Header="{l:Tr Edit_Copy}"
                   CommandTarget="{Binding PlacementTarget, RelativeSource={RelativeSource AncestorType=ContextMenu}}" />
-        <MenuItem Command="ApplicationCommands.Paste"
+        <MenuItem Command="ApplicationCommands.Paste" Header="{l:Tr Edit_Paste}"
                   CommandTarget="{Binding PlacementTarget, RelativeSource={RelativeSource AncestorType=ContextMenu}}" />
     </ContextMenu>
 
@@ -644,7 +646,7 @@
                                 <!-- Style="{x:Null}": not the implicit Button style above -->
                                 <Button x:Name="PART_PreviousButton" Style="{x:Null}" Template="{StaticResource CalendarNavButton}"
                                         Width="28" Height="24" Focusable="False" Cursor="Hand"
-                                        AutomationProperties.Name="Previous month">
+                                        AutomationProperties.Name="{l:Tr Date_PreviousMonth}">
                                     <Path Width="6" Height="10" Stretch="Fill" Fill="{StaticResource MutedTextBrush}"
                                           Data="M288.75,232.25 L288.75,240.625 L283,236.625 z" />
                                 </Button>
@@ -653,7 +655,7 @@
                                         FontWeight="SemiBold" Foreground="{TemplateBinding Foreground}" Focusable="False" Cursor="Hand" />
                                 <Button x:Name="PART_NextButton" Grid.Column="2" Style="{x:Null}" Template="{StaticResource CalendarNavButton}"
                                         Width="28" Height="24" Focusable="False" Cursor="Hand"
-                                        AutomationProperties.Name="Next month">
+                                        AutomationProperties.Name="{l:Tr Date_NextMonth}">
                                     <Path Width="6" Height="10" Stretch="Fill" Fill="{StaticResource MutedTextBrush}"
                                           Data="M282.875,231.875 L282.875,240.375 L288.625,236 z" />
                                 </Button>
