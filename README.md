@@ -30,7 +30,7 @@ The installer puts the add-in in the per-user Revit add-ins folders:
 
 ```text
 %AppData%\Autodesk\Revit\Addins\2026\GanttIt.addin
-%AppData%\Autodesk\Revit\Addins\2026\GanttIt\         add-in DLLs and icons
+%AppData%\Autodesk\Revit\Addins\2026\GanttIt\         add-in DLLs, PDBs and icons
 %AppData%\Autodesk\Revit\Addins\2027\GanttIt.addin
 %AppData%\Autodesk\Revit\Addins\2027\GanttIt\
 ```
@@ -102,3 +102,8 @@ version comes from the tag alone; see [docs/RELEASING.md](docs/RELEASING.md).
 Copy the artifact's contents into `%AppData%\Autodesk\Revit\Addins\<year>\`.
 Revit locks loaded DLLs, so close Revit before redeploying. The add-in is
 unsigned for now, so Revit asks whether to load it on first launch.
+
+## License
+
+Gantt-It is released under the [MIT License](LICENSE). Copyright (c) 2026
+Designs/OS.

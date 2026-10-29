@@ -8,7 +8,8 @@
   ProductCode, install scope) and every file with its install path. Fails
   when the identity or the layout is not what Product.wxs promises: the
   fixed UpgradeCode, a per-user package that needs no elevation, the
-  expected ProductVersion, and the add-in in both Revit years' folders.
+  expected ProductVersion, and exactly the expected add-in files in both
+  Revit years' folders (no more, no fewer).
   CI runs it on every MSI it builds.
 #>
 param(
@@ -97,12 +98,31 @@ if (($wordCount -band 8) -eq 0) { $problems += "summary Word Count ${wordCount}:
 if ($ExpectVersion -and $props['ProductVersion'] -ne $ExpectVersion) {
   $problems += "ProductVersion is $($props['ProductVersion']), expected $ExpectVersion"
 }
-foreach ($year in '2026', '2027') {
-  foreach ($rel in 'GanttIt.addin', 'GanttIt\GanttIt.Revit.dll', 'GanttIt\GanttIt.Core.dll',
-                   'GanttIt\Resources\icons\gantt_16.png', 'GanttIt\Resources\icons\gantt_32.png') {
-    $want = "AppDataFolder\Autodesk\Revit\Addins\$year\$rel"
-    if (-not ($files | Where-Object { $_.Path -eq $want })) { $problems += "missing $want" }
-  }
+# The exact file set, per Revit year (8 files each, 16 in all): PDBs ship,
+# XML doc files do not (installer/stage.sh drops them). A file added to the
+# add-in output must be added here too, deliberately.
+$perYear = @(
+  'GanttIt.addin',
+  'GanttIt\GanttIt.Core.dll',
+  'GanttIt\GanttIt.Core.pdb',
+  'GanttIt\GanttIt.Revit.deps.json',
+  'GanttIt\GanttIt.Revit.dll',
+  'GanttIt\GanttIt.Revit.pdb',
+  'GanttIt\Resources\icons\gantt_16.png',
+  'GanttIt\Resources\icons\gantt_32.png'
+)
+$expected = foreach ($year in '2026', '2027') {
+  foreach ($rel in $perYear) { "AppDataFolder\Autodesk\Revit\Addins\$year\$rel" }
+}
+$actual = @($files | ForEach-Object { $_.Path })
+foreach ($want in $expected) {
+  if ($actual -notcontains $want) { $problems += "missing $want" }
+}
+foreach ($have in $actual) {
+  if ($expected -notcontains $have) { $problems += "unexpected $have" }
+}
+if ($actual.Count -ne $expected.Count) {
+  $problems += "MSI has $($actual.Count) files, expected $($expected.Count)"
 }
 
 if ($problems.Count) {

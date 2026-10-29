@@ -6,11 +6,11 @@
 # Copies the GanttIt.Revit build output of "Release R26" / "Release R27" (or the
 # configuration given) into installer/stage/<year>/, laid out exactly like
 # %AppData%\Autodesk\Revit\Addins\<year>\ — the same layout as build.yml's
-# "Stage add-in" step for the Debug artifacts:
+# "Stage add-in" step for the Debug artifacts, minus the XML doc files:
 #
 #   installer/stage/<year>/GanttIt.addin
-#   installer/stage/<year>/GanttIt/GanttIt.Revit.dll, GanttIt.Core.dll, …,
-#                                  Resources/icons/…
+#   installer/stage/<year>/GanttIt/GanttIt.Revit.dll, GanttIt.Core.dll, *.pdb,
+#                                  GanttIt.Revit.deps.json, Resources/icons/…
 #
 # Product.wxs harvests installer/stage/2026/** and installer/stage/2027/**.
 # Run `dotnet build GanttIt.sln -c "Release R26"` (and R27) first. Works in Git
@@ -40,6 +40,11 @@ mkdir -p "$dest/GanttIt"
 cp "$out/GanttIt.addin" "$dest/"
 cp -r "$out/." "$dest/GanttIt/"
 rm "$dest/GanttIt/GanttIt.addin"
+# Ship the PDBs, not the XML doc files (GanttIt.Core.xml): an <name>.xml next
+# to a <name>.dll is IntelliSense documentation, of no use to Revit.
+for dll in "$dest"/GanttIt/*.dll; do
+  rm -f "${dll%.dll}.xml"
+done
 
 echo "staged $config -> installer/stage/$year"
 (cd "$dest" && find . -type f | sort)

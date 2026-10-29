@@ -9,10 +9,13 @@
     %AppData%\Autodesk\Revit\Addins\2026\
       GanttIt.addin                         manifest (Assembly=GanttIt\GanttIt.Revit.dll)
       GanttIt\
-        GanttIt.Revit.dll, GanttIt.Core.dll, *.pdb, *.deps.json, *.xml
+        GanttIt.Revit.dll, GanttIt.Core.dll, *.pdb, GanttIt.Revit.deps.json
         Resources\icons\gantt_16.png, gantt_32.png
     %AppData%\Autodesk\Revit\Addins\2027\
       (same, built for net10.0-windows)
+
+  PDBs ship (useful stack traces in bug reports); XML doc files do not
+  (installer/stage.sh drops them).
 
   Both years are always installed (no feature selection): the folder of a
   Revit year that is not installed just sits idle until it is. User data
@@ -59,7 +62,7 @@
     <!-- Settings > Apps identity and links. -->
     <Icon Id="GanttItIcon.ico" SourceFile="branding\ganttit.ico" />
     <Property Id="ARPPRODUCTICON"   Value="GanttItIcon.ico" />
-    <Property Id="ARPHELPLINK"      Value="https://github.com/jedbjorn/gantt-it" />
+    <Property Id="ARPHELPLINK"      Value="https://github.com/jedbjorn/gantt-it#install" />
     <Property Id="ARPURLINFOABOUT"  Value="https://github.com/jedbjorn/gantt-it" />
     <Property Id="ARPURLUPDATEINFO" Value="https://github.com/jedbjorn/gantt-it/releases/latest" />
 
