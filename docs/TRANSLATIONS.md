@@ -82,6 +82,10 @@ collect duplicate types. The ribbon panel and button keep the product name
 | cell padding | marge de cellule | margen de celda | Zellenabstand |
 | synchronize and relinquish | synchroniser et abandonner | sincronizar y ceder | synchronisieren und freigeben |
 | Pick from screen | Prélever à l'écran | Tomar de la pantalla | Vom Bildschirm aufnehmen |
+| Cut / Copy / Paste (text-box menu) | Couper / Copier / Coller | Cortar / Copiar / Pegar | Ausschneiden / Kopieren / Einfügen |
+
+The text-box menu uses Gantt-It's resources (with Windows' access keys) rather
+than the WPF command texts, which follow WPF's culture instead of Revit's language.
 
 Conventions: French uses « guillemets » with no-break spaces and a no-break space
 before `:` `;` `?`; German uses „Anführungszeichen“ and the formal *Sie*; Spanish

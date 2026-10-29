@@ -420,6 +420,21 @@ Open it from the Project Browser instead.</value>
   <data name="Date_Calendar" xml:space="preserve">
     <value>Calendar</value>
   </data>
+  <data name="Date_PreviousMonth" xml:space="preserve">
+    <value>Previous month</value>
+  </data>
+  <data name="Date_NextMonth" xml:space="preserve">
+    <value>Next month</value>
+  </data>
+  <data name="Edit_Cut" xml:space="preserve">
+    <value>Cu_t</value>
+  </data>
+  <data name="Edit_Copy" xml:space="preserve">
+    <value>_Copy</value>
+  </data>
+  <data name="Edit_Paste" xml:space="preserve">
+    <value>_Paste</value>
+  </data>
   <data name="Date_FieldCalendar" xml:space="preserve">
     <value>{0} calendar</value>
   </data>

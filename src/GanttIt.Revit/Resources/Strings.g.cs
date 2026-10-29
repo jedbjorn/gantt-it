@@ -385,6 +385,21 @@ internal static class Strings
     /// <summary>Calendar</summary>
     internal static string Date_Calendar => Get("Date_Calendar");
 
+    /// <summary>Previous month</summary>
+    internal static string Date_PreviousMonth => Get("Date_PreviousMonth");
+
+    /// <summary>Next month</summary>
+    internal static string Date_NextMonth => Get("Date_NextMonth");
+
+    /// <summary>Cu_t</summary>
+    internal static string Edit_Cut => Get("Edit_Cut");
+
+    /// <summary>_Copy</summary>
+    internal static string Edit_Copy => Get("Edit_Copy");
+
+    /// <summary>_Paste</summary>
+    internal static string Edit_Paste => Get("Edit_Paste");
+
     /// <summary>{0} calendar</summary>
     internal static string Date_FieldCalendar(object? arg0) => Format("Date_FieldCalendar", arg0);
 

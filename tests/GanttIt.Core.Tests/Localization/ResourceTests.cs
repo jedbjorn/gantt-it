@@ -110,7 +110,7 @@ public partial class ResourceTests
     {
         // Every user-visible attribute is a binding, a {l:Tr} key, a glyph or a symbol.
         var root = RepoRoot();
-        var attribute = new Regex("""\b(Text|Content|ToolTip|Title|AutomationProperties\.Name|FieldName)="([^"{]*)" """.TrimEnd());
+        var attribute = new Regex("""\b(Text|Content|Header|ToolTip|Title|AutomationProperties\.Name|FieldName)="([^"{]*)" """.TrimEnd());
         var glyph = new Regex("&#x[0-9A-Fa-f]+;");
         var offenders = Directory.EnumerateFiles(Path.Combine(root, "src/GanttIt.Revit"), "*.xaml", SearchOption.AllDirectories)
             .Where(f => !f.Contains($"{Path.DirectorySeparatorChar}obj{Path.DirectorySeparatorChar}"))

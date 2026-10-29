@@ -415,6 +415,21 @@ Ouvrez-la plutôt depuis l'arborescence du projet.</value>
   <data name="Date_Calendar" xml:space="preserve">
     <value>Calendrier</value>
   </data>
+  <data name="Date_PreviousMonth" xml:space="preserve">
+    <value>Mois précédent</value>
+  </data>
+  <data name="Date_NextMonth" xml:space="preserve">
+    <value>Mois suivant</value>
+  </data>
+  <data name="Edit_Cut" xml:space="preserve">
+    <value>Co_uper</value>
+  </data>
+  <data name="Edit_Copy" xml:space="preserve">
+    <value>_Copier</value>
+  </data>
+  <data name="Edit_Paste" xml:space="preserve">
+    <value>C_oller</value>
+  </data>
   <data name="Date_FieldCalendar" xml:space="preserve">
     <value>Calendrier {0}</value>
   </data>

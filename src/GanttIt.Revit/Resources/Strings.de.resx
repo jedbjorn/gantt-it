@@ -415,6 +415,21 @@
   <data name="Date_Calendar" xml:space="preserve">
     <value>Kalender</value>
   </data>
+  <data name="Date_PreviousMonth" xml:space="preserve">
+    <value>Vorheriger Monat</value>
+  </data>
+  <data name="Date_NextMonth" xml:space="preserve">
+    <value>Nächster Monat</value>
+  </data>
+  <data name="Edit_Cut" xml:space="preserve">
+    <value>_Ausschneiden</value>
+  </data>
+  <data name="Edit_Copy" xml:space="preserve">
+    <value>_Kopieren</value>
+  </data>
+  <data name="Edit_Paste" xml:space="preserve">
+    <value>_Einfügen</value>
+  </data>
   <data name="Date_FieldCalendar" xml:space="preserve">
     <value>Kalender {0}</value>
   </data>
