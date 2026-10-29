@@ -2,8 +2,9 @@
 
   <!--
     GanttIt.Revit — the Revit add-in. TargetFramework comes from $(RevitVersion)
-    (set by the Configuration in Directory.Build.props): 2026 → net8.0-windows,
-    2027 → net10.0-windows. Builds on Linux/macOS via EnableWindowsTargeting.
+    (set by the Configuration in Directory.Build.props): 2025 and 2026 →
+    net8.0-windows, 2027 → net10.0-windows. Builds on Linux/macOS via
+    EnableWindowsTargeting.
 
     The Revit API comes from the Nice3point reference packages (versions in
     Directory.Packages.props). ExcludeAssets=runtime keeps RevitAPI*.dll out of

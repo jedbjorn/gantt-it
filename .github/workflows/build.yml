@@ -4,9 +4,9 @@ name: build
 # off-VM build seat: the host has no .NET SDK.
 #
 # Delegates to the reusable _build.yml so release.yml builds exactly the same
-# pipeline: Core tests, the four configuration builds (Debug R26/R27 upload
-# the GanttIt-Debug-R26 / -R27 add-in artifacts), and the Windows MSI job
-# (GanttIt-msi, GanttIt-zips). Every job is required. Push/PR builds carry the
+# pipeline: Core tests, the six configuration builds (Debug R25/R26/R27
+# upload the GanttIt-Debug-R25 / -R26 / -R27 add-in artifacts), and the
+# Windows MSI job (GanttIt-msi, GanttIt-zips). Every job is required. Push/PR builds carry the
 # dev version (0.0.0-dev; MSI ProductVersion 0.0.0).
 
 on:

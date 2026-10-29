@@ -12,6 +12,10 @@
 
   <!-- Revit API reference packages, one version per Revit major. Keyed off
        $(RevitVersion) from Directory.Build.props, which is imported first. -->
+  <ItemGroup Condition="'$(RevitVersion)' == '2025'">
+    <PackageVersion Include="Nice3point.Revit.Api.RevitAPI"   Version="2025.4.60" />
+    <PackageVersion Include="Nice3point.Revit.Api.RevitAPIUI" Version="2025.4.60" />
+  </ItemGroup>
   <ItemGroup Condition="'$(RevitVersion)' == '2026'">
     <PackageVersion Include="Nice3point.Revit.Api.RevitAPI"   Version="2026.4.0" />
     <PackageVersion Include="Nice3point.Revit.Api.RevitAPIUI" Version="2026.4.0" />

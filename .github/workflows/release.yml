@@ -137,7 +137,7 @@ jobs:
         run: |
           set -euo pipefail
           ls -l dist/
-          for f in "GanttIt-$VERSION.msi" "GanttIt-$VERSION-Revit2026.zip" "GanttIt-$VERSION-Revit2027.zip"; do
+          for f in "GanttIt-$VERSION.msi" "GanttIt-$VERSION-Revit2025.zip" "GanttIt-$VERSION-Revit2026.zip" "GanttIt-$VERSION-Revit2027.zip"; do
             [[ -s "dist/$f" ]] || { echo "::error::missing release asset $f"; exit 1; }
           done
           (cd dist && sha256sum -- * | tee SHA256SUMS.txt)
