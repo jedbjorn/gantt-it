@@ -70,7 +70,7 @@ internal sealed partial class SelfTestRunner
         };
         Report.Write(A8Path, record);
         var listed = RevitUtil.SheetsShowing(_doc, view.Id);
-        _r.Check("A8", $"place-sheets: '{name}' placed on {count} sheets", listed.Count == count,
+        _r.Check("A8", $"place-sheets: '{name}' placed on {count} sheet{(count == 1 ? "" : "s")}", listed.Count == count,
             record.DeepClone().AsObject());
     }
 
@@ -96,8 +96,10 @@ internal sealed partial class SelfTestRunner
             .ToArray();
 
         _r.Check("A8", $"a8-check: '{name}' view is gone", viewGone);
-        _r.Check("A8", "a8-check: both viewports are gone", viewportsLeft == 0,
-            new JsonObject { ["recorded"] = record["viewportIds"]!.AsArray().Count, ["stillExisting"] = viewportsLeft });
+        var recorded = record["viewportIds"]!.AsArray().Count;
+        _r.Check("A8", recorded == 1 ? "a8-check: the 1 recorded viewport is gone" : $"a8-check: all {recorded} recorded viewports are gone",
+            viewportsLeft == 0,
+            new JsonObject { ["recorded"] = recorded, ["stillExisting"] = viewportsLeft });
         _r.Check("A8", "a8-check: no unused Gantt-It fill type remains", unused == 0,
             new JsonObject { ["unused"] = unused, ["fillInventory"] = inventory, ["before"] = record["fillInventory"]?.DeepClone() });
         _r.Section("a8", new JsonObject
