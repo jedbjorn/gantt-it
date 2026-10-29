@@ -16,19 +16,21 @@
 - Pick bar colours from a palette, by colour code, or straight from the screen.
 - Follows Revit's light or dark theme.
 - Speaks English, French, Spanish and German.
-- Works in Revit 2026 and Revit 2027.
+- Works in Revit 2025, Revit 2026 and Revit 2027.
 
 ## Install
 
 1. Download `GanttIt-<version>.msi` from the [latest release](https://github.com/jedbjorn/gantt-it/releases/latest).
 2. Close Revit, then run the file.
 3. If Windows says "Windows protected your PC", choose **More info**, then **Run anyway**. Windows asks this because Gantt-It is not digitally signed yet. That is expected.
-4. Accept the licence and click **Install**. One installer covers Revit 2026 and 2027. It installs for you only and needs no administrator rights.
+4. Accept the licence and click **Install**. The installer adds Gantt-It to each Revit 2025, 2026 and 2027 it finds on your computer. It installs for you only and needs no administrator rights.
 5. Start Revit. Revit asks whether to load Gantt-It, for the same reason: choose **Always Load**.
 
 Gantt-It now appears on the **Add-Ins** tab.
 
 **Upgrade:** close Revit, then run the newer installer. It replaces the old version. Revit asks again whether to load Gantt-It on the next start: choose **Always Load** again.
+
+**Installed another Revit year later?** Close Revit, run the installer again and choose **Repair**. It adds Gantt-It to the Revit you just installed.
 
 **Uninstall:** close Revit, then:
 
