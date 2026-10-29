@@ -278,6 +278,17 @@ public sealed class EditorViewModel : ObservableObject
         OnEdited();
     }
 
+    /// <summary>
+    /// A schedule or settings change re-shows every date, so text still being typed in a
+    /// date field is dropped, with a notice naming it (never a silent change, §5.1).
+    /// </summary>
+    private void DiscardPendingText()
+    {
+        foreach (var row in Rows)
+            if (row.DiscardPendingText() is { Count: > 0 } dropped)
+                AddNotice($"Section {row.Number}: discarded {string.Join(" and ", dropped)}, which was not a date. The dates shown are the section's dates.");
+    }
+
     /// <summary>A date field's typed text became invalid or valid again: only the issue list changes.</summary>
     public void OnTypingErrorsChanged() => Revalidate();
 
@@ -379,6 +390,7 @@ public sealed class EditorViewModel : ObservableObject
     {
         if (!_main.OpenSettings()) return false;
         // New settings: recalibrated preview (decision #14), new date format, new missing-style state.
+        DiscardPendingText();
         foreach (var row in Rows) row.Refresh();
         Revalidate();
         Preview.RenderNow();
@@ -464,6 +476,7 @@ public sealed class EditorViewModel : ObservableObject
 
     private void OnScheduleChanged()
     {
+        DiscardPendingText();
         foreach (var row in Rows) row.Refresh();
         OnEdited();
     }

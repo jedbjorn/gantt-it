@@ -71,6 +71,15 @@ public class DateEntryTests
     }
 
     [Fact]
+    public void TypedDateError_QuotesTheText_AndNamesThePatternWithAnExample()
+    {
+        Assert.Equal(
+            "\"31/02/2026\" is not a date in this chart's format. Type it as dd/MM/yyyy, for example 31/12/2026.",
+            DateFormats.TypedDateError(" 31/02/2026 ", DateFormats.EuSlash));
+        Assert.False(DateFormats.TryParse("31/02/2026", DateFormats.EuSlash, out _));
+    }
+
+    [Fact]
     public void WithoutLeadingZeros_ShortensDayAndMonth_KeepsLiteralsAndAdjacentFields()
     {
         Assert.Equal("yyyy-M-d", DateFormats.WithoutLeadingZeros("yyyy-MM-dd"));

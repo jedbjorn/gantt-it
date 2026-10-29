@@ -15,18 +15,19 @@ namespace GanttIt.Revit.UI.Editor;
 /// the grid matches the chart in either Revit year and on any Windows locale. Day/month
 /// order always follows the pattern (<see cref="DateFormats.TryParse"/>); text that
 /// doesn't match is kept, marked with the validation style and explained in the tooltip,
-/// and never applied. The calendar drop-down is WPF's own <see cref="Calendar"/>.
+/// and never applied. It lives in the row (<see cref="PendingText"/>), so a field rebuilt
+/// by the virtualized list shows it again. The calendar drop-down is WPF's own <see cref="Calendar"/>.
 /// </summary>
 public partial class DateField : UserControl
 {
     public static readonly DependencyProperty SelectedDateProperty = DependencyProperty.Register(
         nameof(SelectedDate), typeof(DateTime?), typeof(DateField),
-        new FrameworkPropertyMetadata(null, FrameworkPropertyMetadataOptions.BindsTwoWayByDefault, (d, _) => ((DateField)d).ShowDate()));
+        new FrameworkPropertyMetadata(null, FrameworkPropertyMetadataOptions.BindsTwoWayByDefault, (d, _) => ((DateField)d).OnShownValueChanged()));
 
     /// <summary>The project's date pattern; an unusable one falls back to ISO (<see cref="DateFormats.EntryPattern"/>).</summary>
     public static readonly DependencyProperty DateFormatProperty = DependencyProperty.Register(
         nameof(DateFormat), typeof(string), typeof(DateField),
-        new PropertyMetadata(DateFormats.Iso, (d, _) => ((DateField)d).ShowDate()));
+        new PropertyMetadata(DateFormats.Iso, (d, _) => ((DateField)d).OnShownValueChanged()));
 
     public static readonly DependencyProperty DisplayDateStartProperty = DependencyProperty.Register(
         nameof(DisplayDateStart), typeof(DateTime?), typeof(DateField), new PropertyMetadata(null));
@@ -47,18 +48,18 @@ public partial class DateField : UserControl
         nameof(FieldName), typeof(string), typeof(DateField), new PropertyMetadata(null, (d, _) => ((DateField)d).ApplyAutomation()));
 
     /// <summary>
-    /// The pending typing error (null when the text shows <see cref="SelectedDate"/>), two-way:
-    /// the row reports it to the editor, which lists it and blocks Generate/Update, like a
-    /// length that doesn't parse. When the row clears it (a refresh), the field drops the
-    /// typed text and shows the date again.
+    /// Typed text that isn't a date in the pattern (null when the field shows
+    /// <see cref="SelectedDate"/>), two-way with the row. The row keeps it, so the editor
+    /// lists it and blocks Generate/Update (like a length that doesn't parse) and a field
+    /// rebuilt after scrolling shows the same text and red state. The field only clears it
+    /// on a user action (valid text, Esc, cleared field, calendar pick); when the row clears
+    /// it, the field shows the date again.
     /// </summary>
-    public static readonly DependencyProperty TypingErrorProperty = DependencyProperty.Register(
-        nameof(TypingError), typeof(string), typeof(DateField),
-        new FrameworkPropertyMetadata(null, FrameworkPropertyMetadataOptions.BindsTwoWayByDefault, OnTypingErrorChanged));
+    public static readonly DependencyProperty PendingTextProperty = DependencyProperty.Register(
+        nameof(PendingText), typeof(string), typeof(DateField),
+        new FrameworkPropertyMetadata(null, FrameworkPropertyMetadataOptions.BindsTwoWayByDefault,
+            (d, _) => ((DateField)d).OnShownValueChanged()));
 
-    private static readonly DateOnly Sample = new(2026, 12, 31);
-
-    private string? _typingError;
     private bool _settingCalendar;
 
     public DateField()
@@ -68,14 +69,14 @@ public partial class DateField : UserControl
         Box.LostKeyboardFocus += (_, _) => Commit();
         Box.TextChanged += (_, _) =>
         {
-            if (_typingError is not null && Box.Text == Formatted()) ClearTypingError();
+            if (PendingText is not null && Box.Text == Formatted()) SetPending(null);
         };
         CalendarButton.Click += (_, _) => OpenCalendar();
         Picker.PreviewMouseLeftButtonUp += OnCalendarMouseUp;
         Picker.KeyDown += OnCalendarKeyDown;
         CalendarPopup.Opened += (_, _) => CalendarButton.IsHitTestVisible = false;
         CalendarPopup.Closed += (_, _) => CalendarButton.IsHitTestVisible = true;
-        ShowDate();
+        OnShownValueChanged();
     }
 
     public DateTime? SelectedDate
@@ -120,10 +121,10 @@ public partial class DateField : UserControl
         set => SetValue(FieldNameProperty, value);
     }
 
-    public string? TypingError
+    public string? PendingText
     {
-        get => (string?)GetValue(TypingErrorProperty);
-        set => SetValue(TypingErrorProperty, value);
+        get => (string?)GetValue(PendingTextProperty);
+        set => SetValue(PendingTextProperty, value);
     }
 
     /// <summary>The pattern the field shows and reads.</summary>
@@ -134,10 +135,21 @@ public partial class DateField : UserControl
 
     // ---- text -----------------------------------------------------------------------------
 
-    /// <summary>Shows the current date in the pattern; drops any pending typing error.</summary>
+    /// <summary>
+    /// The date, the pattern or the pending text changed (also when the row is rebuilt):
+    /// show the pending text if there is one, otherwise the date. Never clears the pending text.
+    /// </summary>
+    private void OnShownValueChanged()
+    {
+        var shown = PendingText ?? Formatted();
+        if (Box.Text != shown) Box.Text = shown;
+        ShowState();
+    }
+
+    /// <summary>Drops any typed text and shows the current date in the pattern.</summary>
     private void ShowDate()
     {
-        SetTypingError(null);
+        SetPending(null);
         Box.Text = Formatted();
         ShowState();
     }
@@ -148,7 +160,7 @@ public partial class DateField : UserControl
         var text = Box.Text;
         if (text == Formatted())
         {
-            ClearTypingError();
+            SetPending(null);
             return;
         }
         if (string.IsNullOrWhiteSpace(text))
@@ -158,37 +170,31 @@ public partial class DateField : UserControl
         }
         if (!DateFormats.TryParse(text, Pattern, out var date))
         {
-            SetTypingError($"\"{text.Trim()}\" is not a date in this chart's format. " +
-                           $"Type it as {Pattern}, for example {DateFormats.Format(Sample, Pattern)}.");
+            SetPending(text);
             return;
         }
 
+        SetPending(null);
         var value = date.ToDateTime(TimeOnly.MinValue);
         if (SelectedDate != value) SetCurrentValue(SelectedDateProperty, value); // the view-model may refuse it and push its own value back
         ShowDate();
     }
 
-    private void ClearTypingError() => SetTypingError(null);
-
-    private void SetTypingError(string? error)
+    /// <summary>
+    /// Sets the pending text, comparing with the bound value rather than any local copy, so
+    /// clearing always reaches the row (even for a field rebuilt with the row's text).
+    /// </summary>
+    private void SetPending(string? text)
     {
-        if (_typingError == error) return;
-        _typingError = error; // before SetCurrentValue, so OnTypingErrorChanged sees it as ours
-        SetCurrentValue(TypingErrorProperty, error);
+        if (PendingText != text) SetCurrentValue(PendingTextProperty, text);
         ShowState();
-    }
-
-    /// <summary>The row cleared the error (row refresh): drop the typed text and show the date.</summary>
-    private static void OnTypingErrorChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
-    {
-        var field = (DateField)d;
-        if (e.NewValue is null && field._typingError is not null) field.ShowDate();
     }
 
     private void ShowState()
     {
-        Behaviors.SetHasError(Box, HasError || _typingError is not null);
-        Box.ToolTip = _typingError ?? $"Type the date as {Pattern}, or press Alt+Down for the calendar.";
+        var error = PendingText is { } t ? DateFormats.TypedDateError(t, Pattern) : null;
+        Behaviors.SetHasError(Box, HasError || error is not null);
+        Box.ToolTip = error ?? $"Type the date as {Pattern}, or press Alt+Down for the calendar.";
     }
 
     private void OnBoxKeyDown(object sender, KeyEventArgs e)
@@ -200,7 +206,7 @@ public partial class DateField : UserControl
                 Box.SelectAll();
                 e.Handled = true;
                 break;
-            case Key.Escape when Box.Text != Formatted():
+            case Key.Escape when Box.Text != Formatted() || PendingText is not null:
                 ShowDate(); // first Esc undoes the typing; the next one reaches the window
                 Box.SelectAll();
                 e.Handled = true;
@@ -249,9 +255,18 @@ public partial class DateField : UserControl
     {
         if (!CalendarPopup.IsOpen) return;
         CalendarPopup.IsOpen = false;
-        if (apply && !_settingCalendar && Picker.SelectedDate is { } picked && picked.Date != SelectedDate)
-            SetCurrentValue(SelectedDateProperty, picked.Date);
-        ShowDate();
+        if (apply && !_settingCalendar && Picker.SelectedDate is { } picked)
+        {
+            // A chosen day replaces any typed text; clear it first so the schedule change
+            // that follows doesn't report it as discarded.
+            SetPending(null);
+            if (picked.Date != SelectedDate) SetCurrentValue(SelectedDateProperty, picked.Date);
+            ShowDate();
+        }
+        else
+        {
+            OnShownValueChanged(); // cancelled: whatever was there stays
+        }
         Box.Focus();
     }
 

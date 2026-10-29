@@ -104,6 +104,15 @@ public static class DateFormats
     }
 
     /// <summary>
+    /// The message for typed text that <see cref="TryParse"/> rejected, naming the
+    /// pattern with an example (shown in the field's tooltip and the editor's issue list).
+    /// </summary>
+    public static string TypedDateError(string text, string pattern) =>
+        $"\"{text.Trim()}\" is not a date in this chart's format. Type it as {pattern}, for example {Format(ErrorSample, pattern)}.";
+
+    private static readonly DateOnly ErrorSample = new(2026, 12, 31);
+
+    /// <summary>
     /// <paramref name="pattern"/> with each two-letter day (<c>dd</c>) and month
     /// (<c>MM</c>) field shortened to one letter, which parses one or two digits.
     /// Quoted and escaped literals are copied unchanged. A pattern with two fields

@@ -274,7 +274,7 @@
 
                                         <!-- Dates in the chart's date format (Settings), typed or from the calendar -->
                                         <editor:DateField Grid.Column="3" SelectedDate="{Binding StartDate}" Margin="0,0,6,0"
-                                                          TypingError="{Binding StartTextError}"
+                                                          PendingText="{Binding StartPendingText}"
                                                           DateFormat="{Binding DateFormat}"
                                                           DisplayDateStart="{x:Static editor:EditorDates.Min}"
                                                           DisplayDateEnd="{x:Static editor:EditorDates.Max}"
@@ -283,7 +283,7 @@
                                                           FieldName="Start" />
 
                                         <editor:DateField Grid.Column="4" SelectedDate="{Binding EndDate}" Margin="0,0,6,0"
-                                                          TypingError="{Binding EndTextError}"
+                                                          PendingText="{Binding EndPendingText}"
                                                           DateFormat="{Binding DateFormat}"
                                                           DisplayDateStart="{x:Static editor:EditorDates.Min}"
                                                           DisplayDateEnd="{x:Static editor:EditorDates.Max}"

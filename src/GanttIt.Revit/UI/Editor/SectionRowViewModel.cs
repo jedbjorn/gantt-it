@@ -1,6 +1,7 @@
 using System.Globalization;
 using System.Windows.Input;
 using System.Windows.Media;
+using GanttIt.Core.Dates;
 using GanttIt.Core.Model;
 using GanttIt.Core.Scheduling;
 using GanttIt.Revit.UI.Swatches;
@@ -27,8 +28,8 @@ public sealed class SectionRowViewModel : ObservableObject
     private readonly EditorViewModel _editor;
     private string? _error;
     private DropMarker _dropMarker;
-    private string? _startTextError;
-    private string? _endTextError;
+    private string? _startPendingText;
+    private string? _endPendingText;
 
     public SectionRowViewModel(EditorViewModel editor, Section section)
     {
@@ -86,31 +87,54 @@ public sealed class SectionRowViewModel : ObservableObject
     }
 
     /// <summary>
-    /// Text typed in the Start field that isn't a date in the chart's format (from the
-    /// field). While set, the editor lists it and Generate/Update stay disabled; the
+    /// Text typed in the Start field that isn't a date in the chart's format, kept here (not
+    /// in the field) so it survives the field being rebuilt when the list scrolls. While set,
+    /// the editor lists <see cref="StartTextError"/> and Generate/Update stay disabled; the
     /// section keeps its last valid date.
     /// </summary>
-    public string? StartTextError
+    public string? StartPendingText
     {
-        get => _startTextError;
-        set
-        {
-            if (_startTextError == value) return;
-            _startTextError = value;
-            _editor.OnTypingErrorsChanged();
-        }
+        get => _startPendingText;
+        set => SetPending(ref _startPendingText, value, nameof(StartPendingText), nameof(StartTextError));
     }
 
-    /// <summary>As <see cref="StartTextError"/>, for the End field.</summary>
-    public string? EndTextError
+    /// <summary>As <see cref="StartPendingText"/>, for the End field.</summary>
+    public string? EndPendingText
     {
-        get => _endTextError;
-        set
-        {
-            if (_endTextError == value) return;
-            _endTextError = value;
-            _editor.OnTypingErrorsChanged();
-        }
+        get => _endPendingText;
+        set => SetPending(ref _endPendingText, value, nameof(EndPendingText), nameof(EndTextError));
+    }
+
+    public string? StartTextError => StartPendingText is { } t ? DateFormats.TypedDateError(t, DateFormat) : null;
+
+    public string? EndTextError => EndPendingText is { } t ? DateFormats.TypedDateError(t, DateFormat) : null;
+
+    /// <summary>
+    /// Drops text still being typed (a schedule or settings change re-shows every date).
+    /// Returns what was dropped, e.g. <c>Start "31/02/2026"</c>, for the editor's notice.
+    /// </summary>
+    public IReadOnlyList<string> DiscardPendingText()
+    {
+        var dropped = new List<string>();
+        if (_startPendingText is { } s) dropped.Add($"Start \"{s.Trim()}\"");
+        if (_endPendingText is { } e) dropped.Add($"End \"{e.Trim()}\"");
+        if (dropped.Count == 0) return dropped;
+        _startPendingText = null;
+        _endPendingText = null;
+        OnPropertyChanged(nameof(StartPendingText));
+        OnPropertyChanged(nameof(EndPendingText));
+        OnPropertyChanged(nameof(StartTextError));
+        OnPropertyChanged(nameof(EndTextError));
+        return dropped;
+    }
+
+    private void SetPending(ref string? field, string? value, string name, string errorName)
+    {
+        if (field == value) return;
+        field = value;
+        OnPropertyChanged(name);
+        OnPropertyChanged(errorName);
+        _editor.OnTypingErrorsChanged();
     }
 
     /// <summary>The pattern the Start/End fields show and read: the chart's date format from Settings.</summary>
@@ -195,11 +219,6 @@ public sealed class SectionRowViewModel : ObservableObject
     /// <summary>Re-reads everything from the section and the chart's links (after any scheduling change).</summary>
     public void Refresh()
     {
-        // A schedule change re-shows every date, so text still being typed is dropped.
-        _startTextError = null;
-        _endTextError = null;
-        OnPropertyChanged(nameof(StartTextError));
-        OnPropertyChanged(nameof(EndTextError));
         OnPropertyChanged(nameof(Index));
         OnPropertyChanged(nameof(Number));
         OnPropertyChanged(nameof(IsFirst));
