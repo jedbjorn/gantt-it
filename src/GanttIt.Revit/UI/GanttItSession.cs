@@ -1,5 +1,6 @@
 using GanttIt.Core.Editing;
 using GanttIt.Core.Layout;
+using GanttIt.Revit.Resources;
 using GanttIt.Revit.Services;
 using GanttIt.Revit.UI.Preview;
 
@@ -66,7 +67,9 @@ public sealed class GanttItSession
         }
         catch (Exception ex)
         {
-            return new SettingsState(new Core.Model.ProjectSettings(), false, [], $"The settings could not be read: {ex.Message}");
+            return new SettingsState(
+                new Core.Model.ProjectSettings { ChartLanguage = Core.Localization.UiLanguage.Current },
+                false, [], Strings.Settings_ReadFailed(ex.Message));
         }
     }
 
@@ -80,12 +83,12 @@ public sealed class GanttItSession
         }
         catch (Exception ex)
         {
-            note = $"Preview text sizes are approximate: the text styles could not be calibrated ({ex.Message}).";
+            note = Strings.Preview_Approximate(ex.Message);
         }
 
         var metrics = FallbackMetrics.Complete(calibrated, out var approximated);
         if (approximated)
-            note ??= "Preview text sizes are approximate until every text style is chosen in Settings.";
+            note ??= Strings.Preview_ApproximateUntilStyles;
 
         ITextMeasurer measurer;
         try
@@ -103,6 +106,6 @@ public sealed class GanttItSession
     private sealed class UnavailableMeasurer(string reason) : ITextMeasurer
     {
         public IReadOnlyList<TextSize> Measure(IReadOnlyList<TextRequest> requests) =>
-            throw new InvalidOperationException($"the preview measurer is unavailable ({reason}).");
+            throw new InvalidOperationException(Strings.Preview_MeasurerUnavailable(reason));
     }
 }

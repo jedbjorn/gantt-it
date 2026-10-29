@@ -3,6 +3,7 @@ using System.Windows.Input;
 using GanttIt.Core.Editing;
 using GanttIt.Core.Layout;
 using GanttIt.Core.Serialization;
+using GanttIt.Revit.Resources;
 using GanttIt.Revit.Services;
 using GanttIt.Revit.UI.Mvvm;
 
@@ -15,7 +16,7 @@ public sealed class NewChartCardViewModel(ICommand newChart)
 
     public string AutomationId => "Home.NewChartCard";
 
-    public string AutomationName => "New chart";
+    public string AutomationName => Strings.Home_NewChart;
 }
 
 /// <summary>One chart legend in the model (§2.1).</summary>
@@ -38,8 +39,8 @@ public sealed class ChartCardViewModel
         CanDelete = entry.Load.Status != LoadStatus.NewerVersion;
         StatusText = entry.Load.Status switch
         {
-            LoadStatus.NewerVersion => entry.Load.Error ?? "Written by a newer version of Gantt-It. It is read-only here.",
-            LoadStatus.Invalid => $"This chart's stored data can't be read: {entry.Load.Error}",
+            LoadStatus.NewerVersion => entry.Load.Error ?? Strings.Card_NewerVersion,
+            LoadStatus.Invalid => Strings.Card_Invalid(entry.Load.Error),
             _ => null,
         };
         IsInvalid = entry.Load.Status == LoadStatus.Invalid;
@@ -65,7 +66,9 @@ public sealed class ChartCardViewModel
 
     public bool IsPlaced => Entry.Sheets.Count > 0;
 
-    public string SheetsToolTip => IsPlaced ? string.Join("\n", Entry.Sheets) : "Not placed on any sheet";
+    public string SheetsToolTip => IsPlaced ? string.Join("\n", Entry.Sheets) : Strings.Card_NotPlacedTip;
+
+    public string ThumbnailName => Strings.Card_ThumbnailName(Name);
 
     public ChartLayout? Thumbnail { get; }
 
@@ -88,11 +91,11 @@ public sealed class ChartCardViewModel
 
     public ICommand DeleteCommand { get; }
 
-    public string EditName => $"Edit {Name}";
+    public string EditName => Strings.Card_EditName(Name);
 
-    public string OpenViewName => $"Open view {Name}";
+    public string OpenViewName => Strings.Card_OpenViewName(Name);
 
-    public string DeleteName => $"Delete {Name}";
+    public string DeleteName => Strings.Card_DeleteName(Name);
 }
 
 /// <summary>Home (§2.1): New chart, one card per chart, and the Settings gear.</summary>
@@ -137,10 +140,10 @@ public sealed class HomeViewModel : ObservableObject
         {
             var state = _main.Session.Settings;
             if (_main.Session.SettingsReadOnly) return null; // the Error banner says why; nothing to replace
-            if (!state.Stored) return "This model has no Gantt-It settings yet. They open the first time you create a chart.";
+            if (!state.Stored) return Strings.Home_NoSettings;
             return state.MissingStyles.Count == 0
                 ? null
-                : $"Some styles in Settings no longer exist ({string.Join(", ", state.MissingStyles)}). Charts can't be generated until each is replaced.";
+                : Strings.Home_MissingStyles(string.Join(", ", state.MissingStyles));
         }
     }
 
@@ -149,7 +152,7 @@ public sealed class HomeViewModel : ObservableObject
     private void OpenSettings()
     {
         if (!_main.OpenSettings()) return;
-        Status = "Settings saved.";
+        Status = Strings.Status_SettingsSaved;
         Load();
     }
 
@@ -168,7 +171,7 @@ public sealed class HomeViewModel : ObservableObject
         }
         catch (Exception ex)
         {
-            Error = $"The charts in this model could not be read: {ex.Message}";
+            Error = Strings.Home_ListFailed(ex.Message);
             entries = [];
         }
 

@@ -102,7 +102,7 @@ public sealed class ColorPickerViewModel : ObservableObject
     private void ApplyHex()
     {
         if (Rgb.TryParse(HexText, out var color)) Pick(color);
-        else HexError = "Enter a color as #RRGGBB, for example #4F8EF7.";
+        else HexError = Resources.Strings.Color_HexError;
     }
 
     private void More()
@@ -121,7 +121,7 @@ public sealed class ColorPickerViewModel : ObservableObject
         }
         catch (Exception ex)
         {
-            HexError = $"Couldn't pick from the screen: {ex.Message}";
+            HexError = Resources.Strings.Color_PickFailed(ex.Message);
             return;
         }
         if (color is { } c) Pick(c);

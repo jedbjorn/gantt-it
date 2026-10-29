@@ -1,5 +1,6 @@
 using Autodesk.Revit.DB;
 using GanttIt.Core.Model;
+using GanttIt.Revit.Resources;
 using GanttIt.Revit.Services;
 using GanttIt.Revit.UI.Dialogs;
 using GanttIt.Revit.UI.Editor;
@@ -39,8 +40,8 @@ public sealed class MainViewModel : ObservableObject
 
     public string WindowTitle => Page switch
     {
-        EditorViewModel { IsExisting: true } e => $"Gantt-It — Edit {e.OriginalName}",
-        EditorViewModel => "Gantt-It — New chart",
+        EditorViewModel { IsExisting: true } e => Strings.Window_TitleEdit(e.OriginalName),
+        EditorViewModel => Strings.Window_TitleNew,
         _ => "Gantt-It",
     };
 
@@ -75,7 +76,7 @@ public sealed class MainViewModel : ObservableObject
         var owner = CheckEditable(entry.ViewId);
         if (owner is not null)
         {
-            _dialogs.ShowMessage("Chart is not editable", owner);
+            _dialogs.ShowMessage(Strings.Dialog_NotEditableTitle, owner);
             return;
         }
         Page = new EditorViewModel(this, _dialogs, entry, null);
@@ -100,15 +101,17 @@ public sealed class MainViewModel : ObservableObject
         var owner = CheckEditable(viewId);
         if (owner is not null)
         {
-            _dialogs.ShowMessage("Chart is not editable", owner);
+            _dialogs.ShowMessage(Strings.Dialog_NotEditableTitle, owner);
             return false;
         }
 
-        var message = sheets.Count == 0
-            ? $"Delete the chart \"{name}\" and its legend view? It is not placed on any sheet."
-            : $"Delete the chart \"{name}\" and its legend view? It is placed on {(sheets.Count == 1 ? "this sheet" : $"these {sheets.Count} sheets")}, " +
-              "and deleting the view removes its viewports from them:";
-        if (!_dialogs.Confirm("Delete chart", message, sheets, "Delete", danger: true, MessageDialog.DeleteConfirmId))
+        var message = sheets.Count switch
+        {
+            0 => Strings.Delete_ConfirmNotPlaced(name),
+            1 => Strings.Delete_ConfirmOneSheet(name),
+            _ => Strings.Delete_ConfirmSheets(name, sheets.Count),
+        };
+        if (!_dialogs.Confirm(Strings.Delete_Title, message, sheets, Strings.Delete_Button, danger: true, MessageDialog.DeleteConfirmId))
             return false;
 
         ActionResult result;
@@ -122,11 +125,11 @@ public sealed class MainViewModel : ObservableObject
         }
         if (!result.Succeeded)
         {
-            _dialogs.ShowMessage("Chart was not deleted", ResultMessage(result, "deleted"));
+            _dialogs.ShowMessage(Strings.Delete_FailedTitle, ResultMessage(result, Strings.Result_NotDeleted));
             return false;
         }
 
-        ShowHome($"Deleted \"{name}\".");
+        ShowHome(Strings.Status_Deleted(name));
         return true;
     }
 
@@ -137,12 +140,14 @@ public sealed class MainViewModel : ObservableObject
         Page = null;
     }
 
-    /// <summary>A user-facing message for a failed or refused action.</summary>
-    public static string ResultMessage(ActionResult result, string verb) => result.Status switch
+    /// <summary>
+    /// A user-facing message for a failed or refused action; <paramref name="fallback"/>
+    /// (e.g. "The chart could not be deleted.") when the result carries none.
+    /// </summary>
+    public static string ResultMessage(ActionResult result, string fallback) => result.Status switch
     {
-        ActionStatus.Failed => (result.Message ?? $"The chart could not be {verb}.") +
-                               "\n\nThe change was rolled back; the model is as it was.",
-        _ => result.Message ?? $"The chart could not be {verb}.",
+        ActionStatus.Failed => (result.Message ?? fallback) + "\n\n" + Strings.Result_RolledBack,
+        _ => result.Message ?? fallback,
     };
 
     private string? CheckEditable(ElementId? viewId)
@@ -153,7 +158,7 @@ public sealed class MainViewModel : ObservableObject
         }
         catch (Exception ex)
         {
-            return $"Gantt-It could not check who owns this chart: {ex.Message}";
+            return Strings.Owner_CheckFailed(ex.Message);
         }
     }
 

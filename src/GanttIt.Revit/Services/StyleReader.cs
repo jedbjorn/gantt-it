@@ -1,6 +1,7 @@
 using Autodesk.Revit.DB;
 using GanttIt.Core.Layout;
 using GanttIt.Core.Model;
+using GanttIt.Revit.Resources;
 
 namespace GanttIt.Revit.Services;
 
@@ -138,18 +139,18 @@ internal static class StyleReader
     /// <summary>The five setting fields, with the labels shown to the user (§2.3).</summary>
     public static IEnumerable<(string Label, StyleRef? Ref, bool IsText)> Fields(ProjectSettings s)
     {
-        yield return ("Title text style", s.TitleTextStyle, true);
-        yield return ("Header text style", s.HeaderTextStyle, true);
-        yield return ("Body text style", s.BodyTextStyle, true);
-        yield return ("Chart line style", s.ChartLineStyle, false);
-        yield return ("Header line style", s.HeaderLineStyle, false);
+        yield return (Strings.Style_TitleText, s.TitleTextStyle, true);
+        yield return (Strings.Style_HeaderText, s.HeaderTextStyle, true);
+        yield return (Strings.Style_BodyText, s.BodyTextStyle, true);
+        yield return (Strings.Style_ChartLine, s.ChartLineStyle, false);
+        yield return (Strings.Style_HeaderLine, s.HeaderLineStyle, false);
     }
 
     /// <summary>Labels of the set fields whose style no longer resolves.</summary>
     public static List<string> Missing(Document doc, ProjectSettings settings) =>
         Fields(settings)
             .Where(f => f.Ref is not null && (f.IsText ? ResolveText(doc, f.Ref) is null : ResolveLine(doc, f.Ref) is null))
-            .Select(f => $"{f.Label} \"{f.Ref!.Name}\"")
+            .Select(f => Strings.Style_LabelWithName(f.Label, f.Ref!.Name))
             .ToList();
 
     /// <summary>
@@ -161,13 +162,13 @@ internal static class StyleReader
         var unset = Fields(settings).Where(f => f.Ref is null).Select(f => f.Label).ToList();
         if (unset.Count > 0)
         {
-            problem = "Choose a style in Settings for: " + string.Join(", ", unset) + ".";
+            problem = Strings.Styles_Unset(string.Join(", ", unset));
             return null;
         }
         var missing = Missing(doc, settings);
         if (missing.Count > 0)
         {
-            problem = "These styles no longer exist in the model; choose replacements in Settings: " + string.Join(", ", missing) + ".";
+            problem = Strings.Styles_Missing(string.Join(", ", missing));
             return null;
         }
 

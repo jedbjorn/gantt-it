@@ -516,7 +516,9 @@ internal sealed partial class SelfTestRunner
     {
         var styles = _styles!;
         var columns = 1 + new[] { ChartColumns.Start, ChartColumns.End, ChartColumns.Duration }.Count(c => chart.Columns.HasFlag(c));
-        var headerTexts = new HashSet<string>(StringComparer.Ordinal) { "Section", "Start", "End", "Dur" };
+        // Headers in the settings' chart language (§2.6): "Section", "Start", "End", "Dur" in English.
+        var text = Core.Localization.ChartText.For(_settings.ChartLanguage);
+        var headerTexts = new HashSet<string>(StringComparer.Ordinal) { text.NameHeader, text.StartHeader, text.EndHeader, text.DurationHeader };
         var body = notes.Where(n => n.GetTypeId() == styles.BodyText).ToList();
         var bodyTexts = body.Select(n => n.Text.TrimEnd('\r')).ToHashSet(StringComparer.Ordinal);
         var titles = notes.Count(n => n.GetTypeId() == styles.TitleText);
@@ -767,7 +769,7 @@ internal sealed partial class SelfTestRunner
         var live = _backend.ListCharts().Count;
         _r.Check("A9", "Regenerate all redraws live charts only; the detached copies are untouched",
             regen.Succeeded && CopyState(copyW).SameAs(w0) && CopyState(copyP).SameAs(p0)
-            && (regen.Message ?? "").Contains($"Regenerated {live} chart", StringComparison.Ordinal),
+            && (regen.Message ?? "").Contains(ChartGenerator.RegeneratedNote(live), StringComparison.Ordinal),
             new JsonObject { ["status"] = regen.Status.ToString(), ["liveCharts"] = live },
             regen.Message);
 
@@ -1047,7 +1049,7 @@ internal sealed partial class SelfTestRunner
             ["elementsBefore"] = before,
             ["elementsAfter"] = CountAll(),
             ["fillType"] = FillTypes.NameFor(UndoColor),
-            ["transaction"] = GanttItTransaction.Name("Generate", UndoChartName),
+            ["transaction"] = GanttItTransaction.Name(Resources.Strings.Tx_Generate, UndoChartName),
         };
         Report.Write(UndoPath, record);
         _r.Check("A11", "undo preparation: 'GI Undo' generated as the last transaction",

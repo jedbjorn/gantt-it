@@ -1,6 +1,8 @@
 using System.Windows.Input;
 using GanttIt.Core.Dates;
+using GanttIt.Core.Localization;
 using GanttIt.Core.Model;
+using GanttIt.Revit.Resources;
 using GanttIt.Revit.Services;
 using GanttIt.Revit.UI.Dialogs;
 using GanttIt.Revit.UI.Mvvm;
@@ -13,6 +15,9 @@ public sealed record DateFormatOption(string Label, string? Pattern)
     public bool IsCustom => Pattern is null;
 }
 
+/// <summary>A chart language choice, listed by the language's own name (English, Français, …).</summary>
+public sealed record ChartLanguageOption(Language Value, string Label);
+
 /// <summary>
 /// Per-project settings (§2.3): the five styles read live from the model, the
 /// date format, cell padding, "Use as my default for new projects" and
@@ -20,12 +25,13 @@ public sealed record DateFormatOption(string Label, string? Pattern)
 /// </summary>
 public sealed class SettingsViewModel : ObservableObject
 {
-    // Field labels match the §2.3 table and the backend's SettingsState.MissingStyles names.
-    public const string TitleTextLabel = "Title text style";
-    public const string HeaderTextLabel = "Header text style";
-    public const string BodyTextLabel = "Body text style";
-    public const string ChartLineLabel = "Chart line style";
-    public const string HeaderLineLabel = "Header line style";
+    // Field labels match the §2.3 table and the backend's SettingsState.MissingStyles names
+    // (StyleReader uses the same resources, in the same UI language).
+    public static string TitleTextLabel => Strings.Style_TitleText;
+    public static string HeaderTextLabel => Strings.Style_HeaderText;
+    public static string BodyTextLabel => Strings.Style_BodyText;
+    public static string ChartLineLabel => Strings.Style_ChartLine;
+    public static string HeaderLineLabel => Strings.Style_HeaderLine;
 
     private static readonly DateOnly Sample = new(2026, 12, 31);
 
@@ -34,6 +40,7 @@ public sealed class SettingsViewModel : ObservableObject
     private readonly ProjectSettings _settings;
     private DateFormatOption _dateFormatOption;
     private string _customPattern;
+    private ChartLanguageOption _chartLanguage;
     private bool _useAsDefault;
 
     public SettingsViewModel(GanttItSession session, IDialogService dialogs)
@@ -61,11 +68,14 @@ public sealed class SettingsViewModel : ObservableObject
         DateFormatOptions =
         [
             .. DateFormats.Presets.Select(p => new DateFormatOption($"{p}    ({DateFormats.Format(Sample, p)})", p)),
-            new DateFormatOption("Custom pattern…", null),
+            new DateFormatOption(Strings.Settings_CustomPattern, null),
         ];
         var preset = DateFormatOptions.FirstOrDefault(o => o.Pattern == _settings.DateFormat);
         _dateFormatOption = preset ?? DateFormatOptions[^1];
         _customPattern = preset is null ? _settings.DateFormat : "";
+
+        ChartLanguageOptions = Languages.All.Select(l => new ChartLanguageOption(l, Languages.NativeName(l))).ToList();
+        _chartLanguage = ChartLanguageOptions.FirstOrDefault(o => o.Value == _settings.ChartLanguage) ?? ChartLanguageOptions[0];
 
         CellPadding = new LengthField(backend, _settings.CellPadding, _ => OnChanged());
         CellPadding.PropertyChanged += (_, _) => OnChanged();
@@ -133,13 +143,28 @@ public sealed class SettingsViewModel : ObservableObject
 
     public bool HasDateFormatError => DateFormatError is not null;
 
+    /// <summary>31 Dec 2026 as the chart will draw it: the pattern with the chart language's month names.</summary>
     public string DateFormatSample =>
-        DateFormatError is null ? $"31 December 2026 shows as {DateFormats.Format(Sample, DateFormat)}" : "";
+        DateFormatError is null ? Strings.Settings_DateSample(DateFormats.Format(Sample, DateFormat, ChartLanguage.Value)) : "";
+
+    /// <summary>The four chart languages (§2.6), in their own names.</summary>
+    public IReadOnlyList<ChartLanguageOption> ChartLanguageOptions { get; }
+
+    /// <summary>The language of the text drawn on charts (§2.6): headers, months, quarters, default names.</summary>
+    public ChartLanguageOption ChartLanguage
+    {
+        get => _chartLanguage;
+        set
+        {
+            if (value is null || !SetField(ref _chartLanguage, value)) return;
+            OnChanged();
+        }
+    }
 
     public LengthField CellPadding { get; }
 
     public string? CellPaddingError =>
-        CellPadding.Error ?? (CellPadding.Value > 0 ? null : "The cell padding must be greater than zero.");
+        CellPadding.Error ?? (CellPadding.Value > 0 ? null : Strings.Settings_CellPaddingPositive);
 
     public bool HasCellPaddingError => CellPaddingError is not null;
 
@@ -157,7 +182,7 @@ public sealed class SettingsViewModel : ObservableObject
             var missing = Pickers.Where(p => p.IsMissing).Select(p => p.Label).ToList();
             return missing.Count == 0
                 ? null
-                : $"Some styles no longer exist in this model ({string.Join(", ", missing)}). Charts can't be generated until each is replaced.";
+                : Strings.Settings_MissingSummary(string.Join(", ", missing));
         }
     }
 
@@ -176,7 +201,7 @@ public sealed class SettingsViewModel : ObservableObject
         var owner = Guard(() => _session.Backend.CheckEditable(null));
         if (owner is not null)
         {
-            _dialogs.ShowMessage("Settings are not editable", owner);
+            _dialogs.ShowMessage(Strings.Settings_NotEditableTitle, owner);
             return false;
         }
 
@@ -192,7 +217,7 @@ public sealed class SettingsViewModel : ObservableObject
         }
         if (!result.Succeeded)
         {
-            _dialogs.ShowMessage("Settings were not saved", result.Message ?? "The settings could not be saved.");
+            _dialogs.ShowMessage(Strings.Settings_NotSavedTitle, result.Message ?? Strings.Settings_NotSaved);
             return false;
         }
 
@@ -207,8 +232,7 @@ public sealed class SettingsViewModel : ObservableObject
             }
             catch (Exception ex)
             {
-                _dialogs.ShowMessage("Defaults were not saved",
-                    $"The settings were saved to this model, but your defaults for new projects could not be written: {ex.Message}");
+                _dialogs.ShowMessage(Strings.Settings_DefaultsNotSavedTitle, Strings.Settings_DefaultsNotSaved(ex.Message));
             }
         }
         return true;
@@ -228,10 +252,8 @@ public sealed class SettingsViewModel : ObservableObject
             result = new ActionResult(ActionStatus.Failed, ex.Message);
         }
         _dialogs.ShowMessage(
-            result.Succeeded ? "Charts regenerated" : "Charts were not regenerated",
-            result.Message ?? (result.Succeeded
-                ? "Every chart in this model was redrawn with the new settings."
-                : "The charts could not be regenerated. The model was not changed."));
+            result.Succeeded ? Strings.Settings_RegeneratedTitle : Strings.Settings_NotRegeneratedTitle,
+            result.Message ?? (result.Succeeded ? Strings.Settings_Regenerated : Strings.Settings_NotRegenerated));
         CloseRequested?.Invoke();
     }
 
@@ -245,6 +267,7 @@ public sealed class SettingsViewModel : ObservableObject
         s.HeaderLineStyle = HeaderLine.ToRef();
         s.DateFormat = DateFormat.Trim();
         s.CellPadding = CellPadding.Value;
+        s.ChartLanguage = ChartLanguage.Value;
         return s;
     }
 
@@ -281,7 +304,7 @@ public sealed class SettingsViewModel : ObservableObject
         }
         catch (Exception ex)
         {
-            return $"Gantt-It could not check who owns the settings: {ex.Message}";
+            return Strings.Settings_OwnerCheckFailed(ex.Message);
         }
     }
 }

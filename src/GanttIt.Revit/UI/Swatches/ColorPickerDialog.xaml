@@ -2,7 +2,8 @@
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:swatches="clr-namespace:GanttIt.Revit.UI.Swatches"
-        Title="Section color"
+        xmlns:l="clr-namespace:GanttIt.Revit.UI.Localization"
+        Title="{l:Tr Color_DialogTitle}"
         SizeToContent="WidthAndHeight" ResizeMode="NoResize" ShowInTaskbar="False"
         WindowStyle="ToolWindow" WindowStartupLocation="Manual"
         FontFamily="Segoe UI" FontSize="12" UseLayoutRounding="True"
@@ -19,7 +20,7 @@
 
     <StackPanel Margin="12">
         <swatches:ColorPicker />
-        <Button Content="Cancel" IsCancel="True" HorizontalAlignment="Right" Margin="0,4,0,0" MinWidth="80"
+        <Button Content="{l:Tr Common_Cancel}" IsCancel="True" HorizontalAlignment="Right" Margin="0,4,0,0" MinWidth="80"
                 AutomationProperties.AutomationId="ColorPicker.Cancel" />
     </StackPanel>
 </Window>

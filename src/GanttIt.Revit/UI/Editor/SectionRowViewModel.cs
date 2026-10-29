@@ -2,7 +2,9 @@ using System.Globalization;
 using System.Windows.Input;
 using System.Windows.Media;
 using GanttIt.Core.Dates;
+using GanttIt.Core.Localization;
 using GanttIt.Core.Model;
+using GanttIt.Revit.Resources;
 using GanttIt.Core.Scheduling;
 using GanttIt.Revit.UI.Swatches;
 using GanttIt.Revit.UI.Mvvm;
@@ -105,9 +107,9 @@ public sealed class SectionRowViewModel : ObservableObject
         set => SetPending(ref _endPendingText, value, nameof(EndPendingText), nameof(EndTextError));
     }
 
-    public string? StartTextError => StartPendingText is { } t ? DateFormats.TypedDateError(t, DateFormat) : null;
+    public string? StartTextError => StartPendingText is { } t ? DateFormats.TypedDateError(t, DateFormat, UiLanguage.Current) : null;
 
-    public string? EndTextError => EndPendingText is { } t ? DateFormats.TypedDateError(t, DateFormat) : null;
+    public string? EndTextError => EndPendingText is { } t ? DateFormats.TypedDateError(t, DateFormat, UiLanguage.Current) : null;
 
     /// <summary>
     /// Drops text still being typed (a schedule or settings change re-shows every date).
@@ -116,8 +118,8 @@ public sealed class SectionRowViewModel : ObservableObject
     public IReadOnlyList<string> DiscardPendingText()
     {
         var dropped = new List<string>();
-        if (_startPendingText is { } s) dropped.Add($"Start \"{s.Trim()}\"");
-        if (_endPendingText is { } e) dropped.Add($"End \"{e.Trim()}\"");
+        if (_startPendingText is { } s) dropped.Add(Strings.Row_DiscardedStart(s.Trim()));
+        if (_endPendingText is { } e) dropped.Add(Strings.Row_DiscardedEnd(e.Trim()));
         if (dropped.Count == 0) return dropped;
         _startPendingText = null;
         _endPendingText = null;
@@ -174,6 +176,9 @@ public sealed class SectionRowViewModel : ObservableObject
     public Brush ColorBrush => SwatchViewModel.BrushFor(Section.Color);
 
     public string ColorHex => Section.Color.ToHex();
+
+    /// <summary>Automation name of the swatch, e.g. "Color #4F8EF7".</summary>
+    public string ColorName => Strings.Row_ColorName(ColorHex);
 
     /// <summary>Validation messages for this row (blank name, end before start, …); null when valid.</summary>
     public string? Error
@@ -232,5 +237,6 @@ public sealed class SectionRowViewModel : ObservableObject
         OnPropertyChanged(nameof(LinkFollowing));
         OnPropertyChanged(nameof(ColorBrush));
         OnPropertyChanged(nameof(ColorHex));
+        OnPropertyChanged(nameof(ColorName));
     }
 }

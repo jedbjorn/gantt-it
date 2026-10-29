@@ -55,8 +55,8 @@ public sealed class StylePickerViewModel : ObservableObject
     public string? Hint => Selected is not null
         ? null
         : IsMissing
-            ? $"\"{_stored?.Name}\" no longer exists in this model. Choose a replacement."
-            : "Choose a style.";
+            ? Resources.Strings.Style_MissingHint(_stored?.Name)
+            : Resources.Strings.Style_ChooseHint;
 
     public event Action? SelectionChanged;
 

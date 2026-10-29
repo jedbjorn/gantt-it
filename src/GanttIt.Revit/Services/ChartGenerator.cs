@@ -3,6 +3,7 @@ using GanttIt.Core.Layout;
 using GanttIt.Core.Model;
 using GanttIt.Core.Serialization;
 using GanttIt.Core.Validation;
+using GanttIt.Revit.Resources;
 using RevitLine = Autodesk.Revit.DB.Line;
 
 namespace GanttIt.Revit.Services;
@@ -47,10 +48,7 @@ internal sealed class ChartGenerator
     internal static DrawResult? LastDraw { get; private set; }
 #endif
 
-    public const string NoLegendMessage =
-        "Revit's API can't create a legend view from scratch, so Gantt-It copies an existing legend. "
-        + "This model has none yet. Create one with View › Legends › Legend (any name and scale), then press Generate again. "
-        + "Your chart stays in the editor.";
+    public static string NoLegendMessage => Strings.Gen_NoLegend;
 
     // ------------------------------------------------------------------ actions
 
@@ -64,7 +62,7 @@ internal sealed class ChartGenerator
 
         // Defensive: a new chart never shares an Id with a live chart.
         if (ChartStore.Live(_doc).Any(c => ChartJson.Deserialize(c.ChartJson).Value?.Id == chart.Id)) chart.Id = Guid.NewGuid();
-        return GanttItTransaction.Run(_doc, GanttItTransaction.Name("Generate", chart.Name), () =>
+        return GanttItTransaction.Run(_doc, GanttItTransaction.Name(Strings.Tx_Generate, chart.Name), () =>
         {
             var view = LegendFactory.Create(_doc, source, chart.Name);
             var drawn = Draw(view, chart, settings, styles!, new FillTypes(_doc));
@@ -77,10 +75,10 @@ internal sealed class ChartGenerator
     {
         chart.Name = chart.Name?.Trim() ?? "";
         if (LoadChartView(viewId, out var view, out var stored) is { } notChart) return notChart;
-        if (ChartJson.Deserialize(stored!.ChartJson).Status == LoadStatus.NewerVersion) return Blocked(NewerChartMessage);
+        if (ChartJson.Deserialize(stored!.ChartJson).Status == LoadStatus.NewerVersion) return Blocked(Strings.Gen_NewerChart);
         if (Refuse(chart, settings, view, out var styles) is { } refused) return refused;
 
-        return GanttItTransaction.Run(_doc, GanttItTransaction.Name("Update", chart.Name), () =>
+        return GanttItTransaction.Run(_doc, GanttItTransaction.Name(Strings.Tx_Update, chart.Name), () =>
         {
             var drawn = Redraw(view!, stored, chart, settings, styles!, new FillTypes(_doc));
             return (view!.Id, Note(drawn));
@@ -97,12 +95,12 @@ internal sealed class ChartGenerator
     {
         if (LoadChartView(viewId, out var view, out var stored) is { } notChart) return notChart;
         if (ChartJson.Deserialize(stored!.ChartJson).Status == LoadStatus.NewerVersion)
-            return Blocked(NewerChartMessage + " It can still be deleted by hand in Revit.");
+            return Blocked(Strings.Gen_NewerChartByHand);
         if (EditableProblem(view) is { } owned) return Blocked(owned);
         if (leaveView?.Invoke() is { } stuck) return Blocked(stuck);
 
         var name = view!.Name;
-        return GanttItTransaction.Run(_doc, GanttItTransaction.Name("Delete", name), () =>
+        return GanttItTransaction.Run(_doc, GanttItTransaction.Name(Strings.Tx_Delete, name), () =>
         {
             // Deleting the legend removes its own elements and its viewports (V8).
             _doc.Delete(viewId);
@@ -113,7 +111,7 @@ internal sealed class ChartGenerator
     public ActionResult RegenerateAll(ProjectSettings settings)
     {
         if (settings.SchemaVersion > SchemaVersions.Settings || StoredSettingsAreNewer())
-            return Blocked(NewerSettingsMessage);
+            return Blocked(Strings.Gen_NewerSettings);
         var styles = StyleReader.Resolve(_doc, settings, out var styleProblem);
         if (styles is null) return Blocked(styleProblem!);
         if (ChartValidator.ValidateSettings(settings) is { Count: > 0 } settingIssues)
@@ -127,7 +125,7 @@ internal sealed class ChartGenerator
             if (!load.IsEditable || load.Value is null)
             {
                 // Newer-version charts are read-only (§7.2); unreadable ones are reported.
-                skipped.Add($"\"{stored.View.Name}\" ({load.Error})");
+                skipped.Add(Strings.Gen_Skipped(stored.View.Name, load.Error));
                 continue;
             }
             load.Value.Name = stored.View.Name;
@@ -138,24 +136,29 @@ internal sealed class ChartGenerator
         foreach (var w in work)
         {
             var issues = ChartValidator.Validate(w.Chart, settings, RevitUtil.OtherViewNames(_doc, w.View.Id));
-            if (issues.Count > 0) skipped.Add($"\"{w.View.Name}\" ({issues[0].Message})");
+            if (issues.Count > 0) skipped.Add(Strings.Gen_Skipped(w.View.Name, issues[0].Message));
             else ready.Add(w);
         }
         if (ready.Count == 0)
-            return new ActionResult(ActionStatus.Ok, skipped.Count > 0 ? "No chart could be regenerated: " + string.Join("; ", skipped) : "There are no charts to regenerate.");
+            return new ActionResult(ActionStatus.Ok,
+                skipped.Count > 0 ? Strings.Gen_NoneRegenerated(string.Join("; ", skipped)) : Strings.Gen_NoCharts);
 
         foreach (var w in ready)
             if (EditableProblem(w.View) is { } owned) return Blocked(owned);
 
-        return GanttItTransaction.Run(_doc, GanttItTransaction.Name("Regenerate all charts", null), () =>
+        return GanttItTransaction.Run(_doc, GanttItTransaction.Name(Strings.Tx_RegenerateAll, null), () =>
         {
             var fills = new FillTypes(_doc);
             foreach (var w in ready) Redraw(w.View, w.Stored, w.Chart, settings, styles, fills);
-            var note = $"Regenerated {ready.Count} chart{(ready.Count == 1 ? "" : "s")}.";
-            if (skipped.Count > 0) note += " Skipped: " + string.Join("; ", skipped) + ".";
+            var note = RegeneratedNote(ready.Count);
+            if (skipped.Count > 0) note += " " + Strings.Gen_SkippedList(string.Join("; ", skipped));
             return (null, note);
         });
     }
+
+    /// <summary>"Regenerated 3 charts." in the UI language (the Self-Test checks it).</summary>
+    internal static string RegeneratedNote(int count) =>
+        count == 1 ? Strings.Gen_RegeneratedOne : Strings.Gen_RegeneratedMany(count);
 
     // ------------------------------------------------------------------ checks
 
@@ -164,9 +167,9 @@ internal sealed class ChartGenerator
     {
         styles = null;
         if (chart.SchemaVersion > SchemaVersions.Chart)
-            return Blocked("This chart was written by a newer version of Gantt-It and is read-only here.");
+            return Blocked(Strings.Gen_NewerChart);
         if (settings.SchemaVersion > SchemaVersions.Settings || StoredSettingsAreNewer())
-            return Blocked(NewerSettingsMessage);
+            return Blocked(Strings.Gen_NewerSettings);
 
         var issues = ChartValidator.Validate(chart, settings, RevitUtil.OtherViewNames(_doc, self?.Id));
         if (issues.Count > 0) return Blocked(string.Join(" ", issues.Select(i => i.Message).Distinct()));
@@ -204,15 +207,10 @@ internal sealed class ChartGenerator
     {
         view = _doc.GetElement(viewId) as View;
         stored = view is null ? null : ChartStore.Read(view);
-        if (stored is null) return Blocked("That view is not a Gantt-It chart (or it no longer exists).");
-        if (!ChartStore.IsLive(_doc, stored))
-            return Blocked($"\"{view!.Name}\" is a plain legend, not a live Gantt-It chart: it holds none of the elements "
-                           + "Gantt-It drew (a copy made in Revit, or a chart whose elements were deleted). Use New chart instead.");
+        if (stored is null) return Blocked(Strings.Gen_NotChart);
+        if (!ChartStore.IsLive(_doc, stored)) return Blocked(Strings.Gen_Detached(view!.Name));
         return null;
     }
-
-    private const string NewerSettingsMessage =
-        "The model's Gantt-It settings were written by a newer version of Gantt-It and are read-only here.";
 
     /// <summary>
     /// True when the model's stored settings have a newer SchemaVersion (§7.2 v1.1). Checked
@@ -222,13 +220,11 @@ internal sealed class ChartGenerator
     private bool StoredSettingsAreNewer() =>
         ChartStore.ReadSettingsJson(_doc) is { } json && SettingsJson.Deserialize(json).Status == LoadStatus.NewerVersion;
 
-    private const string NewerChartMessage = "This chart was written by a newer version of Gantt-It and is read-only here.";
-
     private static ActionResult Blocked(string message) => new(ActionStatus.Blocked, message);
 
     private static string? Note(DrawResult drawn) =>
         drawn.WidenedBars > 0
-            ? $"{drawn.WidenedBars} very short bar(s) were widened to Revit's minimum line length."
+            ? Strings.Gen_WidenedBars(drawn.WidenedBars)
             : null;
 
     // ------------------------------------------------------------------ drawing

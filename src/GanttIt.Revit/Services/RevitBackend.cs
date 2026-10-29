@@ -1,9 +1,11 @@
 using Autodesk.Revit.DB;
 using Autodesk.Revit.UI;
 using GanttIt.Core.Layout;
+using GanttIt.Core.Localization;
 using GanttIt.Core.Model;
 using GanttIt.Core.Serialization;
 using GanttIt.Core.Validation;
+using GanttIt.Revit.Resources;
 
 namespace GanttIt.Revit.Services;
 
@@ -21,7 +23,7 @@ public sealed class RevitBackend : IGanttItBackend
     }
 
     private Document Doc => _uiapp.ActiveUIDocument?.Document
-                            ?? throw new InvalidOperationException("Gantt-It needs an open project.");
+                            ?? throw new InvalidOperationException(Strings.Backend_NeedsProject);
 
     private ChartGenerator Generator => new(Doc);
 
@@ -68,7 +70,7 @@ public sealed class RevitBackend : IGanttItBackend
                 // Unreadable settings: the UI opens Settings so they can be saved again.
                 var settings = DefaultSettings(doc);
                 return new SettingsState(settings, false, StyleReader.Missing(doc, settings),
-                    $"The stored Gantt-It settings could not be read and will be replaced when saved. {load.Error}");
+                    Strings.Backend_SettingsUnreadable(load.Error));
             }
         }
     }
@@ -77,15 +79,15 @@ public sealed class RevitBackend : IGanttItBackend
     {
         var doc = Doc;
         if (settings.SchemaVersion > SchemaVersions.Settings)
-            return new ActionResult(ActionStatus.Blocked, "These settings were written by a newer version of Gantt-It and are read-only here.");
+            return new ActionResult(ActionStatus.Blocked, Strings.Backend_SettingsNewer);
         if (ChartStore.ReadSettingsJson(doc) is { } stored && SettingsJson.Deserialize(stored).Status == LoadStatus.NewerVersion)
-            return new ActionResult(ActionStatus.Blocked, "The model's settings were written by a newer version of Gantt-It and are read-only here.");
+            return new ActionResult(ActionStatus.Blocked, Strings.Gen_NewerSettings);
         if (ChartValidator.ValidateSettings(settings) is { Count: > 0 } issues)
             return new ActionResult(ActionStatus.Blocked, string.Join(" ", issues.Select(i => i.Message)));
         if (CheckEditable(null) is { } owned)
             return new ActionResult(ActionStatus.Blocked, owned);
 
-        return GanttItTransaction.Run(doc, GanttItTransaction.Name("Save settings", null), () =>
+        return GanttItTransaction.Run(doc, GanttItTransaction.Name(Strings.Tx_SaveSettings, null), () =>
         {
             ChartStore.WriteSettings(doc, settings);
             return (null, null);
@@ -98,7 +100,8 @@ public sealed class RevitBackend : IGanttItBackend
     /// <summary>
     /// Settings for a model that has none: the per-user default names first, then
     /// the model's default text type and the built-in Thin/Medium line styles
-    /// (found by category, never by name).
+    /// (found by category, never by name). The chart language starts as the UI language
+    /// (§2.6): the language the user works in is the likeliest for their charts.
     /// </summary>
     internal static ProjectSettings DefaultSettings(Document doc)
     {
@@ -122,6 +125,7 @@ public sealed class RevitBackend : IGanttItBackend
             BodyTextStyle = StyleReader.RefOf(Text(names?.BodyTextStyle)),
             ChartLineStyle = StyleReader.RefOf(Line(names?.ChartLineStyle, BuiltInCategory.OST_CurvesThinLines)),
             HeaderLineStyle = StyleReader.RefOf(Line(names?.HeaderLineStyle, BuiltInCategory.OST_CurvesMediumLines)),
+            ChartLanguage = UiLanguage.Current,
         };
     }
 
@@ -155,7 +159,7 @@ public sealed class RevitBackend : IGanttItBackend
         if (chartViewId is not null && chartViewId != ElementId.InvalidElementId)
         {
             view = doc.GetElement(chartViewId) as View;
-            if (view is null) return "The chart's legend view no longer exists.";
+            if (view is null) return Strings.Backend_ViewGone;
         }
         return Generator.EditableProblem(view);
     }
@@ -193,7 +197,7 @@ public sealed class RevitBackend : IGanttItBackend
         }
         catch (Exception ex)
         {
-            result = new ActionResult(ActionStatus.Failed, $"Delete failed: {ex.Message}");
+            result = new ActionResult(ActionStatus.Failed, Strings.Backend_DeleteFailed(ex.Message));
         }
 
         if (!result.Succeeded && exit.Restore() is { } notBack)

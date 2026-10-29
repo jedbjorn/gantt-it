@@ -68,7 +68,7 @@ internal sealed class ScreenColorPicker
             using (NativeScreen.PerMonitorDpi())
             {
                 monitors = NativeScreen.Monitors();
-                if (monitors.Count == 0) throw new InvalidOperationException("Windows reported no monitors.");
+                if (monitors.Count == 0) throw new InvalidOperationException(Resources.Strings.Pick_NoMonitors);
                 foreach (var monitor in monitors)
                 {
                     var overlay = new ScreenPickOverlay(monitor);

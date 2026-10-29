@@ -2,6 +2,7 @@ using System.Windows;
 using System.Windows.Input;
 using System.Windows.Media;
 using GanttIt.Core.Model;
+using GanttIt.Revit.Resources;
 using GanttIt.Revit.UI.Swatches;
 using GanttIt.Revit.UI.Settings;
 
@@ -19,15 +20,9 @@ public sealed class DialogService(Window owner) : IDialogService
     public void ShowNoLegend() => Show(
         new MessageDialogModel(
             "Gantt-It",
-            "This model has no legend view yet",
-            "Revit's API can't create a legend view from scratch, so Gantt-It makes each chart by duplicating " +
-            "an existing legend. Your chart has not been generated, and nothing is downloaded or copied from another model.\n\n" +
-            "Revit is paused while Gantt-It is open, so:",
-            [
-                "Close Gantt-It with × or Esc. Your chart is kept. (Cancel discards it.)",
-                "In Revit, choose View › Legends › Legend. Any name and scale will do.",
-                "Open Gantt-It again and press Generate.",
-            ]),
+            Strings.NoLegend_Heading,
+            Strings.NoLegend_Message,
+            [Strings.NoLegend_Step1, Strings.NoLegend_Step2, Strings.NoLegend_Step3]),
         MessageDialog.NoLegendId);
 
     public bool ShowSettings(SettingsViewModel settings)

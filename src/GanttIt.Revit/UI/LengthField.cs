@@ -46,7 +46,7 @@ public sealed class LengthField : ObservableObject
             {
                 _text = value;
                 OnPropertyChanged();
-                Error = $"\"{value.Trim()}\" is not a length. Enter it in the project's units, for example {Format(Value)}.";
+                Error = Resources.Strings.Length_Invalid(value.Trim(), Format(Value));
             }
         }
     }

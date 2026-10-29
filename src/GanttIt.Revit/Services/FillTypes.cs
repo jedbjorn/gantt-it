@@ -1,5 +1,6 @@
 using Autodesk.Revit.DB;
 using GanttIt.Core.Model;
+using GanttIt.Revit.Resources;
 using RevitColor = Autodesk.Revit.DB.Color;
 
 namespace GanttIt.Revit.Services;
@@ -12,6 +13,11 @@ namespace GanttIt.Revit.Services;
 /// </summary>
 internal sealed class FillTypes
 {
+    /// <summary>
+    /// An identifier, never translated (§2.6): Gantt-It finds and reuses its types by this
+    /// name, so a localized name would duplicate every type when users of different
+    /// languages regenerate the same model.
+    /// </summary>
     public const string Prefix = "Gantt-It Fill ";
 
     private readonly Document _doc;
@@ -54,7 +60,7 @@ internal sealed class FillTypes
         }
 
         var baseType = _byName.Values.OrderBy(t => IsGanttItName(t.Name) ? 1 : 0).ThenBy(t => t.Id.Value).FirstOrDefault()
-                       ?? throw new InvalidOperationException("The model has no filled region type to duplicate.");
+                       ?? throw new InvalidOperationException(Strings.Fill_NoRegionType);
         var created = (FilledRegionType)baseType.Duplicate(name);
         Apply(created, color);
         _byName[name] = created;
@@ -81,7 +87,7 @@ internal sealed class FillTypes
             .OrderBy(f => f.Id.Value)
             .Select(f => f.Id)
             .FirstOrDefault()
-        ?? throw new InvalidOperationException("The model has no solid drafting fill pattern.");
+        ?? throw new InvalidOperationException(Strings.Fill_NoSolidPattern);
 
     /// <summary>
     /// <c>&lt;Invisible lines&gt;</c>. It is not a Lines subcategory and
@@ -94,7 +100,7 @@ internal sealed class FillTypes
             .Where(g => g?.GraphicsStyleCategory?.BuiltInCategory == BuiltInCategory.OST_InvisibleLines)
             .Select(g => g!.Id)
             .FirstOrDefault()
-        ?? throw new InvalidOperationException("The <Invisible lines> style was not found.");
+        ?? throw new InvalidOperationException(Strings.Fill_NoInvisibleLines);
 
     /// <summary>
     /// Deletes the Gantt-It fill types nothing uses (§7.3). <see cref="GanttItTransaction.Run"/>

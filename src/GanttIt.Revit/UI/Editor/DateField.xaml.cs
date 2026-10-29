@@ -3,8 +3,11 @@ using System.Windows.Automation;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
 using System.Windows.Input;
+using System.Windows.Markup;
 using System.Windows.Media;
 using GanttIt.Core.Dates;
+using GanttIt.Core.Localization;
+using GanttIt.Revit.Resources;
 using GanttIt.Revit.UI.Mvvm;
 
 namespace GanttIt.Revit.UI.Editor;
@@ -65,6 +68,9 @@ public partial class DateField : UserControl
     public DateField()
     {
         InitializeComponent();
+        // WPF's calendar names months and weekdays (and picks the first day of the week)
+        // from its Language, which defaults to en-US: follow the UI language instead.
+        Picker.Language = XmlLanguage.GetLanguage(Languages.Code(UiLanguage.Current));
         Box.KeyDown += OnBoxKeyDown;
         Box.LostKeyboardFocus += (_, _) => Commit();
         Box.TextChanged += (_, _) =>
@@ -128,10 +134,13 @@ public partial class DateField : UserControl
     }
 
     /// <summary>The pattern the field shows and reads.</summary>
-    public string Pattern => DateFormats.EntryPattern(DateFormat);
+    public string Pattern => DateFormats.EntryPattern(DateFormat, UiLanguage.Current);
+
+    /// <summary>Month and day names (<c>MMM</c>, <c>dddd</c>…) show and parse in the UI language (§2.6).</summary>
+    private static Language TextLanguage => UiLanguage.Current;
 
     private string Formatted() =>
-        SelectedDate is { } d ? DateFormats.Format(DateOnly.FromDateTime(d), Pattern) : "";
+        SelectedDate is { } d ? DateFormats.Format(DateOnly.FromDateTime(d), Pattern, TextLanguage) : "";
 
     // ---- text -----------------------------------------------------------------------------
 
@@ -168,7 +177,7 @@ public partial class DateField : UserControl
             ShowDate(); // a cleared field snaps back, as the date picker did
             return;
         }
-        if (!DateFormats.TryParse(text, Pattern, out var date))
+        if (!DateFormats.TryParse(text, Pattern, out var date, TextLanguage))
         {
             SetPending(text);
             return;
@@ -192,9 +201,9 @@ public partial class DateField : UserControl
 
     private void ShowState()
     {
-        var error = PendingText is { } t ? DateFormats.TypedDateError(t, Pattern) : null;
+        var error = PendingText is { } t ? DateFormats.TypedDateError(t, Pattern, TextLanguage) : null;
         Behaviors.SetHasError(Box, HasError || error is not null);
-        Box.ToolTip = error ?? $"Type the date as {Pattern}, or press Alt+Down for the calendar.";
+        Box.ToolTip = error ?? Strings.Date_TypeTip(Pattern);
     }
 
     private void OnBoxKeyDown(object sender, KeyEventArgs e)
@@ -306,6 +315,6 @@ public partial class DateField : UserControl
         AutomationProperties.SetName(Box, FieldName ?? "");
         AutomationProperties.SetAutomationId(CalendarButton, FieldId is null ? "" : FieldId + ".Calendar");
         AutomationProperties.SetAutomationId(Picker, FieldId is null ? "" : FieldId + ".CalendarPopup");
-        AutomationProperties.SetName(CalendarButton, FieldName is null ? "Calendar" : $"{FieldName} calendar");
+        AutomationProperties.SetName(CalendarButton, FieldName is null ? Strings.Date_Calendar : Strings.Date_FieldCalendar(FieldName));
     }
 }

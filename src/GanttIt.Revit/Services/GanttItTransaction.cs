@@ -1,4 +1,5 @@
 using Autodesk.Revit.DB;
+using GanttIt.Revit.Resources;
 
 namespace GanttIt.Revit.Services;
 
@@ -41,7 +42,10 @@ internal sealed class GanttItFailures : IFailuresPreprocessor
 /// </summary>
 internal static class GanttItTransaction
 {
-    /// <summary>The Undo-list name of an action.</summary>
+    /// <summary>
+    /// The Undo-list name of an action. <paramref name="action"/> is in the UI language
+    /// (e.g. <c>Strings.Tx_Generate</c>); the "Gantt-It:" prefix is the product name.
+    /// </summary>
     public static string Name(string action, string? subject) =>
         string.IsNullOrWhiteSpace(subject) ? $"Gantt-It: {action}" : $"Gantt-It: {action} {subject}";
 
@@ -92,7 +96,7 @@ internal static class GanttItTransaction
         try
         {
             if (t.Start() != TransactionStatus.Started)
-                return new ActionResult(ActionStatus.Failed, $"{name}: Revit did not start the transaction.");
+                return new ActionResult(ActionStatus.Failed, Strings.Tx_NotStarted(name));
 
             var (view, note) = body();
             if (purge)
@@ -101,7 +105,7 @@ internal static class GanttItTransaction
                 purged = result.Deleted.Count;
                 if (reportPurge && purged > 0)
                 {
-                    var removed = $"Removed unused fill types: {string.Join(", ", result.Deleted)}.";
+                    var removed = Strings.Gen_FillsRemoved(string.Join(", ", result.Deleted));
                     note = string.IsNullOrEmpty(note) ? removed : $"{note} {removed}";
                 }
 #if DEBUG
@@ -117,8 +121,8 @@ internal static class GanttItTransaction
             if (status != TransactionStatus.Committed)
             {
                 retryWithoutPurge = purged > 0 && doc.IsWorkshared;
-                var why = failures.Errors.Count > 0 ? string.Join(" ", failures.Errors) : $"status {status}";
-                return new ActionResult(ActionStatus.Failed, $"{name} was rolled back: {why}");
+                var why = failures.Errors.Count > 0 ? string.Join(" ", failures.Errors) : Strings.Tx_Status(status);
+                return new ActionResult(ActionStatus.Failed, Strings.Tx_RolledBack(name, why));
             }
             return new ActionResult(ActionStatus.Ok, note, view);
         }
@@ -126,7 +130,7 @@ internal static class GanttItTransaction
         {
             if (t.HasStarted() && !t.HasEnded()) t.RollBack();
             retryWithoutPurge = purged > 0 && (doc.IsWorkshared || simulated);
-            return new ActionResult(ActionStatus.Failed, $"{name} failed and was rolled back: {ex.Message}");
+            return new ActionResult(ActionStatus.Failed, Strings.Tx_Failed(name, ex.Message));
         }
     }
 }
