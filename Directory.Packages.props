@@ -11,18 +11,22 @@
   </PropertyGroup>
 
   <!-- Revit API reference packages, one version per Revit major. Keyed off
-       $(RevitVersion) from Directory.Build.props, which is imported first. -->
+       $(RevitVersion) from Directory.Build.props, which is imported first.
+       Each is the year's EARLIEST update (the API floor), so the add-in runs on
+       every update of that year. CI fails on anything higher
+       (tools/check_revit_api_floor.py); raising one is deliberate, see the
+       README's Compatibility section. -->
   <ItemGroup Condition="'$(RevitVersion)' == '2025'">
-    <PackageVersion Include="Nice3point.Revit.Api.RevitAPI"   Version="2025.4.60" />
-    <PackageVersion Include="Nice3point.Revit.Api.RevitAPIUI" Version="2025.4.60" />
+    <PackageVersion Include="Nice3point.Revit.Api.RevitAPI"   Version="2025.0.2" />
+    <PackageVersion Include="Nice3point.Revit.Api.RevitAPIUI" Version="2025.0.2" />
   </ItemGroup>
   <ItemGroup Condition="'$(RevitVersion)' == '2026'">
-    <PackageVersion Include="Nice3point.Revit.Api.RevitAPI"   Version="2026.4.0" />
-    <PackageVersion Include="Nice3point.Revit.Api.RevitAPIUI" Version="2026.4.0" />
+    <PackageVersion Include="Nice3point.Revit.Api.RevitAPI"   Version="2026.0.4" />
+    <PackageVersion Include="Nice3point.Revit.Api.RevitAPIUI" Version="2026.0.4" />
   </ItemGroup>
   <ItemGroup Condition="'$(RevitVersion)' == '2027'">
-    <PackageVersion Include="Nice3point.Revit.Api.RevitAPI"   Version="2027.0.10" />
-    <PackageVersion Include="Nice3point.Revit.Api.RevitAPIUI" Version="2027.0.10" />
+    <PackageVersion Include="Nice3point.Revit.Api.RevitAPI"   Version="2027.0.0" />
+    <PackageVersion Include="Nice3point.Revit.Api.RevitAPIUI" Version="2027.0.0" />
   </ItemGroup>
 
   <!-- Installer UI — WixUI dialog set for the branded MSI setup. Tracks the

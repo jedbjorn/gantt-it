@@ -61,7 +61,10 @@ dotnet build GanttIt.sln -c "Debug R26"
 
 Both .NET 8 and .NET 10 SDKs are needed (Core and its tests target both). The
 Revit API comes from the reference-only `Nice3point.Revit.Api.*` packages, so
-everything builds without Revit installed, including on Linux.
+everything builds without Revit installed, including on Linux. Each year is
+pinned to its earliest update (the API floor), and CI's
+`tools/check_revit_api_floor.py` fails on a higher pin; the README's
+Compatibility section says how to raise it on purpose.
 
 ## CI and releases
 
