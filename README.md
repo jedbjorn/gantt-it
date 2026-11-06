@@ -5,6 +5,8 @@
 
 **Gantt-It** is a Revit add-in by Designs/OS that draws Gantt charts inside your Revit project, ready to place on your sheets.
 
+**[Project website →](https://jedbjorn.github.io/gantt-it/)**
+
 ![A finished Gantt-It chart: a title, a table of eight sections with start and end dates and days, and coloured bars on a monthly timeline](docs/images/chart-months.png)
 
 ## What it does
