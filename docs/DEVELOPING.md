@@ -134,8 +134,8 @@ manual install: unzip into `%AppData%\Autodesk\Revit\Addins\<year>\`.
 
 Copy a `GanttIt-Debug-R25` / `-R26` / `-R27` artifact's contents into
 `%AppData%\Autodesk\Revit\Addins\<year>\`. Revit locks loaded DLLs, so close
-Revit before redeploying. The add-in is unsigned for now, so Revit asks whether
-to load it on first launch. Debug builds add a **Gantt-It Self-Test** button to
+Revit before redeploying. CI artifacts are unsigned (only tag releases are
+signed, docs/RELEASING.md), so Revit asks whether to load it on first launch. Debug builds add a **Gantt-It Self-Test** button to
 the panel.
 
 The scripts in `tools/vm/` stage, deploy and drive these builds on the

@@ -257,7 +257,7 @@ The chart preview stays white, like paper, so you see the colours as they will p
 
 **Gantt-It is missing from a Revit you installed after Gantt-It.** Close Revit, run the Gantt-It installer again and choose **Repair**. It adds Gantt-It to every supported Revit it now finds. Installing a newer version of Gantt-It does the same.
 
-**Revit asks to load Gantt-It after installing and after each upgrade.** Gantt-It is not digitally signed yet, so Revit asks each time a new version is installed. Choose **Always Load**.
+**Revit asks to load Gantt-It after installing and after each upgrade.** Choose **Always Load**. Releases after v1.1.1 are digitally signed by AnJ Arch-Tech LLC (Designs/OS); v1.1.1 and older are unsigned, so Revit asks each time a new version is installed.
 
 **A chart copied with Revit's Duplicate becomes a plain legend.** The copy doesn't appear in Gantt-It and Gantt-It never changes it; the original chart is unaffected. The same goes for a chart legend pasted from another model, and for a chart whose drawn lines, text and bars were all deleted by hand in Revit: Gantt-It no longer lists it. To make a variant of a chart, click **New chart** and build it in Gantt-It.
 
