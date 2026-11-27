@@ -1,6 +1,7 @@
 # Gantt-It
 
 [![Latest release](https://img.shields.io/github/v/release/jedbjorn/gantt-it?include_prereleases)](https://github.com/jedbjorn/gantt-it/releases/latest)
+[![Release downloads](https://img.shields.io/github/downloads/jedbjorn/gantt-it/total?label=release%20downloads&style=flat-square)](https://github.com/jedbjorn/gantt-it/releases)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
 **Gantt-It** is a Revit add-in by [Designs/OS](https://designs-os.com) that draws Gantt charts inside your Revit project, ready to place on your sheets.
